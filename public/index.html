@@ -73,6 +73,8 @@ textarea.intel-input{resize:vertical;min-height:80px}select.intel-input{appearan
 <div class="nav-item" onclick="go('content-studio',this)"><span class="icon">🎨</span><span class="nav-text">Content Studio</span></div>
 <div class="nav-item" onclick="go('social-listeners',this)"><span class="icon">📡</span><span class="nav-text">Social Listeners</span></div>
 <div class="nav-item" onclick="go('engagers',this)"><span class="icon">👥</span><span class="nav-text">Engagers</span></div>
+<div class="nav-item" onclick="go('web-intel',this)"><span class="icon">🌐</span><span class="nav-text">Website Intel</span></div>
+<div class="nav-item" onclick="go('products',this)"><span class="icon">🛒</span><span class="nav-text">Products & Prices</span></div>
 <div class="sidebar-section" style="margin-top:12px">Tools</div>
 <div class="nav-item" onclick="go('ad-library',this)"><span class="icon">📺</span><span class="nav-text">Ad Library</span></div>
 <div class="nav-item" onclick="go('keyword-tracker',this)"><span class="icon">🔑</span><span class="nav-text">Keyword Tracker</span></div>
@@ -174,6 +176,36 @@ textarea.intel-input{resize:vertical;min-height:80px}select.intel-input{appearan
 <div id="engagersArea"></div>
 </div>
 </div></div>
+<!-- WEBSITE INTELLIGENCE -->
+<div class="page" id="page-web-intel"><div class="animate-in">
+<div class="stats-grid">
+<div class="stat-card blue"><div class="stat-label">Sites Scanned</div><div class="stat-value" id="sWiCount">—</div></div>
+<div class="stat-card emerald"><div class="stat-label">SeaSalt Score</div><div class="stat-value" id="sWiSS" style="color:var(--accent-emerald)">—</div><div class="stat-change" id="sWiRank"></div></div>
+<div class="stat-card amber"><div class="stat-label">Avg Competitor</div><div class="stat-value" id="sWiAvg">—</div></div>
+<div class="stat-card red"><div class="stat-label">Top Threat</div><div class="stat-value" id="sWiThreat" style="font-size:16px">—</div></div>
+</div>
+<div style="display:flex;gap:10px;margin-bottom:20px"><button class="btn btn-blue btn-sm" onclick="syncWebIntel()" id="btnWebSync">🌐 Scan All Websites</button><button class="btn btn-ghost btn-sm" onclick="syncWebIntel('seasaltpickles.com')">🔱 Scan SeaSalt Only</button></div>
+<div class="card" style="margin-bottom:20px"><div class="card-header"><div><div class="card-title">Site Score Comparison</div><div class="card-subtitle">Performance · SEO · E-commerce · Tech Stack</div></div></div>
+<div class="chart-bar-container" id="siteScoreChart" style="height:180px;padding-bottom:30px"></div></div>
+<div class="card" style="margin-bottom:20px"><div class="card-header"><div><div class="card-title">Website Intelligence Table</div><div class="card-subtitle">PageSpeed · Tech · Products · SEO</div></div></div><div id="wiTableArea"></div></div>
+<div class="grid-2">
+<div class="card"><div class="card-header"><div class="card-title">Tech Stack Comparison</div></div><div id="wiTechArea"></div></div>
+<div class="card"><div class="card-header"><div class="card-title">Feature Checklist</div></div><div id="wiFeatureArea"></div></div>
+</div>
+</div></div>
+<!-- PRODUCTS & PRICES -->
+<div class="page" id="page-products"><div class="animate-in">
+<div class="stats-grid">
+<div class="stat-card orange"><div class="stat-label">Brands With Products</div><div class="stat-value" id="sProdBrands">—</div></div>
+<div class="stat-card emerald"><div class="stat-label">Avg Min Price</div><div class="stat-value" id="sProdMinAvg">—</div></div>
+<div class="stat-card blue"><div class="stat-label">Avg Max Price</div><div class="stat-value" id="sProdMaxAvg">—</div></div>
+<div class="stat-card violet"><div class="stat-label">E-commerce Sites</div><div class="stat-value" id="sProdEcom">—</div></div>
+</div>
+<div class="card" style="margin-bottom:20px"><div class="card-header"><div><div class="card-title">Price Range Comparison</div><div class="card-subtitle">₹ Min → Max price detected on each website</div></div></div>
+<div id="priceChartArea" style="padding:12px 0"></div></div>
+<div class="card" style="margin-bottom:20px"><div class="card-header"><div><div class="card-title">Products & Categories by Brand</div><div class="card-subtitle">Scraped from competitor websites</div></div></div><div id="prodTableArea"></div></div>
+<div class="card"><div class="card-header"><div class="card-title">Product Categories Detected</div></div><div id="prodCatsArea"></div></div>
+</div></div>
 <!-- KEYWORD TRACKER -->
 <div class="page" id="page-keyword-tracker"><div class="animate-in">
 <div class="stats-grid">
@@ -197,13 +229,13 @@ function showModal(h){document.getElementById('modalBox').innerHTML=h;document.g
 function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
 function empty(icon,title,desc,btn,action){return`<div class="empty-state"><div class="es-icon">${icon}</div><h3>${title}</h3><p>${desc}</p>${btn?`<button class="btn btn-primary" onclick="${action}">${btn}</button>`:''}</div>`}
 
-const PG={'competitors':{t:'🏆 Competitor Intelligence',s:'Real-time data from Google Places API → Supabase'},'social-spy':{t:'🔍 Social Spy',s:'Monitor competitor social activity'},'insights':{t:'🧠 Insights Engine',s:'Actionable intelligence from competitive data'},'content-studio':{t:'🎨 Content Studio',s:'Content ideas & pipeline'},'social-listeners':{t:'📡 Social Listeners',s:'Brand mention monitoring'},'engagers':{t:'👥 Competitor Engagers',s:'People engaging with competitors — potential SeaSalt customers'},'ad-library':{t:'📺 Ad Library',s:'Competitor ads — powered by Meta Ad Library (public)'},'keyword-tracker':{t:'🔑 Keyword Tracker',s:'SEO ranking intelligence'}};
+const PG={'competitors':{t:'🏆 Competitor Intelligence',s:'Real-time data from Google Places API → Supabase'},'social-spy':{t:'🔍 Social Spy',s:'Monitor competitor social activity'},'insights':{t:'🧠 Insights Engine',s:'Actionable intelligence from competitive data'},'content-studio':{t:'🎨 Content Studio',s:'Content ideas & pipeline'},'social-listeners':{t:'📡 Social Listeners',s:'Brand mention monitoring'},'engagers':{t:'👥 Competitor Engagers',s:'People engaging with competitors — potential SeaSalt customers'},'web-intel':{t:'🌐 Website Intelligence',s:'PageSpeed · SEO · Tech Stack · Products — scanned from live websites'},'products':{t:'🛒 Products & Prices',s:'Product categories and price comparison across all brands'},'ad-library':{t:'📺 Ad Library',s:'Competitor ads — powered by Meta Ad Library (public)'},'keyword-tracker':{t:'🔑 Keyword Tracker',s:'SEO ranking intelligence'}};
 function go(p,el){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));if(el)el.classList.add('active');document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));const t=document.getElementById('page-'+p);if(t)t.classList.add('active');const c=PG[p]||{};document.getElementById('pageTitle').textContent=c.t||p;document.getElementById('pageSubtitle').textContent=c.s||''}
 
 // DATA ARRAYS — filled from Supabase only
-let COMP=[],INSIGHTS=[],IDEAS=[],SEO_KW=[],HASHTAGS=[],LISTEN_KW=[],MENTIONS=[],ADS=[],SOC_CONTENT=[],ENGAGERS=[];
+let COMP=[],INSIGHTS=[],IDEAS=[],SEO_KW=[],HASHTAGS=[],LISTEN_KW=[],MENTIONS=[],ADS=[],SOC_CONTENT=[],ENGAGERS=[],WEB_INTEL=[];
 
-async function loadAll(){await Promise.allSettled([loadComp(),loadInsights(),loadIdeas(),loadSeoKw(),loadHashtags(),loadListenKw(),loadMentions(),loadAds(),loadSocContent(),loadEngagers()]);document.getElementById('lastSync').textContent=new Date().toLocaleTimeString()}
+async function loadAll(){await Promise.allSettled([loadComp(),loadInsights(),loadIdeas(),loadSeoKw(),loadHashtags(),loadListenKw(),loadMentions(),loadAds(),loadSocContent(),loadEngagers(),loadWebIntel()]);document.getElementById('lastSync').textContent=new Date().toLocaleTimeString()}
 
 async function q(table,opts={}){try{let query=db.from(table).select(opts.select||'*');if(opts.eq)for(const[k,v]of Object.entries(opts.eq))query=query.eq(k,v);if(opts.order)query=query.order(opts.order.col,{ascending:opts.order.asc??true});if(opts.limit)query=query.limit(opts.limit);const{data,error}=await query;if(error)throw error;return data||[];}catch(e){console.log(table+':',e.message);return[];}}
 
@@ -370,6 +402,149 @@ function filterEngagers(filter){
 }
 
 function exportData(){toast('📥 Use Supabase Dashboard → Table Editor → Export CSV')}
+
+// ═══════ WEBSITE INTELLIGENCE ═══════
+async function loadWebIntel(){WEB_INTEL=await q('website_intelligence',{order:{col:'site_score',asc:false}});renderWebIntel();renderProducts()}
+
+async function syncWebIntel(site){
+  const b=document.getElementById('btnWebSync');b.disabled=true;b.innerHTML='<span class="spinner"></span> Scanning...';
+  toast('🌐 Scanning websites — this takes 3-5 minutes...');
+  try{
+    let url='/.netlify/functions/web-intel';
+    if(site)url+='?site='+encodeURIComponent(site);
+    const r=await fetch(url);const d=await r.json();
+    if(d.error){toast('❌ '+d.error)}
+    else{toast('✅ '+d.total_sites+' websites scanned');await loadWebIntel()}
+  }catch(e){toast('❌ '+e.message)}
+  b.disabled=false;b.innerHTML='🌐 Scan All Websites';
+}
+
+function renderWebIntel(){
+  const self=WEB_INTEL.find(w=>w.is_self);
+  const comps=WEB_INTEL.filter(w=>!w.is_self);
+
+  document.getElementById('sWiCount').textContent=WEB_INTEL.length;
+  document.getElementById('sWiSS').textContent=self?self.site_score+'/100':'—';
+  if(self&&comps.length){
+    const rank=comps.filter(c=>c.site_score>self.site_score).length+1;
+    document.getElementById('sWiRank').textContent='Rank #'+rank+' of '+(comps.length+1);
+  }
+  const avgComp=comps.length?Math.round(comps.reduce((s,c)=>s+c.site_score,0)/comps.length):0;
+  document.getElementById('sWiAvg').textContent=avgComp+'/100';
+  const topThreat=comps.sort((a,b)=>b.site_score-a.site_score)[0];
+  document.getElementById('sWiThreat').textContent=topThreat?topThreat.name+' ('+topThreat.site_score+')':'—';
+
+  // Score chart
+  const chart=document.getElementById('siteScoreChart');
+  if(!WEB_INTEL.length){chart.innerHTML='';document.getElementById('wiTableArea').innerHTML=empty('🌐','No Website Data','Click "Scan All Websites" to analyze competitor sites.','🌐 Run First Scan','syncWebIntel()');return}
+  chart.innerHTML=WEB_INTEL.map(w=>`<div class="chart-bar" style="height:${w.site_score}%;background:${w.is_self?'var(--accent-red)':w.color||'var(--accent-blue)'};opacity:${w.is_self?1:0.7}"><span class="chart-bar-label">${w.code}<br><b>${w.site_score}</b></span></div>`).join('');
+
+  // Table
+  let tbl=`<table class="data-table"><thead><tr><th>Brand</th><th>Score</th><th>Perf</th><th>SEO</th><th>Products</th><th>Price Range</th><th>E-com</th><th>Tech Stack</th><th>Scanned</th></tr></thead><tbody>`;
+  for(const w of WEB_INTEL){
+    const ts=safeJSON(w.tech_stack);
+    const scoreColor=w.site_score>=60?'var(--accent-emerald)':w.site_score>=35?'var(--accent-amber)':'var(--accent-red)';
+    tbl+=`<tr style="${w.is_self?'background:rgba(220,38,38,.04)':''}">
+      <td><div style="display:flex;align-items:center;gap:8px"><span class="comp-dot" style="background:${w.color||'#666'}"></span><div><div style="font-weight:600;color:var(--text-primary)">${esc(w.name)}${w.is_self?' 🔱':''}</div><div style="font-size:11px;color:var(--text-muted)">${esc(w.url)}</div></div></div></td>
+      <td><b style="font-size:18px;color:${scoreColor}">${w.site_score}</b><span style="font-size:10px;color:var(--text-muted)">/100</span></td>
+      <td><span class="badge ${w.performance_score>=60?'badge-green':w.performance_score>=30?'badge-amber':'badge-red'}">${w.performance_score||0}</span></td>
+      <td><span class="badge ${w.seo_score>=70?'badge-green':w.seo_score>=40?'badge-amber':'badge-red'}">${w.seo_score||0}</span></td>
+      <td style="font-weight:600">${w.product_count||0}</td>
+      <td>${w.price_min&&w.price_max?'₹'+Math.round(w.price_min)+' — ₹'+Math.round(w.price_max):'—'}</td>
+      <td>${w.has_ecommerce?'<span class="badge badge-green">Yes</span>':'<span class="badge badge-red">No</span>'}</td>
+      <td style="font-size:11px">${ts.length?ts.slice(0,3).join(', ')+(ts.length>3?' +'.concat(ts.length-3):''):'—'}</td>
+      <td style="font-size:11px;color:var(--text-muted)">${timeAgo(w.scanned_at)}</td>
+    </tr>`;
+  }
+  tbl+='</tbody></table>';
+  document.getElementById('wiTableArea').innerHTML=tbl;
+
+  // Tech stack comparison
+  const techMap={};
+  WEB_INTEL.forEach(w=>{const ts=safeJSON(w.tech_stack);ts.forEach(t=>{if(!techMap[t])techMap[t]=[];techMap[t].push(w.code)})});
+  let techHtml='<div style="display:flex;flex-direction:column;gap:8px;padding:8px 0">';
+  for(const[tech,codes]of Object.entries(techMap).sort((a,b)=>b[1].length-a[1].length)){
+    techHtml+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border-subtle)"><div style="font-size:13px;font-weight:600">${esc(tech)}</div><div style="display:flex;gap:4px">${codes.map(c=>`<span class="badge badge-blue" style="font-size:9px">${c}</span>`).join('')}</div></div>`;
+  }
+  techHtml+='</div>';
+  document.getElementById('wiTechArea').innerHTML=Object.keys(techMap).length?techHtml:'<div class="empty-state" style="padding:20px"><p>Run scan to detect tech stacks</p></div>';
+
+  // Feature checklist
+  const features=['has_ecommerce','has_blog','has_whatsapp','has_ssl','has_structured_data','is_mobile_friendly'];
+  const fLabels={'has_ecommerce':'🛒 E-commerce','has_blog':'📝 Blog','has_whatsapp':'💬 WhatsApp','has_ssl':'🔒 SSL','has_structured_data':'📊 Schema','is_mobile_friendly':'📱 Mobile'};
+  let fHtml='<table class="data-table"><thead><tr><th>Feature</th>';
+  WEB_INTEL.slice(0,6).forEach(w=>{fHtml+=`<th style="text-align:center;font-size:9px">${w.code}</th>`});
+  fHtml+='</tr></thead><tbody>';
+  features.forEach(f=>{
+    fHtml+=`<tr><td style="font-size:12px">${fLabels[f]||f}</td>`;
+    WEB_INTEL.slice(0,6).forEach(w=>{fHtml+=`<td style="text-align:center">${w[f]?'✅':'❌'}</td>`});
+    fHtml+='</tr>';
+  });
+  fHtml+='</tbody></table>';
+  document.getElementById('wiFeatureArea').innerHTML=fHtml;
+}
+
+// ═══════ PRODUCTS & PRICES ═══════
+function renderProducts(){
+  const withProducts=WEB_INTEL.filter(w=>w.product_count>0);
+  const withPrices=WEB_INTEL.filter(w=>w.price_min>0);
+  const withEcom=WEB_INTEL.filter(w=>w.has_ecommerce);
+
+  document.getElementById('sProdBrands').textContent=withProducts.length;
+  document.getElementById('sProdEcom').textContent=withEcom.length;
+  if(withPrices.length){
+    document.getElementById('sProdMinAvg').textContent='₹'+Math.round(withPrices.reduce((s,w)=>s+parseFloat(w.price_min),0)/withPrices.length);
+    document.getElementById('sProdMaxAvg').textContent='₹'+Math.round(withPrices.reduce((s,w)=>s+parseFloat(w.price_max),0)/withPrices.length);
+  }
+
+  // Price range chart
+  const pc=document.getElementById('priceChartArea');
+  if(!withPrices.length){pc.innerHTML='<div class="empty-state" style="padding:20px"><p>Run website scan to detect prices</p></div>'}
+  else{
+    const maxP=Math.max(...withPrices.map(w=>parseFloat(w.price_max)||0),1);
+    pc.innerHTML='<div style="display:flex;flex-direction:column;gap:10px">'+withPrices.map(w=>{
+      const mn=parseFloat(w.price_min)||0,mx=parseFloat(w.price_max)||0,av=parseFloat(w.price_avg)||0;
+      const leftPct=Math.round((mn/maxP)*100);
+      const widthPct=Math.max(Math.round(((mx-mn)/maxP)*100),2);
+      return`<div style="display:flex;align-items:center;gap:12px">
+        <div style="width:120px;font-size:12px;font-weight:600;text-align:right;color:${w.is_self?'var(--accent-red)':'var(--text-primary)'}">${esc(w.name)}${w.is_self?' 🔱':''}</div>
+        <div style="flex:1;height:24px;background:var(--bg-elevated);border-radius:6px;position:relative;overflow:hidden">
+          <div style="position:absolute;left:${leftPct}%;width:${widthPct}%;height:100%;background:${w.is_self?'var(--accent-red)':w.color||'var(--accent-blue)'};border-radius:6px;opacity:0.7"></div>
+        </div>
+        <div style="width:140px;font-size:11px;color:var(--text-muted)">₹${Math.round(mn)} — ₹${Math.round(mx)}${av?' (avg ₹'+Math.round(av)+')':''}</div>
+      </div>`;
+    }).join('')+'</div>';
+  }
+
+  // Products & categories table
+  const pt=document.getElementById('prodTableArea');
+  if(!WEB_INTEL.length){pt.innerHTML=empty('🛒','No Product Data','Run website scan to extract products and categories.','🌐 Scan Websites','syncWebIntel()');return}
+  let pHtml=`<table class="data-table"><thead><tr><th>Brand</th><th>Products</th><th>Categories</th><th>Price Min</th><th>Price Max</th><th>Price Avg</th><th>E-com</th></tr></thead><tbody>`;
+  for(const w of WEB_INTEL){
+    const prods=safeJSON(w.products);
+    const cats=safeJSON(w.categories);
+    pHtml+=`<tr style="${w.is_self?'background:rgba(220,38,38,.04)':''}">
+      <td style="font-weight:600;color:var(--text-primary)">${esc(w.name)}${w.is_self?' 🔱':''}</td>
+      <td><span style="font-weight:700">${w.product_count||0}</span>${prods.length?`<div style="font-size:10px;color:var(--text-muted);margin-top:2px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${prods.slice(0,3).map(p=>esc(p)).join(', ')}${prods.length>3?' +'+(prods.length-3)+' more':''}</div>`:''}</td>
+      <td>${cats.length?cats.slice(0,4).map(c=>`<span class="badge badge-violet" style="margin:1px;font-size:9px">${esc(c)}</span>`).join('')+(cats.length>4?`<span style="font-size:10px;color:var(--text-muted)"> +${cats.length-4}</span>`:''):'—'}</td>
+      <td style="font-weight:600;color:var(--accent-emerald)">${w.price_min>0?'₹'+Math.round(parseFloat(w.price_min)):'—'}</td>
+      <td style="font-weight:600;color:var(--accent-red)">${w.price_max>0?'₹'+Math.round(parseFloat(w.price_max)):'—'}</td>
+      <td>${w.price_avg>0?'₹'+Math.round(parseFloat(w.price_avg)):'—'}</td>
+      <td>${w.has_ecommerce?'<span class="badge badge-green">✓</span>':'<span class="badge badge-red">✗</span>'}</td>
+    </tr>`;
+  }
+  pHtml+='</tbody></table>';
+  pt.innerHTML=pHtml;
+
+  // All categories detected
+  const allCats={};
+  WEB_INTEL.forEach(w=>{const cats=safeJSON(w.categories);cats.forEach(c=>{if(!allCats[c])allCats[c]=[];allCats[c].push(w.code)})});
+  const catEl=document.getElementById('prodCatsArea');
+  if(!Object.keys(allCats).length){catEl.innerHTML='<div class="empty-state" style="padding:20px"><p>No categories detected yet</p></div>';return}
+  catEl.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:8px;padding:8px">'+Object.entries(allCats).sort((a,b)=>b[1].length-a[1].length).map(([cat,codes])=>`<div style="background:var(--bg-elevated);border-radius:8px;padding:8px 12px;font-size:12px"><div style="font-weight:600">${esc(cat)}</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">${codes.join(', ')}</div></div>`).join('')+'</div>';
+}
+
+function safeJSON(v){try{return typeof v==='string'?JSON.parse(v):(Array.isArray(v)?v:[])}catch(e){return[]}}
 
 document.addEventListener('DOMContentLoaded',()=>{if(db)loadAll();else toast('⚠️ Supabase not connected')});
 </script>
