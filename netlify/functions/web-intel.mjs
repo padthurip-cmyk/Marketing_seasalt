@@ -349,13 +349,17 @@ async function sbUpsert(table, data) {
 }
 
 // ═══════ ANALYZE ONE SITE ═══════
-async function analyzeSite(site) {
+async function analyzeSite(site, skipPageSpeed = false) {
   console.log(`\n[${site.code}] ─── ${site.name} (${site.url}) ───`);
 
-  console.log(`[${site.code}] ⚡ PageSpeed...`);
-  const ps = await getPageSpeed(site.url);
-  console.log(`[${site.code}] PageSpeed: ${ps ? `Perf ${ps.performance_score}, SEO ${ps.seo_score}` : '✗'}`);
-
+  let ps = null;
+  if (!skipPageSpeed) {
+    console.log(`[${site.code}] ⚡ PageSpeed...`);
+    ps = await getPageSpeed(site.url);
+    console.log(`[${site.code}] PageSpeed: ${ps ? `Perf ${ps.performance_score}, SEO ${ps.seo_score}` : '✗'}`);
+  } else {
+    console.log(`[${site.code}] ⚡ PageSpeed SKIPPED (fast mode)`);
+  }
   console.log(`[${site.code}] 🌐 Scraping homepage...`);
   const sc = await scrapeWebsite(site.url);
   console.log(`[${site.code}] Homepage: ${sc.reachable ? `${sc.product_count} products, marketplace: ${sc.marketplace_presence?._platform_count || 0} platforms` : '✗'}`);
@@ -400,6 +404,34 @@ async function analyzeSite(site) {
   return { site, ps, sc, allProducts, allPrices, allCategories, shopifyProducts: shopify, siteScore };
 }
 
+// ═══════ BUILD SUPABASE ROW ═══════
+function buildRow(site, r) {
+  return {
+    name: site.name, code: site.code, url: site.url, color: site.color,
+    is_self: site.is_self || false, reachable: r.sc.reachable || false,
+    performance_score: r.ps?.performance_score || 0, seo_score: r.ps?.seo_score || 0,
+    accessibility_score: r.ps?.accessibility_score || 0, best_practices_score: r.ps?.best_practices_score || 0,
+    first_contentful_paint: r.ps?.first_contentful_paint || '', largest_contentful_paint: r.ps?.largest_contentful_paint || '',
+    speed_index: r.ps?.speed_index || '', is_mobile_friendly: r.ps?.is_mobile_friendly || false,
+    page_title: r.sc.title || '', meta_description: r.sc.meta_description || '',
+    product_count: r.allProducts.length,
+    products: JSON.stringify(r.allProducts.slice(0, 100)),
+    category_count: r.allCategories.length,
+    categories: JSON.stringify(r.allCategories),
+    price_min: r.sc.price_range?.min || 0, price_max: r.sc.price_range?.max || 0, price_avg: r.sc.price_range?.avg || 0,
+    tech_stack: JSON.stringify(r.sc.tech_stack || []),
+    has_ecommerce: r.sc.has_ecommerce || false, has_blog: r.sc.has_blog || false,
+    has_whatsapp: r.sc.has_whatsapp || false, has_ssl: r.sc.has_ssl || false,
+    has_structured_data: r.sc.has_structured_data || false,
+    social_links: JSON.stringify(r.sc.social_links || {}),
+    marketplace_presence: JSON.stringify(r.sc.marketplace_presence || {}),
+    products_with_prices: JSON.stringify(r.sc.products_with_prices || []),
+    image_count: r.sc.image_count || 0, word_count: r.sc.word_count || 0,
+    internal_links: r.sc.internal_links || 0, external_links: r.sc.external_links || 0,
+    site_score: r.siteScore, scanned_at: new Date().toISOString()
+  };
+}
+
 // ═══════ MAIN HANDLER ═══════
 export const handler = async (event) => {
   const H = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type', 'Content-Type': 'application/json' };
@@ -407,52 +439,48 @@ export const handler = async (event) => {
   const params = event.queryStringParameters || {};
 
   if (params.site) {
+    // Single site test — SKIP PageSpeed for fast response (under 10s)
     const fakeSite = { name: 'Test', code: 'TS', url: params.site, color: '#666' };
-    const r = await analyzeSite(fakeSite);
+    const r = await analyzeSite(fakeSite, true); // skipPageSpeed=true
     return { statusCode: 200, headers: H, body: JSON.stringify({
       mode: 'single_test', version: 'web_intel_v3', site: params.site,
       site_score: r.siteScore,
       products_found: r.allProducts.length,
       products_with_prices: r.sc.products_with_prices?.length || 0,
       marketplace_presence: r.sc.marketplace_presence,
-      pagespeed: r.ps,
-      scrape: { reachable: r.sc.reachable, title: r.sc.title, products: r.allProducts.slice(0, 30), products_with_prices: r.sc.products_with_prices?.slice(0, 20), categories: r.allCategories, price_range: r.sc.price_range, tech_stack: r.sc.tech_stack, social_links: r.sc.social_links, has_ecommerce: r.sc.has_ecommerce }
+      pagespeed: 'skipped_for_speed',
+      scrape: { reachable: r.sc.reachable, title: r.sc.title, products: r.allProducts.slice(0, 50), products_with_prices: r.sc.products_with_prices?.slice(0, 50), categories: r.allCategories, price_range: r.sc.price_range, tech_stack: r.sc.tech_stack, social_links: r.sc.social_links, has_ecommerce: r.sc.has_ecommerce, marketplace_presence: r.sc.marketplace_presence }
     }, null, 2) };
+  }
+
+  // ── Scan ONE specific competitor (called from dashboard one by one) ──
+  if (params.scan) {
+    if (!SB_KEY || !SB_URL) return { statusCode: 500, headers: H, body: JSON.stringify({ error: 'Supabase not configured' }) };
+    const site = SITES.find(s => s.code === params.scan || s.url === params.scan);
+    if (!site) return { statusCode: 400, headers: H, body: JSON.stringify({ error: 'Site not found: ' + params.scan }) };
+
+    const skipPS = params.fast === '1';
+    const r = await analyzeSite(site, skipPS);
+    const row = buildRow(site, r);
+    const saved = await sbUpsert('website_intelligence', row);
+    return { statusCode: 200, headers: H, body: JSON.stringify({
+      mode: 'single_scan', version: 'web_intel_v3', site: site.name,
+      site_score: r.siteScore, products: r.allProducts.length,
+      products_with_prices: r.sc.products_with_prices?.length || 0,
+      marketplace: r.sc.marketplace_presence, saved
+    }) };
   }
 
   if (!SB_KEY || !SB_URL) return { statusCode: 500, headers: H, body: JSON.stringify({ error: 'Supabase not configured' }) };
 
-  console.log(`\n[WEB-INTEL v3] ═══ Analyzing ${SITES.length} websites ═══`);
+  const skipPS = params.fast === '1';
+  console.log(`\n[WEB-INTEL v3] ═══ Analyzing ${SITES.length} websites ${skipPS ? '(FAST mode — no PageSpeed)' : ''} ═══`);
   const startTime = Date.now();
   const results = [];
 
   for (const site of SITES) {
-    const r = await analyzeSite(site);
-    const row = {
-      name: site.name, code: site.code, url: site.url, color: site.color,
-      is_self: site.is_self || false, reachable: r.sc.reachable || false,
-      performance_score: r.ps?.performance_score || 0, seo_score: r.ps?.seo_score || 0,
-      accessibility_score: r.ps?.accessibility_score || 0, best_practices_score: r.ps?.best_practices_score || 0,
-      first_contentful_paint: r.ps?.first_contentful_paint || '', largest_contentful_paint: r.ps?.largest_contentful_paint || '',
-      speed_index: r.ps?.speed_index || '', is_mobile_friendly: r.ps?.is_mobile_friendly || false,
-      page_title: r.sc.title || '', meta_description: r.sc.meta_description || '',
-      product_count: r.allProducts.length,
-      products: JSON.stringify(r.allProducts.slice(0, 100)),
-      category_count: r.allCategories.length,
-      categories: JSON.stringify(r.allCategories),
-      price_min: r.sc.price_range?.min || 0, price_max: r.sc.price_range?.max || 0, price_avg: r.sc.price_range?.avg || 0,
-      tech_stack: JSON.stringify(r.sc.tech_stack || []),
-      has_ecommerce: r.sc.has_ecommerce || false, has_blog: r.sc.has_blog || false,
-      has_whatsapp: r.sc.has_whatsapp || false, has_ssl: r.sc.has_ssl || false,
-      has_structured_data: r.sc.has_structured_data || false,
-      social_links: JSON.stringify(r.sc.social_links || {}),
-      // ═══ NEW COLUMNS ═══
-      marketplace_presence: JSON.stringify(r.sc.marketplace_presence || {}),
-      products_with_prices: JSON.stringify(r.sc.products_with_prices || []),
-      image_count: r.sc.image_count || 0, word_count: r.sc.word_count || 0,
-      internal_links: r.sc.internal_links || 0, external_links: r.sc.external_links || 0,
-      site_score: r.siteScore, scanned_at: new Date().toISOString()
-    };
+    const r = await analyzeSite(site, skipPS);
+    const row = buildRow(site, r);
     const saved = await sbUpsert('website_intelligence', row);
     results.push({ name: site.name, code: site.code, url: site.url, is_self: site.is_self || false, reachable: r.sc.reachable || false, site_score: r.siteScore, products: r.allProducts.length, products_with_prices: r.sc.products_with_prices?.length || 0, marketplace: r.sc.marketplace_presence, saved });
     await new Promise(r => setTimeout(r, 2000));
