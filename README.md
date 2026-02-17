@@ -39,7 +39,7 @@ seasalt-intelligence/
 
 | Variable | Value |
 |----------|-------|
-| `GOOGLE_PLACES_API_KEY` | `AIzaSyA33gWiI28GPZw2v-sOYYcyEyMTz9Lm5s8` |
+| `GOOGLE_PLACES_API_KEY` | Your Google Places API key (from Google Cloud Console) |
 | `SUPABASE_URL` | `https://yosjbsncvghpscsrvxds.supabase.co` |
 | `SUPABASE_KEY` | Your Supabase anon key |
 
