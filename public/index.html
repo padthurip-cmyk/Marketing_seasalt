@@ -197,37 +197,59 @@ textarea.intel-input{resize:vertical;min-height:80px}select.intel-input{appearan
 <div class="page" id="page-products"><div class="animate-in">
 <div class="stats-grid">
 <div class="stat-card orange"><div class="stat-label">Brands Tracked</div><div class="stat-value" id="sProdBrands">—</div></div>
-<div class="stat-card emerald"><div class="stat-label">Avg Min Price</div><div class="stat-value" id="sProdMinAvg">—</div></div>
-<div class="stat-card blue"><div class="stat-label">Avg Max Price</div><div class="stat-value" id="sProdMaxAvg">—</div></div>
-<div class="stat-card violet"><div class="stat-label">E-commerce Sites</div><div class="stat-value" id="sProdEcom">—</div></div>
-<div class="stat-card red"><div class="stat-label">Cheapest Brand</div><div class="stat-value" id="sProdCheapest" style="font-size:16px">—</div></div>
-<div class="stat-card amber"><div class="stat-label">Product Types</div><div class="stat-value" id="sProdTypes">—</div></div>
+<div class="stat-card emerald"><div class="stat-label">SeaSalt Platforms</div><div class="stat-value" id="sProdMyPlat">—</div></div>
+<div class="stat-card blue"><div class="stat-label">Avg Competitor Platforms</div><div class="stat-value" id="sProdAvgPlat">—</div></div>
+<div class="stat-card violet"><div class="stat-label">Price Entries</div><div class="stat-value" id="sProdPriceEntries">—</div></div>
+<div class="stat-card red"><div class="stat-label">SeaSalt vs Market</div><div class="stat-value" id="sProdVsMarket" style="font-size:16px">—</div></div>
+<div class="stat-card amber"><div class="stat-label">Biggest Gap</div><div class="stat-value" id="sProdGap" style="font-size:14px">—</div></div>
 </div>
 
-<!-- Market Presence Map -->
+<!-- Brand Selector Tabs -->
 <div class="card" style="margin-bottom:20px">
-<div class="card-header"><div><div class="card-title">🗺️ Market Presence Map</div><div class="card-subtitle">Where each competitor sells — Own Website · Marketplaces · Aggregators</div></div>
-<button class="btn btn-ghost btn-sm" onclick="openEditPresence()">✏️ Edit Platforms</button></div>
-<div id="presenceMapArea"></div></div>
+<div class="card-header"><div><div class="card-title">🏪 Select Brand to Explore</div><div class="card-subtitle">Click a brand to see platforms, products & pricing deep-dive — compared vs SeaSalt 🔱</div></div></div>
+<div id="brandSelectorArea" style="display:flex;flex-wrap:wrap;gap:8px;padding:8px 0"></div>
+</div>
 
-<!-- Price Range Comparison -->
-<div class="card" style="margin-bottom:20px"><div class="card-header"><div><div class="card-title">💰 Price Range Comparison</div><div class="card-subtitle">₹ Min → Max price detected on each website</div></div></div>
+<!-- Brand Detail Panel (shows when brand clicked) -->
+<div id="brandDetailPanel" style="display:none">
+<!-- Brand Header -->
+<div class="card" style="margin-bottom:20px;border-left:4px solid var(--accent-blue)" id="brandHeaderCard">
+<div id="brandHeaderArea"></div></div>
+
+<!-- Market Presence Comparison: Selected vs SeaSalt -->
+<div class="card" style="margin-bottom:20px">
+<div class="card-header"><div><div class="card-title" id="presenceTitle">🗺️ Market Presence</div><div class="card-subtitle">Where this brand sells vs SeaSalt 🔱</div></div>
+<button class="btn btn-ghost btn-sm" onclick="openEditPresence()">✏️ Edit</button></div>
+<div id="presenceCompareArea"></div></div>
+
+<!-- Products List for Selected Brand -->
+<div class="card" style="margin-bottom:20px">
+<div class="card-header"><div><div class="card-title" id="prodListTitle">🛒 Products</div><div class="card-subtitle">All products detected on this brand's website</div></div></div>
+<div id="brandProductsArea"></div></div>
+
+<!-- Platform Pricing for Selected Brand -->
+<div class="card" style="margin-bottom:20px">
+<div class="card-header"><div><div class="card-title" id="platPriceTitle">💰 Platform Pricing</div><div class="card-subtitle">Click a platform to see how this brand prices across channels</div></div>
+<button class="btn btn-ghost btn-sm" onclick="openAddPlatformPrice()">➕ Add Price</button></div>
+<div id="brandPlatformPriceArea"></div></div>
+</div>
+
+<!-- Product × Brand Matrix (always visible) -->
+<div class="card" style="margin-bottom:20px">
+<div class="card-header"><div><div class="card-title">📊 Product × Brand Comparison</div><div class="card-subtitle">Products as rows · Brands as columns · SeaSalt 🔱 always first — avg price shown</div></div>
+<button class="btn btn-ghost btn-sm" onclick="openAddPlatformPrice()">➕ Add Price</button></div>
+<div id="productMatrixArea"></div></div>
+
+<!-- Full Market Presence Grid -->
+<div class="card" style="margin-bottom:20px">
+<div class="card-header"><div><div class="card-title">🗺️ Full Market Presence Grid</div><div class="card-subtitle">All brands × all platforms — SeaSalt 🔱 highlighted</div></div>
+<button class="btn btn-ghost btn-sm" onclick="openEditPresence()">✏️ Edit</button></div>
+<div id="fullPresenceArea"></div></div>
+
+<!-- Price Range Visual -->
+<div class="card" style="margin-bottom:20px"><div class="card-header"><div><div class="card-title">💰 Price Range Comparison</div><div class="card-subtitle">₹ Min → Max from each website · SeaSalt 🔱 highlighted</div></div></div>
 <div id="priceChartArea" style="padding:12px 0"></div></div>
 
-<!-- Similar Products & Avg Price -->
-<div class="card" style="margin-bottom:20px"><div class="card-header"><div><div class="card-title">🏷️ Product Groups & Avg Pricing</div><div class="card-subtitle">Similar products grouped across brands with average market price</div></div></div>
-<div id="prodGroupArea"></div></div>
-
-<!-- Platform Price Comparison -->
-<div class="card" style="margin-bottom:20px"><div class="card-header"><div><div class="card-title">📊 Platform Price Variation</div><div class="card-subtitle">Price differences across platforms for the same brand</div></div>
-<button class="btn btn-ghost btn-sm" onclick="openAddPlatformPrice()">➕ Add Price Data</button></div>
-<div id="platformPriceArea"></div></div>
-
-<!-- Products & Categories Table -->
-<div class="card" style="margin-bottom:20px"><div class="card-header"><div><div class="card-title">🛒 Products & Categories by Brand</div><div class="card-subtitle">Scraped from competitor websites</div></div></div><div id="prodTableArea"></div></div>
-
-<!-- Category Cloud -->
-<div class="card"><div class="card-header"><div class="card-title">📂 Product Categories Detected</div></div><div id="prodCatsArea"></div></div>
 </div></div>
 <!-- KEYWORD TRACKER -->
 <div class="page" id="page-keyword-tracker"><div class="animate-in">
@@ -507,8 +529,9 @@ function renderWebIntel(){
   document.getElementById('wiFeatureArea').innerHTML=fHtml;
 }
 
-// ═══════ PRODUCTS & PRICES ═══════
-// ═══════ MARKET PRESENCE DATA (editable — stored in localStorage for now) ═══════
+// ═══════ PRODUCTS & PRICES — DYNAMIC INTERACTIVE SYSTEM ═══════
+let SELECTED_BRAND = null; // currently selected brand code
+
 const DEFAULT_PRESENCE = {
   'SS': { website: true, swiggy: false, zomato: false, amazon: false, flipkart: false, bigbasket: false, jiomart: false, blinkit: false, instagram_shop: true, whatsapp: true },
   'VF': { website: true, swiggy: true, zomato: false, amazon: true, flipkart: true, bigbasket: false, jiomart: false, blinkit: false, instagram_shop: true, whatsapp: true },
@@ -525,275 +548,308 @@ const DEFAULT_PRESENCE = {
 
 const PLATFORM_META = {
   website: { icon: '🌐', label: 'Own Website', color: '#2563eb' },
-  swiggy: { icon: '🟠', label: 'Swiggy Instamart', color: '#fc8019' },
-  zomato: { icon: '🔴', label: 'Zomato / Hyperpure', color: '#e23744' },
+  swiggy: { icon: '🟠', label: 'Swiggy', color: '#fc8019' },
+  zomato: { icon: '🔴', label: 'Zomato', color: '#e23744' },
   amazon: { icon: '📦', label: 'Amazon', color: '#ff9900' },
   flipkart: { icon: '🛒', label: 'Flipkart', color: '#2874f0' },
   bigbasket: { icon: '🧺', label: 'BigBasket', color: '#84c225' },
   jiomart: { icon: '🔵', label: 'JioMart', color: '#0078ad' },
   blinkit: { icon: '⚡', label: 'Blinkit', color: '#f7d600' },
-  instagram_shop: { icon: '📸', label: 'Instagram Shop', color: '#e1306c' },
-  whatsapp: { icon: '💬', label: 'WhatsApp Orders', color: '#25d366' }
+  instagram_shop: { icon: '📸', label: 'Instagram', color: '#e1306c' },
+  whatsapp: { icon: '💬', label: 'WhatsApp', color: '#25d366' }
 };
 
-// Standard product types for grouping across brands
-const PRODUCT_GROUPS = [
-  { name: 'Chicken Pickle', keywords: ['chicken','chk','kodi'] },
-  { name: 'Mutton Pickle', keywords: ['mutton','goat','mamsam'] },
-  { name: 'Prawns / Shrimp Pickle', keywords: ['prawn','shrimp','royyala'] },
-  { name: 'Fish Pickle', keywords: ['fish','chepala'] },
-  { name: 'Avakaya (Raw Mango)', keywords: ['avakaya','avakay','avakai','raw mango','mango pickle'] },
-  { name: 'Gongura Pickle', keywords: ['gongura','sorrel'] },
-  { name: 'Tomato Pickle', keywords: ['tomato'] },
-  { name: 'Lemon Pickle', keywords: ['lemon','nimma'] },
-  { name: 'Garlic Pickle', keywords: ['garlic','velluli'] },
-  { name: 'Mixed Veg Pickle', keywords: ['mixed','mix veg'] },
-  { name: 'Mango Thokku', keywords: ['thokku','tokku'] },
-  { name: 'Red Chilli Pickle', keywords: ['red chilli','mirchi','mirapakay'] },
-  { name: 'Pandu Mirchi', keywords: ['pandu','pandumirchi'] },
-  { name: 'Kakarakaya (Bitter Gourd)', keywords: ['kakarakaya','bitter gourd','bitter guard'] },
-  { name: 'Ginger Pickle', keywords: ['ginger','allam'] },
-  { name: 'Biryani Masala', keywords: ['biryani'] },
-  { name: 'Podi / Powder', keywords: ['podi','powder','karam'] },
-  { name: 'Sweets', keywords: ['sweet','halwa','laddu','ladoo','mysore pak','bobbatlu'] }
-];
-
-function getMarketPresence(){
-  try { const s = localStorage.getItem('seasalt_presence'); return s ? JSON.parse(s) : DEFAULT_PRESENCE; }
-  catch(e){ return DEFAULT_PRESENCE; }
-}
-function saveMarketPresence(data){
-  localStorage.setItem('seasalt_presence', JSON.stringify(data));
-}
-
-// Platform price data (user-entered — persisted in localStorage)
-function getPlatformPrices(){
-  try { const s = localStorage.getItem('seasalt_platform_prices'); return s ? JSON.parse(s) : []; }
-  catch(e){ return []; }
-}
-function savePlatformPrices(data){
-  localStorage.setItem('seasalt_platform_prices', JSON.stringify(data));
-}
+function getMarketPresence(){try{const s=localStorage.getItem('seasalt_presence');return s?JSON.parse(s):DEFAULT_PRESENCE}catch(e){return DEFAULT_PRESENCE}}
+function saveMarketPresence(d){localStorage.setItem('seasalt_presence',JSON.stringify(d))}
+function getPlatformPrices(){try{const s=localStorage.getItem('seasalt_platform_prices');return s?JSON.parse(s):[]}catch(e){return[]}}
+function savePlatformPrices(d){localStorage.setItem('seasalt_platform_prices',JSON.stringify(d))}
 
 function renderProducts(){
-  const withProducts=WEB_INTEL.filter(w=>w.product_count>0);
-  const withPrices=WEB_INTEL.filter(w=>w.price_min>0);
-  const withEcom=WEB_INTEL.filter(w=>w.has_ecommerce);
   const presence=getMarketPresence();
+  const prices=getPlatformPrices();
+  const self=WEB_INTEL.find(w=>w.is_self);
+  const selfPres=self?presence[self.code]||{}:{};
+  const selfPlatCount=Object.values(selfPres).filter(v=>v).length;
+  const compPlatCounts=WEB_INTEL.filter(w=>!w.is_self).map(w=>Object.values(presence[w.code]||{}).filter(v=>v).length);
+  const avgCompPlat=compPlatCounts.length?Math.round(compPlatCounts.reduce((a,b)=>a+b,0)/compPlatCounts.length*10)/10:0;
 
-  // Stats
-  document.getElementById('sProdBrands').textContent=WEB_INTEL.length||'0';
-  document.getElementById('sProdEcom').textContent=withEcom.length;
-  if(withPrices.length){
-    document.getElementById('sProdMinAvg').textContent='₹'+Math.round(withPrices.reduce((s,w)=>s+parseFloat(w.price_min),0)/withPrices.length);
-    document.getElementById('sProdMaxAvg').textContent='₹'+Math.round(withPrices.reduce((s,w)=>s+parseFloat(w.price_max),0)/withPrices.length);
-    const cheapest=withPrices.reduce((a,b)=>parseFloat(a.price_min)<parseFloat(b.price_min)?a:b);
-    document.getElementById('sProdCheapest').textContent=cheapest.name+' (₹'+Math.round(parseFloat(cheapest.price_min))+')';
+  document.getElementById('sProdBrands').textContent=WEB_INTEL.length;
+  document.getElementById('sProdMyPlat').textContent=selfPlatCount;
+  document.getElementById('sProdAvgPlat').textContent=avgCompPlat;
+  document.getElementById('sProdPriceEntries').textContent=prices.length;
+
+  // SeaSalt vs Market
+  if(self&&self.price_avg>0){
+    const compAvgs=WEB_INTEL.filter(w=>!w.is_self&&w.price_avg>0);
+    if(compAvgs.length){
+      const mktAvg=Math.round(compAvgs.reduce((s,w)=>s+parseFloat(w.price_avg),0)/compAvgs.length);
+      const diff=Math.round(parseFloat(self.price_avg)-mktAvg);
+      document.getElementById('sProdVsMarket').innerHTML=diff>0?`<span style="color:var(--accent-red)">₹${diff} above</span>`:`<span style="color:var(--accent-emerald)">₹${Math.abs(diff)} below</span>`;
+    }
+  }
+  // Biggest platform gap
+  const missingPlats=Object.keys(PLATFORM_META).filter(p=>!selfPres[p]&&WEB_INTEL.some(w=>!w.is_self&&(presence[w.code]||{})[p]));
+  if(missingPlats.length){
+    const top=missingPlats[0];
+    const cnt=WEB_INTEL.filter(w=>!w.is_self&&(presence[w.code]||{})[top]).length;
+    document.getElementById('sProdGap').textContent=`${PLATFORM_META[top].icon} ${PLATFORM_META[top].label} (${cnt} brands)`;
   }
 
-  // Count unique product types detected
-  const allProds = WEB_INTEL.flatMap(w=>safeJSON(w.products));
-  const detectedGroups = PRODUCT_GROUPS.filter(g=>allProds.some(p=>g.keywords.some(k=>p.toLowerCase().includes(k))));
-  document.getElementById('sProdTypes').textContent=detectedGroups.length;
-
-  // ═══ 1. MARKET PRESENCE MAP ═══
-  renderPresenceMap(presence);
-
-  // ═══ 2. PRICE RANGE CHART ═══
-  const pc=document.getElementById('priceChartArea');
-  if(!withPrices.length){pc.innerHTML='<div class="empty-state" style="padding:20px"><p>Run website scan to detect prices</p></div>'}
-  else{
-    const maxP=Math.max(...withPrices.map(w=>parseFloat(w.price_max)||0),1);
-    pc.innerHTML='<div style="display:flex;flex-direction:column;gap:10px">'+withPrices.map(w=>{
-      const mn=parseFloat(w.price_min)||0,mx=parseFloat(w.price_max)||0,av=parseFloat(w.price_avg)||0;
-      const leftPct=Math.round((mn/maxP)*100);
-      const widthPct=Math.max(Math.round(((mx-mn)/maxP)*100),2);
-      return`<div style="display:flex;align-items:center;gap:12px">
-        <div style="width:130px;font-size:12px;font-weight:600;text-align:right;color:${w.is_self?'var(--accent-red)':'var(--text-primary)'}">${esc(w.name)}${w.is_self?' 🔱':''}</div>
-        <div style="flex:1;height:28px;background:var(--bg-elevated);border-radius:6px;position:relative;overflow:hidden">
-          <div style="position:absolute;left:${leftPct}%;width:${widthPct}%;height:100%;background:${w.is_self?'var(--accent-red)':w.color||'var(--accent-blue)'};border-radius:6px;opacity:0.7;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:600">${av?'₹'+Math.round(av):''}</div>
-        </div>
-        <div style="width:160px;font-size:11px;color:var(--text-muted)">₹${Math.round(mn)} — ₹${Math.round(mx)}${av?' (avg ₹'+Math.round(av)+')':''}</div>
-      </div>`;
-    }).join('')+'</div>';
-  }
-
-  // ═══ 3. PRODUCT GROUPS ═══
-  renderProductGroups();
-
-  // ═══ 4. PLATFORM PRICE COMPARISON ═══
-  renderPlatformPrices();
-
-  // ═══ 5. PRODUCTS TABLE ═══
-  const pt=document.getElementById('prodTableArea');
-  if(!WEB_INTEL.length){pt.innerHTML=empty('🛒','No Product Data','Run website scan to extract products and categories.','🌐 Scan Websites','syncWebIntel()');return}
-  let pHtml=`<table class="data-table"><thead><tr><th>Brand</th><th>Products</th><th>Categories</th><th>Price Min</th><th>Price Max</th><th>Price Avg</th><th>E-com</th><th>Platforms</th></tr></thead><tbody>`;
-  for(const w of WEB_INTEL){
-    const prods=safeJSON(w.products);
-    const cats=safeJSON(w.categories);
+  // ═══ BRAND SELECTOR TABS ═══
+  const bs=document.getElementById('brandSelectorArea');
+  // Always show SeaSalt first, then competitors
+  const sorted=[...WEB_INTEL].sort((a,b)=>a.is_self?-1:b.is_self?1:a.name.localeCompare(b.name));
+  bs.innerHTML=sorted.map(w=>{
+    const isActive=SELECTED_BRAND===w.code;
     const bp=presence[w.code]||{};
     const platCount=Object.values(bp).filter(v=>v).length;
-    pHtml+=`<tr style="${w.is_self?'background:rgba(220,38,38,.04)':''}">
-      <td style="font-weight:600;color:var(--text-primary)">${esc(w.name)}${w.is_self?' 🔱':''}</td>
-      <td><span style="font-weight:700">${w.product_count||0}</span>${prods.length?`<div style="font-size:10px;color:var(--text-muted);margin-top:2px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${prods.slice(0,3).map(p=>esc(p)).join(', ')}${prods.length>3?' +'+(prods.length-3)+' more':''}</div>`:''}</td>
-      <td>${cats.length?cats.slice(0,4).map(c=>`<span class="badge badge-violet" style="margin:1px;font-size:9px">${esc(c)}</span>`).join('')+(cats.length>4?`<span style="font-size:10px;color:var(--text-muted)"> +${cats.length-4}</span>`:''):'—'}</td>
-      <td style="font-weight:600;color:var(--accent-emerald)">${w.price_min>0?'₹'+Math.round(parseFloat(w.price_min)):'—'}</td>
-      <td style="font-weight:600;color:var(--accent-red)">${w.price_max>0?'₹'+Math.round(parseFloat(w.price_max)):'—'}</td>
-      <td>${w.price_avg>0?'₹'+Math.round(parseFloat(w.price_avg)):'—'}</td>
-      <td>${w.has_ecommerce?'<span class="badge badge-green">✓</span>':'<span class="badge badge-red">✗</span>'}</td>
-      <td><span class="badge badge-blue">${platCount}</span></td>
-    </tr>`;
-  }
-  pHtml+='</tbody></table>';
-  pt.innerHTML=pHtml;
-
-  // ═══ 6. CATEGORY CLOUD ═══
-  const allCats={};
-  WEB_INTEL.forEach(w=>{const cats=safeJSON(w.categories);cats.forEach(c=>{if(!allCats[c])allCats[c]=[];allCats[c].push(w.code)})});
-  const catEl=document.getElementById('prodCatsArea');
-  if(!Object.keys(allCats).length){catEl.innerHTML='<div class="empty-state" style="padding:20px"><p>No categories detected yet</p></div>';return}
-  catEl.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:8px;padding:8px">'+Object.entries(allCats).sort((a,b)=>b[1].length-a[1].length).map(([cat,codes])=>`<div style="background:var(--bg-elevated);border-radius:8px;padding:8px 12px;font-size:12px"><div style="font-weight:600">${esc(cat)}</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">${codes.join(', ')} (${codes.length} brand${codes.length>1?'s':''})</div></div>`).join('')+'</div>';
-}
-
-// ═══ RENDER: Market Presence Map ═══
-function renderPresenceMap(presence){
-  const area=document.getElementById('presenceMapArea');
-  if(!WEB_INTEL.length){area.innerHTML=empty('🗺️','No Data','Run website scan first.','🌐 Scan Websites','syncWebIntel()');return}
-
-  const platforms=Object.keys(PLATFORM_META);
-  let html=`<div style="overflow-x:auto"><table class="data-table"><thead><tr><th style="min-width:120px">Brand</th>`;
-  for(const p of platforms){
-    html+=`<th style="text-align:center;font-size:9px;min-width:65px">${PLATFORM_META[p].icon}<br>${PLATFORM_META[p].label}</th>`;
-  }
-  html+=`<th style="text-align:center">Total</th></tr></thead><tbody>`;
-
-  for(const w of WEB_INTEL){
-    const bp=presence[w.code]||{};
-    const count=Object.values(bp).filter(v=>v).length;
-    html+=`<tr style="${w.is_self?'background:rgba(220,38,38,.04)':''}">
-      <td style="font-weight:600;color:${w.is_self?'var(--accent-red)':'var(--text-primary)'}"><span class="comp-dot" style="background:${w.color||'#666'}"></span> ${esc(w.name)}${w.is_self?' 🔱':''}</td>`;
-    for(const p of platforms){
-      const active=bp[p]||false;
-      html+=`<td style="text-align:center">${active?`<span style="color:${PLATFORM_META[p].color};font-size:16px">●</span>`:'<span style="color:#ddd;font-size:14px">○</span>'}</td>`;
-    }
-    html+=`<td style="text-align:center;font-weight:700">${count}<span style="font-size:10px;color:var(--text-muted)">/${platforms.length}</span></td></tr>`;
-  }
-  html+='</tbody></table></div>';
-
-  // Platform summary
-  const platformCounts=platforms.map(p=>({
-    key:p, ...PLATFORM_META[p],
-    count:WEB_INTEL.filter(w=>(presence[w.code]||{})[p]).length
-  })).sort((a,b)=>b.count-a.count);
-
-  html+=`<div style="display:flex;flex-wrap:wrap;gap:8px;padding:12px 0">${platformCounts.map(p=>
-    `<div style="background:${p.count>0?p.color+'15':'var(--bg-elevated)'};border:1px solid ${p.count>0?p.color+'40':'var(--border-subtle)'};border-radius:8px;padding:8px 12px;min-width:100px;text-align:center">
-      <div style="font-size:18px">${p.icon}</div>
-      <div style="font-size:11px;font-weight:600;margin-top:2px">${p.label}</div>
-      <div style="font-size:20px;font-weight:800;color:${p.color}">${p.count}</div>
-      <div style="font-size:10px;color:var(--text-muted)">brands</div>
-    </div>`
-  ).join('')}</div>`;
-
-  area.innerHTML=html;
-}
-
-// ═══ RENDER: Product Groups ═══
-function renderProductGroups(){
-  const area=document.getElementById('prodGroupArea');
-  if(!WEB_INTEL.length){area.innerHTML='<div class="empty-state" style="padding:20px"><p>No product data yet</p></div>';return}
-
-  const groups=[];
-  for(const g of PRODUCT_GROUPS){
-    const matches=[];
-    for(const w of WEB_INTEL){
-      const prods=safeJSON(w.products);
-      const prices=[...safeJSON(w.categories)]; // not prices, but we use price_min/max
-      const found=prods.filter(p=>g.keywords.some(k=>p.toLowerCase().includes(k)));
-      if(found.length>0){
-        matches.push({ brand: w.name, code: w.code, color: w.color, is_self: w.is_self,
-          products: found, price_min: parseFloat(w.price_min)||0, price_max: parseFloat(w.price_max)||0, price_avg: parseFloat(w.price_avg)||0 });
-      }
-    }
-    if(matches.length>0){
-      const avgPrice=matches.filter(m=>m.price_avg>0).length>0?Math.round(matches.filter(m=>m.price_avg>0).reduce((s,m)=>s+m.price_avg,0)/matches.filter(m=>m.price_avg>0).length):0;
-      groups.push({ ...g, matches, avgPrice });
-    }
-  }
-
-  if(!groups.length){area.innerHTML='<div class="empty-state" style="padding:20px"><p>No products detected yet — scan websites to auto-detect product types</p></div>';return}
-
-  let html='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;padding:8px">';
-  for(const g of groups.sort((a,b)=>b.matches.length-a.matches.length)){
-    html+=`<div style="background:var(--bg-elevated);border-radius:10px;padding:14px;border:1px solid var(--border-subtle)">
-      <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
-        <div style="font-size:14px;font-weight:700">${esc(g.name)}</div>
-        <span class="badge badge-blue">${g.matches.length} brand${g.matches.length>1?'s':''}</span>
+    return`<div onclick="selectBrand('${w.code}')" style="cursor:pointer;padding:10px 16px;border-radius:10px;border:2px solid ${isActive?w.color||'var(--accent-blue)':'var(--border-subtle)'};background:${isActive?(w.color||'#2563eb')+'12':'var(--bg-surface)'};min-width:120px;transition:all .15s;text-align:center" onmouseenter="this.style.borderColor='${w.color||'var(--accent-blue)'}'" onmouseleave="this.style.borderColor='${isActive?w.color||'var(--accent-blue)':'var(--border-subtle)'}'" >
+      <div style="display:flex;align-items:center;gap:6px;justify-content:center"><span class="comp-dot" style="background:${w.color||'#666'}"></span><span style="font-weight:700;font-size:13px;color:${w.is_self?'var(--accent-red)':'var(--text-primary)'}">${esc(w.name)}${w.is_self?' 🔱':''}</span></div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:6px">
+        <span style="font-size:10px;color:var(--text-muted)">${platCount} platforms</span>
+        <span style="font-size:10px;color:var(--text-muted)">₹${w.price_avg>0?Math.round(parseFloat(w.price_avg)):'—'} avg</span>
       </div>
-      ${g.avgPrice>0?`<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Market Avg: <span style="font-weight:700;color:var(--accent-emerald);font-size:14px">₹${g.avgPrice}</span></div>`:''}
-      <div style="display:flex;flex-direction:column;gap:4px">
-        ${g.matches.map(m=>`<div style="display:flex;align-items:center;gap:6px;font-size:12px">
-          <span class="comp-dot" style="background:${m.color||'#666'};width:8px;height:8px"></span>
-          <span style="font-weight:600;color:${m.is_self?'var(--accent-red)':'var(--text-primary)'}${m.is_self?';font-weight:700':''}">${esc(m.brand)}${m.is_self?' 🔱':''}</span>
-          ${m.price_avg>0?`<span style="margin-left:auto;color:var(--text-muted);font-size:11px">~₹${Math.round(m.price_avg)}</span>`:''}
-        </div>`).join('')}
+    </div>`}).join('');
+
+  // ═══ BRAND DETAIL PANEL ═══
+  if(SELECTED_BRAND){
+    document.getElementById('brandDetailPanel').style.display='block';
+    renderBrandDetail(SELECTED_BRAND, presence, prices);
+  } else {
+    document.getElementById('brandDetailPanel').style.display='none';
+  }
+
+  // ═══ PRODUCT × BRAND MATRIX ═══
+  renderProductMatrix(prices);
+
+  // ═══ FULL PRESENCE GRID ═══
+  renderFullPresence(presence);
+
+  // ═══ PRICE RANGE CHART ═══
+  renderPriceChart();
+}
+
+function selectBrand(code){
+  SELECTED_BRAND=SELECTED_BRAND===code?null:code;
+  renderProducts();
+  if(SELECTED_BRAND) document.getElementById('brandDetailPanel').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ═══ BRAND DETAIL VIEW ═══
+function renderBrandDetail(code, presence, prices){
+  const w=WEB_INTEL.find(x=>x.code===code);
+  if(!w)return;
+  const self=WEB_INTEL.find(x=>x.is_self);
+  const bp=presence[code]||{};
+  const sp=self?presence[self.code]||{}:{};
+
+  // Header
+  document.getElementById('brandHeaderCard').style.borderLeftColor=w.color||'var(--accent-blue)';
+  document.getElementById('brandHeaderArea').innerHTML=`
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="width:48px;height:48px;border-radius:12px;background:${w.color||'#666'}20;display:flex;align-items:center;justify-content:center"><span class="comp-dot" style="background:${w.color||'#666'};width:20px;height:20px"></span></div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:20px;font-weight:800;color:${w.is_self?'var(--accent-red)':'var(--text-primary)'}">${esc(w.name)}${w.is_self?' 🔱':''}</div>
+        <div style="font-size:12px;color:var(--text-muted)">${esc(w.url)} · Site Score: <b>${w.site_score||0}/100</b></div>
+      </div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div style="text-align:center"><div style="font-size:22px;font-weight:800">${w.product_count||0}</div><div style="font-size:10px;color:var(--text-muted)">Products</div></div>
+        <div style="text-align:center"><div style="font-size:22px;font-weight:800">${Object.values(bp).filter(v=>v).length}</div><div style="font-size:10px;color:var(--text-muted)">Platforms</div></div>
+        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--accent-emerald)">${w.price_min>0?'₹'+Math.round(parseFloat(w.price_min)):'—'}</div><div style="font-size:10px;color:var(--text-muted)">Min Price</div></div>
+        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--accent-red)">${w.price_max>0?'₹'+Math.round(parseFloat(w.price_max)):'—'}</div><div style="font-size:10px;color:var(--text-muted)">Max Price</div></div>
       </div>
     </div>`;
+
+  // Presence comparison vs SeaSalt
+  document.getElementById('presenceTitle').textContent=`🗺️ ${w.name} — Market Presence`;
+  const platforms=Object.keys(PLATFORM_META);
+  let presHtml=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;padding:8px 0">`;
+  for(const p of platforms){
+    const them=bp[p]||false;
+    const us=sp[p]||false;
+    let status='',bg='',border='';
+    if(them&&us){status='Both ✅';bg='rgba(5,150,105,.08)';border='var(--accent-emerald)'}
+    else if(them&&!us){status='They have, you don\'t ⚠️';bg='rgba(220,38,38,.06)';border='var(--accent-red)'}
+    else if(!them&&us){status='Your advantage 💪';bg='rgba(37,99,235,.06)';border='var(--accent-blue)'}
+    else{status='Neither';bg='var(--bg-elevated)';border='var(--border-subtle)'}
+    presHtml+=`<div style="background:${bg};border:1px solid ${border};border-radius:10px;padding:12px;text-align:center">
+      <div style="font-size:20px">${PLATFORM_META[p].icon}</div>
+      <div style="font-size:12px;font-weight:600;margin:4px 0">${PLATFORM_META[p].label}</div>
+      <div style="display:flex;justify-content:center;gap:8px;margin:6px 0">
+        <span style="font-size:10px;padding:2px 6px;border-radius:4px;background:${them?PLATFORM_META[p].color+'20':'var(--bg-elevated)'};color:${them?PLATFORM_META[p].color:'var(--text-muted)'};font-weight:600">${w.code} ${them?'✓':'✗'}</span>
+        <span style="font-size:10px;padding:2px 6px;border-radius:4px;background:${us?'rgba(220,38,38,.1)':'var(--bg-elevated)'};color:${us?'var(--accent-red)':'var(--text-muted)'};font-weight:600">SS ${us?'✓':'✗'}</span>
+      </div>
+      <div style="font-size:10px;color:${them&&!us?'var(--accent-red)':!them&&us?'var(--accent-blue)':'var(--text-muted)'};font-weight:600">${status}</div>
+    </div>`;
   }
-  html+='</div>';
-  area.innerHTML=html;
+  presHtml+=`</div>`;
+  document.getElementById('presenceCompareArea').innerHTML=presHtml;
+
+  // Products list
+  document.getElementById('prodListTitle').textContent=`🛒 ${w.name} — Products (${w.product_count||0})`;
+  const prods=safeJSON(w.products);
+  const cats=safeJSON(w.categories);
+  if(!prods.length){
+    document.getElementById('brandProductsArea').innerHTML=`<div style="padding:20px;text-align:center;color:var(--text-muted)">No products detected on ${w.name}'s website. Their site may not list products directly, or products are loaded dynamically.</div>`;
+  } else {
+    let prodHtml=`<div style="margin-bottom:10px;display:flex;flex-wrap:wrap;gap:4px">${cats.map(c=>`<span class="badge badge-violet">${esc(c)}</span>`).join('')}</div>`;
+    prodHtml+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px">`;
+    prods.forEach((p,i)=>{
+      prodHtml+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-elevated);border-radius:8px;font-size:12px">
+        <span style="color:var(--text-muted);font-size:10px;min-width:20px">#${i+1}</span>
+        <span style="font-weight:600">${esc(p)}</span>
+      </div>`;
+    });
+    prodHtml+=`</div>`;
+    document.getElementById('brandProductsArea').innerHTML=prodHtml;
+  }
+
+  // Platform pricing for this brand
+  document.getElementById('platPriceTitle').textContent=`💰 ${w.name} — Platform Pricing`;
+  const brandPrices=prices.filter(p=>p.brand===w.name);
+  if(!brandPrices.length){
+    document.getElementById('brandPlatformPriceArea').innerHTML=`<div style="padding:20px;text-align:center;color:var(--text-muted)">
+      No platform price data for ${w.name} yet.<br><button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="openAddPlatformPrice('${esc(w.name)}')">➕ Add ${w.name} Prices</button>
+    </div>`;
+  } else {
+    // Group by product
+    const byProd={};
+    brandPrices.forEach(p=>{if(!byProd[p.product])byProd[p.product]={};byProd[p.product][p.platform]=p.price});
+    let ppHtml=`<div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Product</th>`;
+    const usedPlats=[...new Set(brandPrices.map(p=>p.platform))];
+    usedPlats.forEach(p=>{const m=PLATFORM_META[p]||{icon:'🏪',label:p};ppHtml+=`<th style="text-align:center">${m.icon} ${m.label}</th>`});
+    ppHtml+=`<th>Δ Gap</th></tr></thead><tbody>`;
+    for(const[prod,plats]of Object.entries(byProd)){
+      const vals=Object.values(plats).filter(v=>v>0);
+      const gap=vals.length>=2?Math.round(Math.max(...vals)-Math.min(...vals)):0;
+      const gapPct=vals.length>=2?Math.round(((Math.max(...vals)-Math.min(...vals))/Math.min(...vals))*100):0;
+      ppHtml+=`<tr><td style="font-weight:600">${esc(prod)}</td>`;
+      usedPlats.forEach(p=>{
+        const v=plats[p];const isMin=v&&vals.length>=2&&v===Math.min(...vals);const isMax=v&&vals.length>=2&&v===Math.max(...vals);
+        ppHtml+=`<td style="text-align:center;font-weight:700;${isMin?'color:var(--accent-emerald)':isMax?'color:var(--accent-red)':''}">${v?'₹'+v:'—'}</td>`;
+      });
+      ppHtml+=`<td style="text-align:center"><span class="badge ${gapPct>15?'badge-red':gapPct>5?'badge-amber':'badge-green'}">${gap>0?'₹'+gap+' ('+gapPct+'%)':'—'}</span></td></tr>`;
+    }
+    ppHtml+=`</tbody></table></div>`;
+    document.getElementById('brandPlatformPriceArea').innerHTML=ppHtml;
+  }
 }
 
-// ═══ RENDER: Platform Price Comparison ═══
-function renderPlatformPrices(){
-  const area=document.getElementById('platformPriceArea');
-  const prices=getPlatformPrices();
-
+// ═══ PRODUCT × BRAND MATRIX ═══
+function renderProductMatrix(prices){
+  const area=document.getElementById('productMatrixArea');
   if(!prices.length){
     area.innerHTML=`<div class="empty-state" style="padding:30px">
-      <div class="es-icon">📊</div>
-      <h3>Track Price Variations Across Platforms</h3>
-      <p>Add price data from Amazon, Swiggy, Zomato, etc. to compare how competitors price the same product differently on each platform.</p>
+      <div class="es-icon">📊</div><h3>Product × Brand Price Matrix</h3>
+      <p>Add price entries for specific products (e.g. "Chicken Pickle 250g") across brands to see a side-by-side comparison with SeaSalt 🔱 always in the first column.</p>
       <button class="btn btn-primary btn-sm" onclick="openAddPlatformPrice()">➕ Add First Price Entry</button>
     </div>`;
     return;
   }
 
-  // Group by brand
-  const byBrand={};
-  prices.forEach(p=>{
-    if(!byBrand[p.brand])byBrand[p.brand]={};
-    if(!byBrand[p.brand][p.product])byBrand[p.brand][p.product]={};
-    byBrand[p.brand][p.product][p.platform]=p.price;
+  // Get all unique products and brands
+  const allProducts=[...new Set(prices.map(p=>p.product))].sort();
+  const allBrands=[...new Set(prices.map(p=>p.brand))];
+  // Put SeaSalt first
+  const self=WEB_INTEL.find(w=>w.is_self);
+  const selfName=self?self.name:'SeaSalt Pickles';
+  const sortedBrands=[selfName,...allBrands.filter(b=>b!==selfName)];
+
+  let html=`<div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Product</th>`;
+  sortedBrands.forEach(b=>{
+    const w=WEB_INTEL.find(x=>x.name===b);
+    const isSelf=w&&w.is_self;
+    html+=`<th style="text-align:center;${isSelf?'background:rgba(220,38,38,.04);color:var(--accent-red)':''}">${isSelf?'🔱 ':''}<span style="font-weight:700">${esc(b)}</span></th>`;
   });
+  html+=`<th style="text-align:center">Mkt Avg</th></tr></thead><tbody>`;
 
-  let html=`<div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Brand</th><th>Product</th>`;
-  const platKeys=[...new Set(prices.map(p=>p.platform))];
-  for(const pk of platKeys){
-    const meta=PLATFORM_META[pk]||{icon:'🏪',label:pk};
-    html+=`<th style="text-align:center">${meta.icon} ${meta.label}</th>`;
+  for(const prod of allProducts){
+    html+=`<tr><td style="font-weight:600">${esc(prod)}</td>`;
+    const rowPrices=[];
+    sortedBrands.forEach(b=>{
+      // Get avg price across all platforms for this brand+product
+      const entries=prices.filter(p=>p.brand===b&&p.product===prod);
+      const avg=entries.length?Math.round(entries.reduce((s,e)=>s+e.price,0)/entries.length):0;
+      if(avg>0)rowPrices.push(avg);
+      const w=WEB_INTEL.find(x=>x.name===b);
+      const isSelf=w&&w.is_self;
+      const isMin=avg>0&&rowPrices.length>=2&&avg<=Math.min(...rowPrices);
+      html+=`<td style="text-align:center;font-weight:700;${isSelf?'background:rgba(220,38,38,.04);':''}">${avg>0?`<span style="color:${isMin?'var(--accent-emerald)':'var(--text-primary)'}">₹${avg}</span><div style="font-size:9px;color:var(--text-muted)">${entries.length} platform${entries.length>1?'s':''}</div>`:'<span style="color:var(--text-muted)">—</span>'}</td>`;
+    });
+    const mktAvg=rowPrices.length?Math.round(rowPrices.reduce((a,b)=>a+b,0)/rowPrices.length):0;
+    html+=`<td style="text-align:center;font-weight:700;color:var(--accent-blue)">${mktAvg>0?'₹'+mktAvg:'—'}</td></tr>`;
   }
-  html+=`<th style="text-align:center">Δ Variation</th></tr></thead><tbody>`;
-
-  for(const [brand, products] of Object.entries(byBrand)){
-    for(const [product, platforms] of Object.entries(products)){
-      const pvals=Object.values(platforms).filter(v=>v>0);
-      const variation=pvals.length>=2?Math.round(Math.max(...pvals)-Math.min(...pvals)):0;
-      const variationPct=pvals.length>=2?Math.round(((Math.max(...pvals)-Math.min(...pvals))/Math.min(...pvals))*100):0;
-      html+=`<tr>
-        <td style="font-weight:600">${esc(brand)}</td>
-        <td>${esc(product)}</td>`;
-      for(const pk of platKeys){
-        const val=platforms[pk];
-        const isMin=val&&pvals.length>=2&&val===Math.min(...pvals);
-        const isMax=val&&pvals.length>=2&&val===Math.max(...pvals);
-        html+=`<td style="text-align:center;font-weight:600;${isMin?'color:var(--accent-emerald)':isMax?'color:var(--accent-red)':''}">${val?'₹'+val:'—'}</td>`;
-      }
-      html+=`<td style="text-align:center"><span class="badge ${variationPct>15?'badge-red':variationPct>5?'badge-amber':'badge-green'}">${variation>0?'₹'+variation+' ('+variationPct+'%)':'—'}</span></td></tr>`;
-    }
-  }
-  html+='</tbody></table></div>';
+  html+=`</tbody></table></div>`;
   area.innerHTML=html;
+}
+
+// ═══ FULL MARKET PRESENCE GRID ═══
+function renderFullPresence(presence){
+  const area=document.getElementById('fullPresenceArea');
+  if(!WEB_INTEL.length){area.innerHTML=empty('🗺️','No Data','Run website scan first.','🌐 Scan','syncWebIntel()');return}
+  const platforms=Object.keys(PLATFORM_META);
+  const self=WEB_INTEL.find(w=>w.is_self);
+  const sp=self?presence[self.code]||{}:{};
+
+  let html=`<div style="overflow-x:auto"><table class="data-table"><thead><tr><th style="min-width:120px">Brand</th>`;
+  platforms.forEach(p=>{
+    const us=sp[p]||false;
+    html+=`<th style="text-align:center;font-size:9px;min-width:60px;${us?'':'background:rgba(220,38,38,.04)'}">${PLATFORM_META[p].icon}<br>${PLATFORM_META[p].label}${!us?'<br><span style="color:var(--accent-red);font-size:8px">SS ✗</span>':''}</th>`;
+  });
+  html+=`<th style="text-align:center">Total</th></tr></thead><tbody>`;
+
+  const sorted=[...WEB_INTEL].sort((a,b)=>a.is_self?-1:b.is_self?1:a.name.localeCompare(b.name));
+  sorted.forEach(w=>{
+    const bp=presence[w.code]||{};
+    const count=Object.values(bp).filter(v=>v).length;
+    html+=`<tr style="${w.is_self?'background:rgba(220,38,38,.04)':'cursor:pointer'}" ${!w.is_self?`onclick="selectBrand('${w.code}')"`:''}>
+      <td style="font-weight:600;color:${w.is_self?'var(--accent-red)':'var(--text-primary)'}"><span class="comp-dot" style="background:${w.color||'#666'}"></span> ${esc(w.name)}${w.is_self?' 🔱':''}</td>`;
+    platforms.forEach(p=>{
+      const active=bp[p]||false;
+      const us=sp[p]||false;
+      const gap=active&&!us;
+      html+=`<td style="text-align:center;${gap?'background:rgba(220,38,38,.06)':''}">${active?`<span style="color:${PLATFORM_META[p].color};font-size:16px;font-weight:bold">●</span>`:'<span style="color:#e2e5e9;font-size:14px">○</span>'}</td>`;
+    });
+    html+=`<td style="text-align:center;font-weight:700">${count}<span style="font-size:10px;color:var(--text-muted)">/${platforms.length}</span></td></tr>`;
+  });
+  html+=`</tbody></table></div>`;
+
+  // Summary: platforms where competitors are but SeaSalt isn't
+  const gaps=platforms.filter(p=>!sp[p]&&WEB_INTEL.some(w=>!w.is_self&&(presence[w.code]||{})[p]));
+  if(gaps.length){
+    html+=`<div style="margin-top:12px;padding:12px;background:rgba(220,38,38,.04);border:1px solid rgba(220,38,38,.2);border-radius:10px">
+      <div style="font-size:12px;font-weight:700;color:var(--accent-red);margin-bottom:6px">⚠️ Platform Gaps — Competitors are here but SeaSalt is not:</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${gaps.map(p=>{
+        const cnt=WEB_INTEL.filter(w=>!w.is_self&&(presence[w.code]||{})[p]).length;
+        const names=WEB_INTEL.filter(w=>!w.is_self&&(presence[w.code]||{})[p]).map(w=>w.name);
+        return`<div style="background:#fff;border:1px solid rgba(220,38,38,.2);border-radius:8px;padding:8px 12px">
+          <span style="font-size:16px">${PLATFORM_META[p].icon}</span> <b>${PLATFORM_META[p].label}</b>
+          <span class="badge badge-red" style="margin-left:4px">${cnt} brand${cnt>1?'s':''}</span>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${names.join(', ')}</div>
+        </div>`}).join('')}</div>
+    </div>`;
+  }
+  area.innerHTML=html;
+}
+
+// ═══ PRICE RANGE CHART ═══
+function renderPriceChart(){
+  const pc=document.getElementById('priceChartArea');
+  const withPrices=WEB_INTEL.filter(w=>w.price_min>0);
+  if(!withPrices.length){pc.innerHTML='<div class="empty-state" style="padding:20px"><p>Run website scan to detect prices</p></div>';return}
+  const sorted=[...withPrices].sort((a,b)=>a.is_self?-1:b.is_self?1:parseFloat(a.price_avg||0)-parseFloat(b.price_avg||0));
+  const maxP=Math.max(...sorted.map(w=>parseFloat(w.price_max)||0),1);
+  pc.innerHTML='<div style="display:flex;flex-direction:column;gap:10px">'+sorted.map(w=>{
+    const mn=parseFloat(w.price_min)||0,mx=parseFloat(w.price_max)||0,av=parseFloat(w.price_avg)||0;
+    const leftPct=Math.round((mn/maxP)*100),widthPct=Math.max(Math.round(((mx-mn)/maxP)*100),2);
+    return`<div style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:2px 0;border-radius:6px;transition:background .15s" onclick="selectBrand('${w.code}')" onmouseenter="this.style.background='var(--bg-elevated)'" onmouseleave="this.style.background='transparent'">
+      <div style="width:130px;font-size:12px;font-weight:${w.is_self?'800':'600'};text-align:right;color:${w.is_self?'var(--accent-red)':'var(--text-primary)'}">${esc(w.name)}${w.is_self?' 🔱':''}</div>
+      <div style="flex:1;height:28px;background:var(--bg-elevated);border-radius:6px;position:relative;overflow:hidden">
+        <div style="position:absolute;left:${leftPct}%;width:${widthPct}%;height:100%;background:${w.is_self?'var(--accent-red)':w.color||'var(--accent-blue)'};border-radius:6px;opacity:${SELECTED_BRAND===w.code?'1':'0.6'};display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;transition:opacity .2s">${av?'₹'+Math.round(av):''}</div>
+      </div>
+      <div style="width:160px;font-size:11px;color:var(--text-muted)">₹${Math.round(mn)} — ₹${Math.round(mx)}</div>
+    </div>`;
+  }).join('')+'</div>';
 }
 
 // ═══ MODAL: Edit Market Presence ═══
@@ -801,79 +857,52 @@ function openEditPresence(){
   const presence=getMarketPresence();
   const platforms=Object.keys(PLATFORM_META);
   let html=`<div class="modal-title">✏️ Edit Market Presence</div>
-    <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">Mark which platforms each brand operates on</p>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">Mark which platforms each brand sells on</p>
     <div style="overflow-x:auto;max-height:60vh"><table class="data-table"><thead><tr><th>Brand</th>`;
-  for(const p of platforms) html+=`<th style="text-align:center;font-size:9px">${PLATFORM_META[p].icon}<br>${PLATFORM_META[p].label.split(' ')[0]}</th>`;
+  platforms.forEach(p=>html+=`<th style="text-align:center;font-size:9px">${PLATFORM_META[p].icon}<br>${PLATFORM_META[p].label.split(' ')[0]}</th>`);
   html+=`</tr></thead><tbody>`;
-
-  for(const w of WEB_INTEL){
+  WEB_INTEL.forEach(w=>{
     const bp=presence[w.code]||{};
-    html+=`<tr><td style="font-weight:600;font-size:12px">${esc(w.name)}</td>`;
-    for(const p of platforms){
-      html+=`<td style="text-align:center"><input type="checkbox" id="pres_${w.code}_${p}" ${bp[p]?'checked':''}></td>`;
-    }
+    html+=`<tr${w.is_self?' style="background:rgba(220,38,38,.04)"':''}><td style="font-weight:600;font-size:12px">${esc(w.name)}${w.is_self?' 🔱':''}</td>`;
+    platforms.forEach(p=>html+=`<td style="text-align:center"><input type="checkbox" id="pres_${w.code}_${p}" ${bp[p]?'checked':''}></td>`);
     html+=`</tr>`;
-  }
+  });
   html+=`</tbody></table></div>
-    <div style="display:flex;gap:10px;margin-top:12px">
-      <button class="btn btn-emerald" onclick="savePresenceFromModal()">💾 Save</button>
-      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-    </div>`;
+    <div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-emerald" onclick="savePresenceFromModal()">💾 Save</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>`;
   showModal(html);
 }
-
 function savePresenceFromModal(){
-  const presence=getMarketPresence();
-  const platforms=Object.keys(PLATFORM_META);
-  for(const w of WEB_INTEL){
-    if(!presence[w.code])presence[w.code]={};
-    for(const p of platforms){
-      const cb=document.getElementById('pres_'+w.code+'_'+p);
-      presence[w.code][p]=cb?cb.checked:false;
-    }
-  }
-  saveMarketPresence(presence);
-  closeModal();
-  renderProducts();
-  toast('✅ Market presence updated');
+  const presence=getMarketPresence();const platforms=Object.keys(PLATFORM_META);
+  WEB_INTEL.forEach(w=>{if(!presence[w.code])presence[w.code]={};platforms.forEach(p=>{const cb=document.getElementById('pres_'+w.code+'_'+p);presence[w.code][p]=cb?cb.checked:false})});
+  saveMarketPresence(presence);closeModal();renderProducts();toast('✅ Market presence updated');
 }
 
 // ═══ MODAL: Add Platform Price ═══
-function openAddPlatformPrice(){
+function openAddPlatformPrice(defaultBrand){
   const brands=WEB_INTEL.map(w=>w.name);
   const platforms=Object.keys(PLATFORM_META);
-  let html=`<div class="modal-title">➕ Add Platform Price Data</div>
-    <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">Track how the same product is priced across different platforms</p>
+  const selBrand=defaultBrand||brands[0]||'';
+  let html=`<div class="modal-title">➕ Add Platform Price</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">Track how products are priced across platforms</p>
     <div class="field-group"><label class="field-label">Brand *</label>
-      <select class="intel-input" id="ppBrand">${brands.map(b=>`<option>${b}</option>`).join('')}</select></div>
+      <select class="intel-input" id="ppBrand">${brands.map(b=>`<option ${b===selBrand?'selected':''}>${b}</option>`).join('')}</select></div>
     <div class="field-group"><label class="field-label">Product Name *</label>
       <input class="intel-input" id="ppProduct" placeholder="e.g. Chicken Pickle 250g"></div>
     <div class="field-group"><label class="field-label">Platform *</label>
       <select class="intel-input" id="ppPlatform">${platforms.map(p=>`<option value="${p}">${PLATFORM_META[p].icon} ${PLATFORM_META[p].label}</option>`).join('')}</select></div>
     <div class="field-group"><label class="field-label">Price (₹) *</label>
       <input class="intel-input" type="number" id="ppPrice" placeholder="e.g. 299"></div>
-    <div style="display:flex;gap:10px;margin-top:8px">
-      <button class="btn btn-emerald" onclick="savePlatformPrice()">💾 Save</button>
-      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-    </div>`;
+    <div style="display:flex;gap:10px;margin-top:8px"><button class="btn btn-emerald" onclick="savePlatformPrice()">💾 Save</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>`;
   showModal(html);
 }
-
 function savePlatformPrice(){
-  const brand=document.getElementById('ppBrand').value;
-  const product=document.getElementById('ppProduct').value.trim();
-  const platform=document.getElementById('ppPlatform').value;
-  const price=parseFloat(document.getElementById('ppPrice').value);
+  const brand=document.getElementById('ppBrand').value,product=document.getElementById('ppProduct').value.trim(),platform=document.getElementById('ppPlatform').value,price=parseFloat(document.getElementById('ppPrice').value);
   if(!product||!price){toast('⚠️ Fill all fields');return}
   const prices=getPlatformPrices();
-  // Update existing or add new
-  const existing=prices.findIndex(p=>p.brand===brand&&p.product===product&&p.platform===platform);
-  if(existing>=0)prices[existing].price=price;
-  else prices.push({brand,product,platform,price,added:new Date().toISOString()});
-  savePlatformPrices(prices);
-  closeModal();
-  renderProducts();
-  toast('✅ Price added: '+brand+' '+product+' on '+PLATFORM_META[platform].label+' = ₹'+price);
+  const idx=prices.findIndex(p=>p.brand===brand&&p.product===product&&p.platform===platform);
+  if(idx>=0)prices[idx].price=price;else prices.push({brand,product,platform,price,added:new Date().toISOString()});
+  savePlatformPrices(prices);closeModal();renderProducts();
+  toast('✅ ₹'+price+' — '+brand+' · '+product+' · '+PLATFORM_META[platform].label);
 }
 
 function safeJSON(v){try{return typeof v==='string'?JSON.parse(v):(Array.isArray(v)?v:[])}catch(e){return[]}}
