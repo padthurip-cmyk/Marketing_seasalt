@@ -18,15 +18,15 @@ const SB_KEY = process.env.SUPABASE_KEY || '';
 const SITES = [
   { name: "SeaSalt Pickles", code: "SS", url: "seasaltpickles.com", is_self: true, color: "#dc2626" },
   { name: "Vellanki Foods", code: "VF", url: "vellankifoods.com", color: "#C2410C" },
-  { name: "Tulasi Pickles", code: "TP", url: "tulasipickles.com", color: "#16A34A" },
-  { name: "Aavarampoo Pickles", code: "AP", url: "aavarampoo.com", color: "#7C3AED" },
-  { name: "Nirupama Pickles", code: "NP", url: "nirupamapickles.in", color: "#DC2626" },
-  { name: "Priya Pickles", code: "PP", url: "priyapickles.com", color: "#0891B2" },
-  { name: "Ammas Homemade Pickles", code: "AH", url: "ammashomemade.in", color: "#EA580C" },
-  { name: "Sitara Pickles", code: "SP", url: "sitarapickles.com", color: "#65A30D" },
-  { name: "Ruchulu Pickles", code: "RP", url: "ruchulupickles.com", color: "#9333EA" },
-  { name: "Andhra Pickles", code: "AC", url: "andhrapickles.co", color: "#0369A1" },
-  { name: "Hyderabad Pickles", code: "HP", url: "hyderabadpickles.in", color: "#B91C1C" }
+  { name: "Priya Foods", code: "PP", url: "priyafoods.com", color: "#0891B2" },
+  { name: "Sitara Foods", code: "SP", url: "sitarafoods.com", color: "#65A30D" },
+  { name: "Fia Home Foods", code: "FH", url: "fiahomefoods.com", color: "#7C3AED" },
+  { name: "Jampani Foods", code: "JF", url: "jampanifoods.com", color: "#EA580C" },
+  { name: "Jandhyala Foods", code: "JD", url: "jandhyalafoods.in", color: "#9333EA" },
+  { name: "Nirmala Foods", code: "NF", url: "nirmalafoods.com", color: "#DC2626" },
+  { name: "Swagruha Pickles", code: "SG", url: "swagruhapickles.com", color: "#0369A1" },
+  { name: "Amaravathi Pickles", code: "AM", url: "amaravathipickles.com", color: "#B91C1C" },
+  { name: "Konaseema Foods", code: "KF", url: "konaseemaspecialfoods.com", color: "#16A34A" }
 ];
 
 // ═══════ 1. GOOGLE PAGESPEED INSIGHTS ═══════
