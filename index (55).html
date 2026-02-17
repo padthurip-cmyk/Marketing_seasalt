@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SeaSalt Intelligence Hub</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg-deep:#0c0a09;--bg-surface:#1c1917;--bg-card:#231f1d;--bg-elevated:#292524;--border:#3a3532;--border-subtle:#2a2623;--text-primary:#fafaf9;--text-secondary:#a8a29e;--text-muted:#78716c;--accent-red:#ef4444;--accent-orange:#f97316;--accent-amber:#f59e0b;--accent-emerald:#10b981;--accent-blue:#3b82f6;--accent-violet:#8b5cf6;--accent-pink:#ec4899}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg-deep);color:var(--text-primary);min-height:100vh;display:flex;overflow:hidden}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+.sidebar{width:240px;min-width:240px;background:var(--bg-surface);border-right:1px solid var(--border-subtle);display:flex;flex-direction:column;height:100vh;z-index:50}
+.sidebar-brand{padding:20px 20px 16px;border-bottom:1px solid var(--border-subtle)}.sidebar-brand h1{font-size:18px;font-weight:800}.sidebar-brand p{font-size:11px;color:var(--accent-red);font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px}
+.sidebar-section{padding:16px 12px 4px;font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:1.8px;text-transform:uppercase}
+.sidebar-nav{flex:1;overflow-y:auto;padding:4px 8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:13.5px;font-weight:500;color:var(--text-secondary);transition:all .15s;margin-bottom:2px;position:relative;text-decoration:none}
+.nav-item:hover{background:var(--bg-card);color:var(--text-primary)}.nav-item.active{background:linear-gradient(135deg,rgba(239,68,68,.12),rgba(249,115,22,.08));color:var(--accent-red);font-weight:600}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:20px;background:var(--accent-red);border-radius:0 3px 3px 0}
+.nav-item .icon{font-size:16px;width:22px;text-align:center}
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--border-subtle)}.status-dot{width:7px;height:7px;border-radius:50%;display:inline-block;animation:pulse-dot 2s infinite}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
+.main-content{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:var(--bg-surface);border-bottom:1px solid var(--border-subtle);min-height:58px}
+.topbar-left h2{font-size:18px;font-weight:700}.topbar-left .subtitle{font-size:12px;color:var(--text-muted)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:inherit}
+.btn-primary{background:var(--accent-red);color:#fff}.btn-primary:hover{background:#dc2626}.btn-ghost{background:var(--bg-elevated);color:var(--text-secondary);border:1px solid var(--border)}.btn-ghost:hover{background:var(--border);color:var(--text-primary)}
+.btn-blue{background:var(--accent-blue);color:#fff}.btn-emerald{background:var(--accent-emerald);color:#fff}.btn-orange{background:var(--accent-orange);color:#fff}.btn-violet{background:var(--accent-violet);color:#fff}
+.btn-sm{padding:6px 12px;font-size:11.5px}.btn:disabled{opacity:.5;cursor:not-allowed}
+.page-content{flex:1;overflow-y:auto;padding:24px 28px}.page{display:none}.page.active{display:block}
+.card{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:12px;padding:20px;transition:border-color .2s}.card:hover{border-color:var(--border)}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}.card-title{font-size:14px;font-weight:700}.card-subtitle{font-size:11px;color:var(--text-muted);margin-top:2px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.stat-card.red::before{background:var(--accent-red)}.stat-card.blue::before{background:var(--accent-blue)}.stat-card.emerald::before{background:var(--accent-emerald)}.stat-card.amber::before{background:var(--accent-amber)}.stat-card.violet::before{background:var(--accent-violet)}.stat-card.orange::before{background:var(--accent-orange)}.stat-card.pink::before{background:var(--accent-pink)}
+.stat-label{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px}.stat-value{font-size:28px;font-weight:800;margin:6px 0 2px;letter-spacing:-1px}.stat-change{font-size:11px;font-weight:600}.stat-change.up{color:var(--accent-emerald)}.stat-change.down{color:var(--accent-red)}
+.data-table{width:100%;border-collapse:collapse}.data-table th{text-align:left;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;padding:10px 14px;border-bottom:1px solid var(--border-subtle)}
+.data-table td{padding:12px 14px;font-size:13px;color:var(--text-secondary);border-bottom:1px solid var(--border-subtle)}.data-table tr:hover td{background:var(--bg-elevated);color:var(--text-primary)}.data-table tr:last-child td{border-bottom:none}
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:6px;font-size:10.5px;font-weight:700}
+.badge-red{background:rgba(239,68,68,.15);color:#f87171}.badge-green{background:rgba(16,185,129,.15);color:#34d399}.badge-blue{background:rgba(59,130,246,.15);color:#60a5fa}.badge-amber{background:rgba(245,158,11,.15);color:#fbbf24}.badge-violet{background:rgba(139,92,246,.15);color:#a78bfa}.badge-orange{background:rgba(249,115,22,.15);color:#fb923c}
+.stars{color:#fbbf24;font-size:13px}.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.comp-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.chart-bar-container{display:flex;align-items:end;gap:6px;height:120px;padding-top:8px}.chart-bar{flex:1;border-radius:4px 4px 0 0;transition:height .5s;position:relative;min-width:24px}.chart-bar-label{position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--text-muted);white-space:nowrap}
+.intel-input{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text-primary);font-size:13px;font-family:inherit;width:100%;transition:border-color .2s}.intel-input:focus{outline:none;border-color:var(--accent-red)}.intel-input::placeholder{color:var(--text-muted)}
+textarea.intel-input{resize:vertical;min-height:80px}select.intel-input{appearance:none;padding-right:32px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.animate-in{animation:fadeIn .35s ease-out}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:100;align-items:center;justify-content:center}.modal-overlay.show{display:flex}
+.modal-box{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:28px;width:90%;max-width:600px;max-height:85vh;overflow-y:auto;animation:slideUp .3s ease}.modal-title{font-size:18px;font-weight:700;margin-bottom:4px}
+.toast-container{position:fixed;top:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px 18px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;animation:slideUp .3s ease;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-muted)}.empty-state .es-icon{font-size:48px;margin-bottom:12px}.empty-state h3{font-size:18px;font-weight:700;color:var(--text-secondary);margin-bottom:6px}.empty-state p{font-size:13px;max-width:400px;margin:0 auto 16px}
+.insight-card{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:12px;padding:20px;border-left:3px solid}
+.insight-card.opportunity{border-left-color:var(--accent-emerald)}.insight-card.threat{border-left-color:var(--accent-red)}.insight-card.trend{border-left-color:var(--accent-blue)}.insight-card.action{border-left-color:var(--accent-amber)}
+.social-profile{display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;transition:background .15s}.social-profile:hover{background:var(--bg-elevated)}
+.social-avatar{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700}
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent-red);border-radius:50%;animation:spin .6s linear infinite;display:inline-block}@keyframes spin{to{transform:rotate(360deg)}}
+.field-group{margin-bottom:12px}.field-label{font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px}
+@media(max-width:768px){.sidebar{width:60px;min-width:60px}.sidebar .nav-text,.sidebar-brand p,.sidebar-section,.sidebar-footer span{display:none}.grid-2{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr 1fr}.page-content{padding:16px}}
+</style>
+</head>
+<body>
+<div class="toast-container" id="toastContainer"></div>
+<aside class="sidebar">
+<div class="sidebar-brand"><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;background:var(--accent-red);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">🔱</div><div><h1>SeaSalt</h1><p>Intelligence Hub</p></div></div></div>
+<div class="sidebar-nav">
+<div class="sidebar-section">Intelligence</div>
+<div class="nav-item active" onclick="go('competitors',this)"><span class="icon">🏆</span><span class="nav-text">Competitors</span></div>
+<div class="nav-item" onclick="go('social-spy',this)"><span class="icon">🔍</span><span class="nav-text">Social Spy</span></div>
+<div class="nav-item" onclick="go('insights',this)"><span class="icon">🧠</span><span class="nav-text">Insights</span></div>
+<div class="nav-item" onclick="go('content-studio',this)"><span class="icon">🎨</span><span class="nav-text">Content Studio</span></div>
+<div class="nav-item" onclick="go('social-listeners',this)"><span class="icon">📡</span><span class="nav-text">Social Listeners</span></div>
+<div class="sidebar-section" style="margin-top:12px">Tools</div>
+<div class="nav-item" onclick="go('ad-library',this)"><span class="icon">📺</span><span class="nav-text">Ad Library</span></div>
+<div class="nav-item" onclick="go('keyword-tracker',this)"><span class="icon">🔑</span><span class="nav-text">Keyword Tracker</span></div>
+<div class="sidebar-section" style="margin-top:12px">Links</div>
+<a href="https://seasaltpickles.com" target="_blank" class="nav-item"><span class="icon">🌐</span><span class="nav-text">Store</span></a>
+<a href="https://supabase.com/dashboard" target="_blank" class="nav-item"><span class="icon">🗄️</span><span class="nav-text">Supabase</span></a>
+</div>
+<div class="sidebar-footer"><div style="display:flex;align-items:center;gap:8px"><span class="status-dot" id="statusDot" style="background:var(--accent-amber)"></span><span style="font-size:11px;color:var(--text-muted)" id="statusText">Connecting...</span></div><div style="font-size:10px;color:var(--text-muted);margin-top:4px">Last sync: <span id="lastSync">—</span></div></div>
+</aside>
+<div class="main-content">
+<div class="topbar"><div class="topbar-left"><div><h2 id="pageTitle">🏆 Competitor Intelligence</h2><div class="subtitle" id="pageSubtitle">Real-time data from Google Places API → Supabase</div></div></div>
+<div class="topbar-actions"><button class="btn btn-ghost btn-sm" onclick="syncAll()" id="btnSyncAll">📊 Sync All</button><button class="btn btn-primary btn-sm" onclick="exportData()">📥 Export</button></div></div>
+<div class="page-content">
+<!-- COMPETITORS -->
+<div class="page active" id="page-competitors"><div class="animate-in">
+<div class="stats-grid">
+<div class="stat-card red"><div class="stat-label">Competitors Tracked</div><div class="stat-value" id="sCompCount">—</div><div class="stat-change" id="sCompSub">Loading...</div></div>
+<div class="stat-card blue"><div class="stat-label">Avg Google Rating</div><div class="stat-value" id="sAvgRating">—</div><div class="stat-change">From Google Places</div></div>
+<div class="stat-card emerald"><div class="stat-label">Total Reviews</div><div class="stat-value" id="sTotalReviews">—</div><div class="stat-change">Across all competitors</div></div>
+<div class="stat-card amber"><div class="stat-label">Last Synced</div><div class="stat-value" id="sLastSync" style="font-size:16px">Never</div><div class="stat-change">Click Sync to fetch</div></div>
+</div>
+<div style="display:flex;gap:10px;margin-bottom:20px"><button class="btn btn-blue btn-sm" onclick="syncCompetitors()" id="btnSync">🔄 Sync Live Data</button><button class="btn btn-ghost btn-sm" onclick="openAddCompetitor()">➕ Add Competitor</button></div>
+<div class="card"><div class="card-header"><div><div class="card-title">Competitor Directory</div><div class="card-subtitle">Google Places API → Supabase → Dashboard</div></div></div><div id="compArea"></div></div>
+<div class="grid-2" style="margin-top:20px"><div class="card"><div class="card-header"><div class="card-title">Rating Comparison</div></div><div class="chart-bar-container" id="ratingChart" style="height:160px"></div></div>
+<div class="card"><div class="card-header"><div class="card-title">Review Volume</div></div><div class="chart-bar-container" id="reviewChart" style="height:160px"></div></div></div>
+</div></div>
+<!-- SOCIAL SPY -->
+<div class="page" id="page-social-spy"><div class="animate-in">
+<div class="stats-grid">
+<div class="stat-card violet"><div class="stat-label">With Social URLs</div><div class="stat-value" id="sSocial">—</div></div>
+<div class="stat-card blue"><div class="stat-label">Content Logged</div><div class="stat-value" id="sSocContent">—</div></div>
+<div class="stat-card amber"><div class="stat-label">Hashtags Tracked</div><div class="stat-value" id="sSocHash">—</div></div>
+</div>
+<div style="display:flex;gap:10px;margin-bottom:20px"><button class="btn btn-violet btn-sm" onclick="openAddSocial()">➕ Add Social URLs</button><button class="btn btn-ghost btn-sm" onclick="openLogPost()">📝 Log Post</button><button class="btn btn-ghost btn-sm" onclick="openAddHashtag()">🏷️ Add Hashtag</button></div>
+<div class="grid-2"><div class="card"><div class="card-header"><div class="card-title">Social Profiles</div></div><div id="socProfiles"></div></div>
+<div class="card"><div class="card-header"><div class="card-title">Logged Posts</div></div><div id="socPosts"></div></div></div>
+<div class="card" style="margin-top:16px"><div class="card-header"><div class="card-title">Hashtag Tracker</div></div><div id="hashArea"></div></div>
+</div></div>
+<!-- INSIGHTS -->
+<div class="page" id="page-insights"><div class="animate-in">
+<div class="stats-grid">
+<div class="stat-card emerald"><div class="stat-label">Opportunities</div><div class="stat-value" id="sOpp" style="color:var(--accent-emerald)">—</div></div>
+<div class="stat-card red"><div class="stat-label">Threats</div><div class="stat-value" id="sThreat" style="color:var(--accent-red)">—</div></div>
+<div class="stat-card blue"><div class="stat-label">Trends</div><div class="stat-value" id="sTrend" style="color:var(--accent-blue)">—</div></div>
+<div class="stat-card amber"><div class="stat-label">Actions</div><div class="stat-value" id="sAction" style="color:var(--accent-amber)">—</div></div>
+</div>
+<div style="display:flex;gap:10px;margin-bottom:16px"><button class="btn btn-emerald btn-sm" onclick="openAddInsight()">➕ Add Insight</button></div>
+<div id="insightsArea"></div>
+</div></div>
+<!-- CONTENT STUDIO -->
+<div class="page" id="page-content-studio"><div class="animate-in">
+<div class="stats-grid">
+<div class="stat-card orange"><div class="stat-label">Ideas</div><div class="stat-value" id="sCiTotal">—</div></div>
+<div class="stat-card violet"><div class="stat-label">Planned</div><div class="stat-value" id="sCiPlanned">—</div></div>
+<div class="stat-card emerald"><div class="stat-label">Published</div><div class="stat-value" id="sCiPub">—</div></div>
+</div>
+<div style="margin-bottom:20px"><button class="btn btn-orange btn-sm" onclick="openAddIdea()">✨ Add Content Idea</button></div>
+<div class="card"><div class="card-header"><div class="card-title">Content Pipeline</div></div><div id="ideasArea"></div></div>
+</div></div>
+<!-- SOCIAL LISTENERS -->
+<div class="page" id="page-social-listeners"><div class="animate-in">
+<div class="stats-grid">
+<div class="stat-card emerald"><div class="stat-label">Keywords Monitored</div><div class="stat-value" id="sLkCount">—</div></div>
+<div class="stat-card blue"><div class="stat-label">Mentions Logged</div><div class="stat-value" id="sLkMentions">—</div></div>
+</div>
+<div style="display:flex;gap:10px;margin-bottom:20px"><button class="btn btn-emerald btn-sm" onclick="openAddListenKW()">➕ Add Keyword</button><button class="btn btn-ghost btn-sm" onclick="openLogMention()">📝 Log Mention</button></div>
+<div class="grid-2"><div class="card"><div class="card-header"><div class="card-title">Tracked Keywords</div></div><div id="lkArea"></div></div>
+<div class="card"><div class="card-header"><div class="card-title">Recent Mentions</div></div><div id="mentionArea"></div></div></div>
+</div></div>
+<!-- AD LIBRARY -->
+<div class="page" id="page-ad-library"><div class="animate-in">
+<div class="stats-grid">
+<div class="stat-card orange"><div class="stat-label">Ads Tracked</div><div class="stat-value" id="sAdCount">—</div></div>
+<div class="stat-card blue"><div class="stat-label">Active</div><div class="stat-value" id="sAdActive">—</div></div>
+</div>
+<div style="display:flex;gap:10px;margin-bottom:10px"><button class="btn btn-orange btn-sm" onclick="scanMetaAds()">🔍 Open Meta Ad Library</button><button class="btn btn-ghost btn-sm" onclick="openLogAd()">📝 Log Ad Manually</button></div>
+<p style="font-size:11px;color:var(--text-muted);margin-bottom:16px">Meta Ad Library is <b>public</b> — no API needed. Click to search each competitor, then log what you find.</p>
+<div class="card"><div class="card-header"><div class="card-title">Competitor Ads</div></div><div id="adArea"></div></div>
+</div></div>
+<!-- KEYWORD TRACKER -->
+<div class="page" id="page-keyword-tracker"><div class="animate-in">
+<div class="stats-grid">
+<div class="stat-card emerald"><div class="stat-label">Keywords</div><div class="stat-value" id="sKwCount">—</div></div>
+<div class="stat-card blue"><div class="stat-label">Avg Position</div><div class="stat-value" id="sKwAvg">—</div></div>
+<div class="stat-card amber"><div class="stat-label">Top 10</div><div class="stat-value" id="sKwTop">—</div></div>
+</div>
+<div style="margin-bottom:20px"><button class="btn btn-emerald btn-sm" onclick="openAddSEOKW()">➕ Add Keyword</button></div>
+<div class="card"><div class="card-header"><div class="card-title">SEO Keyword Rankings</div></div><div id="kwArea"></div></div>
+</div></div>
+</div></div>
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()"><div class="modal-box" id="modalBox"></div></div>
+<script>
+const SB_URL='https://yosjbsncvghpscsrvxds.supabase.co',SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlvc2pic25jdmdocHNjc3J2eGRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyMjc3NTgsImV4cCI6MjA4NTgwMzc1OH0.PNEbeofoyT7KdkzepRfqg-zqyBiGAat5ElCMiyQ4UAs';
+let db;try{db=supabase.createClient(SB_URL,SB_KEY);document.getElementById('statusDot').style.background='var(--accent-emerald)';document.getElementById('statusText').textContent='Live · Supabase Connected';}catch(e){document.getElementById('statusText').textContent='DB Error';}
+
+function toast(m){const c=document.getElementById('toastContainer'),t=document.createElement('div');t.className='toast';t.textContent=m;c.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='all .3s';setTimeout(()=>t.remove(),300)},3500)}
+function timeAgo(d){if(!d)return'—';const m=Math.floor((Date.now()-new Date(d).getTime())/60000);if(m<1)return'just now';if(m<60)return m+'m ago';const h=Math.floor(m/60);if(h<24)return h+'h ago';return Math.floor(h/24)+'d ago'}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('show')}
+function showModal(h){document.getElementById('modalBox').innerHTML=h;document.getElementById('modalOverlay').classList.add('show')}
+function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function empty(icon,title,desc,btn,action){return`<div class="empty-state"><div class="es-icon">${icon}</div><h3>${title}</h3><p>${desc}</p>${btn?`<button class="btn btn-primary" onclick="${action}">${btn}</button>`:''}</div>`}
+
+const PG={'competitors':{t:'🏆 Competitor Intelligence',s:'Real-time data from Google Places API → Supabase'},'social-spy':{t:'🔍 Social Spy',s:'Monitor competitor social activity'},'insights':{t:'🧠 Insights Engine',s:'Actionable intelligence from competitive data'},'content-studio':{t:'🎨 Content Studio',s:'Content ideas & pipeline'},'social-listeners':{t:'📡 Social Listeners',s:'Brand mention monitoring'},'ad-library':{t:'📺 Ad Library',s:'Competitor ads — powered by Meta Ad Library (public)'},'keyword-tracker':{t:'🔑 Keyword Tracker',s:'SEO ranking intelligence'}};
+function go(p,el){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));if(el)el.classList.add('active');document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));const t=document.getElementById('page-'+p);if(t)t.classList.add('active');const c=PG[p]||{};document.getElementById('pageTitle').textContent=c.t||p;document.getElementById('pageSubtitle').textContent=c.s||''}
+
+// DATA ARRAYS — filled from Supabase only
+let COMP=[],INSIGHTS=[],IDEAS=[],SEO_KW=[],HASHTAGS=[],LISTEN_KW=[],MENTIONS=[],ADS=[],SOC_CONTENT=[];
+
+async function loadAll(){await Promise.allSettled([loadComp(),loadInsights(),loadIdeas(),loadSeoKw(),loadHashtags(),loadListenKw(),loadMentions(),loadAds(),loadSocContent()]);document.getElementById('lastSync').textContent=new Date().toLocaleTimeString()}
+
+async function q(table,opts={}){try{let query=db.from(table).select(opts.select||'*');if(opts.eq)for(const[k,v]of Object.entries(opts.eq))query=query.eq(k,v);if(opts.order)query=query.order(opts.order.col,{ascending:opts.order.asc??true});if(opts.limit)query=query.limit(opts.limit);const{data,error}=await query;if(error)throw error;return data||[];}catch(e){console.log(table+':',e.message);return[];}}
+
+async function loadComp(){COMP=await q('competitor_profiles',{order:{col:'name',asc:true}});renderComp()}
+async function loadInsights(){INSIGHTS=await q('intel_insights',{eq:{is_dismissed:false},order:{col:'created_at',asc:false},limit:50});renderInsights()}
+async function loadIdeas(){IDEAS=await q('content_ideas',{order:{col:'created_at',asc:false},limit:50});renderIdeas()}
+async function loadSeoKw(){SEO_KW=await q('keyword_rankings',{order:{col:'current_position',asc:true}});renderSeoKw()}
+async function loadHashtags(){HASHTAGS=await q('hashtag_tracker',{order:{col:'hashtag',asc:true}});renderHash()}
+async function loadListenKw(){LISTEN_KW=await q('listener_keywords',{eq:{is_active:true},order:{col:'keyword',asc:true}});renderListenKw()}
+async function loadMentions(){MENTIONS=await q('brand_mentions',{order:{col:'found_at',asc:false},limit:30});renderMentions()}
+async function loadAds(){ADS=await q('competitor_ads',{order:{col:'scraped_at',asc:false},limit:50});renderAds()}
+async function loadSocContent(){SOC_CONTENT=await q('competitor_content',{order:{col:'scraped_at',asc:false},limit:30});renderSocContent()}
+
+// RENDERERS
+function renderComp(){
+  const el=document.getElementById('compArea'),rc=document.getElementById('ratingChart'),rv=document.getElementById('reviewChart');
+  document.getElementById('sCompCount').textContent=COMP.length||'0';
+  if(!COMP.length){el.innerHTML=empty('🏆','No Competitor Data','Click "Sync Live Data" to fetch from Google Places.','🔄 Run First Sync','syncCompetitors()');rc.innerHTML='';rv.innerHTML='';document.getElementById('sAvgRating').textContent='—';document.getElementById('sTotalReviews').textContent='—';return}
+  const avg=(COMP.reduce((s,c)=>s+parseFloat(c.rating||0),0)/COMP.length).toFixed(1);document.getElementById('sAvgRating').textContent=avg;
+  const tot=COMP.reduce((s,c)=>s+(c.total_reviews||0),0);document.getElementById('sTotalReviews').textContent=tot.toLocaleString();
+  const ls=COMP.reduce((l,c)=>{const d=new Date(c.synced_at||0);return d>l?d:l},new Date(0));
+  if(ls.getTime()>0){document.getElementById('sLastSync').textContent=timeAgo(ls);document.getElementById('sCompSub').textContent='All synced'}
+  el.innerHTML=`<table class="data-table"><thead><tr><th></th><th>Competitor</th><th>Rating</th><th>Reviews</th><th>Status</th><th>Threat</th><th>Synced</th></tr></thead><tbody>${COMP.map(c=>`<tr><td><span class="comp-dot" style="background:${c.color||'#666'}"></span></td><td><div style="font-weight:600;color:var(--text-primary)">${esc(c.name)}</div><div style="font-size:11px;color:var(--text-muted)">${esc(c.website||c.url||'')}</div></td><td>${c.rating?`<span class="stars">${'★'.repeat(Math.round(c.rating))}</span> <b>${parseFloat(c.rating).toFixed(1)}</b>`:'—'}</td><td style="font-weight:600">${c.total_reviews?c.total_reviews.toLocaleString():'—'}</td><td><span class="badge ${c.business_status==='OPERATIONAL'?'badge-green':'badge-amber'}">${c.business_status||'—'}</span></td><td><span class="badge ${c.threat_level==='high'?'badge-red':c.threat_level==='medium'?'badge-amber':'badge-green'}">${(c.threat_level||'—').toUpperCase()}</span></td><td style="font-size:11px;color:var(--text-muted)">${timeAgo(c.synced_at)}</td></tr>`).join('')}</tbody></table>`;
+  const mx=5;rc.innerHTML=COMP.slice(0,8).map(c=>`<div class="chart-bar" style="height:${(parseFloat(c.rating||0)/mx)*100}%;background:${c.color||'var(--accent-blue)'}"><span class="chart-bar-label">${c.code||''}<br>${parseFloat(c.rating||0).toFixed(1)}</span></div>`).join('');
+  const mr=Math.max(...COMP.map(c=>c.total_reviews||0),1);rv.innerHTML=COMP.slice(0,8).map(c=>`<div class="chart-bar" style="height:${((c.total_reviews||0)/mr)*100}%;background:${c.color||'var(--accent-blue)'}"><span class="chart-bar-label">${c.code||''}<br>${c.total_reviews||0}</span></div>`).join('')}
+
+function renderInsights(){
+  document.getElementById('sOpp').textContent=INSIGHTS.filter(i=>i.type==='opportunity').length;document.getElementById('sThreat').textContent=INSIGHTS.filter(i=>i.type==='threat').length;document.getElementById('sTrend').textContent=INSIGHTS.filter(i=>i.type==='trend').length;document.getElementById('sAction').textContent=INSIGHTS.filter(i=>i.type==='action').length;
+  const el=document.getElementById('insightsArea');if(!INSIGHTS.length){el.innerHTML=empty('🧠','No Insights','Add insights from your competitive analysis.','➕ Add Insight','openAddInsight()');return}
+  el.innerHTML='<div style="display:flex;flex-direction:column;gap:12px">'+INSIGHTS.map(i=>`<div class="insight-card ${i.type}"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><div><span class="badge ${i.type==='opportunity'?'badge-green':i.type==='threat'?'badge-red':i.type==='trend'?'badge-blue':'badge-amber'}">${i.type==='opportunity'?'💡 Opportunity':i.type==='threat'?'⚠️ Threat':i.type==='trend'?'📈 Trend':'⚡ Action'}</span><h3 style="font-size:15px;font-weight:700;margin-top:6px">${esc(i.title)}</h3></div><span class="badge ${i.priority==='critical'?'badge-red':i.priority==='high'?'badge-orange':'badge-blue'}">${i.priority||'medium'}</span></div><p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:10px">${esc(i.body||'')}</p><div style="display:flex;justify-content:space-between"><span style="font-size:11px;color:var(--text-muted)">${timeAgo(i.created_at)}</span><button class="btn btn-ghost btn-sm" style="padding:4px 10px;font-size:10px" onclick="dismissInsight(${i.id})">Dismiss</button></div></div>`).join('')+'</div>'}
+
+function renderIdeas(){
+  document.getElementById('sCiTotal').textContent=IDEAS.length;document.getElementById('sCiPlanned').textContent=IDEAS.filter(c=>c.status==='planned').length;document.getElementById('sCiPub').textContent=IDEAS.filter(c=>c.status==='published').length;
+  const el=document.getElementById('ideasArea');if(!IDEAS.length){el.innerHTML=empty('🎨','No Content Ideas','Add ideas based on competitor gaps.','✨ Add Idea','openAddIdea()');return}
+  el.innerHTML=`<table class="data-table"><thead><tr><th>Title</th><th>Type</th><th>Platform</th><th>Status</th><th>Created</th></tr></thead><tbody>${IDEAS.map(c=>`<tr><td style="font-weight:600;color:var(--text-primary)">${esc(c.title)}</td><td><span class="badge badge-violet">${esc(c.content_type||'—')}</span></td><td><span class="badge badge-blue">${esc(c.platform||'—')}</span></td><td><span class="badge ${c.status==='published'?'badge-green':c.status==='planned'?'badge-amber':'badge-blue'}">${c.status||'idea'}</span></td><td style="font-size:11px;color:var(--text-muted)">${timeAgo(c.created_at)}</td></tr>`).join('')}</tbody></table>`}
+
+function renderSeoKw(){
+  document.getElementById('sKwCount').textContent=SEO_KW.length;const avg=SEO_KW.length?(SEO_KW.reduce((s,k)=>s+(k.current_position||0),0)/SEO_KW.length).toFixed(1):'—';document.getElementById('sKwAvg').textContent=avg;document.getElementById('sKwTop').textContent=SEO_KW.filter(k=>(k.current_position||99)<=10).length;
+  const el=document.getElementById('kwArea');if(!SEO_KW.length){el.innerHTML=empty('🔑','No Keywords','Track your SEO rankings.','➕ Add Keyword','openAddSEOKW()');return}
+  el.innerHTML=`<table class="data-table"><thead><tr><th>Keyword</th><th>Position</th><th>Change</th><th>Volume</th><th>Difficulty</th></tr></thead><tbody>${SEO_KW.map(k=>{const ch=k.change||0;return`<tr><td style="font-weight:600;color:var(--text-primary)">${esc(k.keyword)}</td><td><span style="font-size:18px;font-weight:800;color:${(k.current_position||99)<=5?'var(--accent-emerald)':(k.current_position||99)<=15?'var(--accent-amber)':'var(--accent-red)'}">#${k.current_position||'—'}</span></td><td><span class="stat-change ${ch>0?'up':ch<0?'down':''}" style="font-size:13px;font-weight:700">${ch>0?'↑'+ch:ch<0?'↓'+Math.abs(ch):'—'}</span></td><td>${esc(k.search_volume||'—')}</td><td><span class="badge ${k.difficulty==='Low'?'badge-green':k.difficulty==='High'?'badge-red':'badge-amber'}">${k.difficulty||'—'}</span></td></tr>`}).join('')}</tbody></table>`}
+
+function renderHash(){
+  document.getElementById('sSocHash').textContent=HASHTAGS.length;const el=document.getElementById('hashArea');
+  if(!HASHTAGS.length){el.innerHTML='<div class="empty-state" style="padding:30px"><p>Add hashtags to track</p></div>';return}
+  el.innerHTML=`<table class="data-table"><thead><tr><th>Hashtag</th><th>Posts</th><th>Engagement</th><th>Growth</th><th>Trend</th></tr></thead><tbody>${HASHTAGS.map(h=>`<tr><td style="font-weight:700;color:var(--accent-blue)">${esc(h.hashtag)}</td><td>${esc(h.total_posts||'—')}</td><td>${esc(h.avg_engagement||'—')}</td><td>${esc(h.growth_rate||'—')}</td><td>${h.trend==='up'?'📈':'➡️'}</td></tr>`).join('')}</tbody></table>`}
+
+function renderListenKw(){
+  document.getElementById('sLkCount').textContent=LISTEN_KW.length;const el=document.getElementById('lkArea');
+  if(!LISTEN_KW.length){el.innerHTML='<div class="empty-state" style="padding:30px"><p>Add keywords to monitor</p></div>';return}
+  el.innerHTML=LISTEN_KW.map(k=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-subtle)"><div><div style="font-size:13px;font-weight:600;color:var(--text-primary)">"${esc(k.keyword)}"</div><div style="font-size:11px;color:var(--text-muted)">${(k.platforms||[]).join(', ')}</div></div><span style="font-size:12px;font-weight:700">${k.total_mentions||0} mentions</span></div>`).join('')}
+
+function renderMentions(){
+  document.getElementById('sLkMentions').textContent=MENTIONS.length;const el=document.getElementById('mentionArea');
+  if(!MENTIONS.length){el.innerHTML='<div class="empty-state" style="padding:30px"><p>Log mentions as you find them</p></div>';return}
+  el.innerHTML=MENTIONS.slice(0,10).map(m=>`<div style="padding:10px 0;border-bottom:1px solid var(--border-subtle)"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><div style="display:flex;gap:6px"><span class="badge badge-blue" style="font-size:9px">${esc(m.source_platform)}</span><span style="font-size:12px;font-weight:600">${esc(m.author||'')}</span></div><span style="font-size:10px;color:var(--text-muted)">${timeAgo(m.found_at)}</span></div><p style="font-size:12px;color:var(--text-secondary);line-height:1.5">"${esc(m.content||'')}"</p></div>`).join('')}
+
+function renderAds(){
+  document.getElementById('sAdCount').textContent=ADS.length;document.getElementById('sAdActive').textContent=ADS.filter(a=>a.status==='active').length;
+  const el=document.getElementById('adArea');if(!ADS.length){el.innerHTML=empty('📺','No Ads Tracked','Scan Meta Ad Library or log ads manually.','🔍 Open Meta Ads','scanMetaAds()');return}
+  el.innerHTML=`<table class="data-table"><thead><tr><th>Competitor</th><th>Platform</th><th>Type</th><th>Description</th><th>Status</th><th>Est Spend</th><th>Found</th></tr></thead><tbody>${ADS.map(a=>`<tr><td style="font-weight:600">${esc(a.competitor_name)}</td><td><span class="badge badge-blue">${esc(a.platform)}</span></td><td>${esc(a.ad_type||'—')}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a.headline||a.description||'—')}</td><td><span class="badge ${a.status==='active'?'badge-green':'badge-amber'}">${a.status||'—'}</span></td><td style="font-weight:600;color:var(--accent-amber)">${esc(a.estimated_spend||'—')}</td><td style="font-size:11px;color:var(--text-muted)">${timeAgo(a.scraped_at)}</td></tr>`).join('')}</tbody></table>`}
+
+function renderSocContent(){
+  const ws=COMP.filter(c=>c.instagram_url||c.youtube_url||c.facebook_url);document.getElementById('sSocial').textContent=ws.length;document.getElementById('sSocContent').textContent=SOC_CONTENT.length;
+  const sp=document.getElementById('socProfiles');
+  if(!ws.length)sp.innerHTML='<div class="empty-state" style="padding:30px"><p>Add social URLs to competitor profiles</p></div>';
+  else sp.innerHTML=ws.map(c=>`<div class="social-profile"><div class="social-avatar" style="background:${c.color}20;color:${c.color}">${c.code}</div><div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text-primary)">${esc(c.name)}</div><div style="font-size:11px;color:var(--text-muted)">${c.instagram_url?'📸 IG ':''}${c.youtube_url?'📹 YT ':''}${c.facebook_url?'📘 FB':''}</div></div>${c.instagram_followers?`<div style="font-size:12px;font-weight:700">${c.instagram_followers.toLocaleString()}</div>`:''}</div>`).join('');
+  const sc=document.getElementById('socPosts');
+  if(!SOC_CONTENT.length)sc.innerHTML='<div class="empty-state" style="padding:30px"><p>Log competitor posts</p></div>';
+  else sc.innerHTML=SOC_CONTENT.slice(0,8).map(p=>`<div class="social-profile"><div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text-primary)">${esc(p.caption||p.post_type||'Post')}</div><div style="font-size:11px;color:var(--text-muted)">${esc(p.competitor_name)} · ${esc(p.platform)}</div></div>${p.likes?`<div style="font-size:12px;font-weight:700;color:var(--accent-pink)">♥ ${p.likes.toLocaleString()}</div>`:''}</div>`).join('')}
+
+// SYNC
+async function syncCompetitors(){const b=document.getElementById('btnSync');b.disabled=true;b.innerHTML='<span class="spinner"></span> Syncing...';toast('🔄 Calling Google Places API...');try{const r=await fetch('/.netlify/functions/intel-sync');const d=await r.json();if(d.error){toast('❌ '+d.error)}else{toast('✅ '+d.success+'/'+d.total+' synced');await loadComp()}document.getElementById('lastSync').textContent=new Date().toLocaleTimeString()}catch(e){toast('❌ '+e.message)}b.disabled=false;b.innerHTML='🔄 Sync Live Data'}
+async function syncAll(){const b=document.getElementById('btnSyncAll');b.disabled=true;b.innerHTML='<span class="spinner"></span>';toast('🔄 Full sync...');try{await fetch('/.netlify/functions/intel-sync');await loadAll();toast('✅ All refreshed')}catch(e){toast('⚠️ '+e.message)}b.disabled=false;b.innerHTML='📊 Sync All'}
+
+// META AD LIBRARY — opens public Facebook Ad Library
+function scanMetaAds(){const c=COMP.length?COMP:[{name:'Vellanki Foods'},{name:'Priya Pickles'},{name:'Aavarampoo Pickles'}];showModal(`<div class="modal-title">🔍 Meta Ad Library</div><p style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Meta's Ad Library is <b>100% public</b> at facebook.com/ads/library. Click each competitor below to search their active ads, then log what you find.</p><div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">${c.map(x=>`<a href="https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=IN&q=${encodeURIComponent(x.name)}" target="_blank" style="text-decoration:none"><div class="social-profile" style="border:1px solid var(--border-subtle);border-radius:8px"><div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text-primary)">${esc(x.name)}</div><div style="font-size:11px;color:var(--accent-blue)">Search in Meta Ad Library →</div></div></div></a>`).join('')}</div><button class="btn btn-orange" onclick="closeModal();openLogAd()">📝 Log an Ad</button> <button class="btn btn-ghost" style="margin-left:8px" onclick="closeModal()">Close</button>`)}
+
+// CRUD — all write to Supabase
+async function dbInsert(table,row){try{const{error}=await db.from(table).insert(row);if(error)throw error;return true}catch(e){toast('❌ '+e.message);return false}}
+
+function openAddCompetitor(){showModal(`<div class="modal-title">➕ Add Competitor</div><div class="field-group"><label class="field-label">Name *</label><input class="intel-input" id="f1" placeholder="Business name"></div><div class="field-group"><label class="field-label">Code (2-4 letters) *</label><input class="intel-input" id="f2" maxlength="4" placeholder="e.g. VF"></div><div class="field-group"><label class="field-label">Website</label><input class="intel-input" id="f3" placeholder="domain.com"></div><div class="field-group"><label class="field-label">Google Search Query</label><input class="intel-input" id="f4" placeholder="Business Name City"></div><div class="field-group"><label class="field-label">Threat Level</label><select class="intel-input" id="f5"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select></div><div class="field-group"><label class="field-label">Color</label><input class="intel-input" type="color" id="f6" value="#ef4444" style="height:40px;padding:4px"></div><div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-primary" onclick="saveComp()">Add</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>`)}
+async function saveComp(){const n=document.getElementById('f1').value.trim(),c=document.getElementById('f2').value.trim().toUpperCase();if(!n||!c){toast('❌ Name & Code required');return}if(await dbInsert('competitor_profiles',{name:n,code:c,url:document.getElementById('f3').value.trim(),search_query:document.getElementById('f4').value.trim(),threat_level:document.getElementById('f5').value,color:document.getElementById('f6').value})){toast('✅ '+n+' added!');closeModal();await loadComp()}}
+
+function openAddInsight(){showModal(`<div class="modal-title">➕ Add Insight</div><div class="field-group"><label class="field-label">Type *</label><select class="intel-input" id="i1"><option value="opportunity">💡 Opportunity</option><option value="threat">⚠️ Threat</option><option value="trend">📈 Trend</option><option value="action">⚡ Action</option></select></div><div class="field-group"><label class="field-label">Title *</label><input class="intel-input" id="i2" placeholder="What's the insight?"></div><div class="field-group"><label class="field-label">Details</label><textarea class="intel-input" id="i3" placeholder="Context and analysis..."></textarea></div><div class="field-group"><label class="field-label">Priority</label><select class="intel-input" id="i4"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option><option value="critical">Critical</option></select></div><div style="display:flex;gap:10px;margin-top:8px"><button class="btn btn-emerald" onclick="saveInsight()">Save</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>`)}
+async function saveInsight(){const t=document.getElementById('i2').value.trim();if(!t){toast('❌ Title required');return}if(await dbInsert('intel_insights',{type:document.getElementById('i1').value,title:t,body:document.getElementById('i3').value.trim(),priority:document.getElementById('i4').value})){toast('✅ Saved!');closeModal();await loadInsights()}}
+async function dismissInsight(id){try{await db.from('intel_insights').update({is_dismissed:true}).eq('id',id);toast('Dismissed');await loadInsights()}catch(e){toast('❌ '+e.message)}}
+
+function openAddIdea(){showModal(`<div class="modal-title">✨ Content Idea</div><div class="field-group"><label class="field-label">Title *</label><input class="intel-input" id="c1" placeholder="Idea title"></div><div class="field-group"><label class="field-label">Description</label><textarea class="intel-input" id="c2" placeholder="Concept details"></textarea></div><div class="field-group"><label class="field-label">Type</label><input class="intel-input" id="c3" placeholder="Reel, Carousel, Blog..."></div><div class="field-group"><label class="field-label">Platform</label><select class="intel-input" id="c4"><option>Instagram</option><option>YouTube</option><option>Facebook</option><option>Website</option></select></div><div class="field-group"><label class="field-label">Status</label><select class="intel-input" id="c5"><option value="idea">Idea</option><option value="planned">Planned</option><option value="in_progress">In Progress</option><option value="published">Published</option></select></div><div style="display:flex;gap:10px;margin-top:8px"><button class="btn btn-orange" onclick="saveIdea()">Save</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>`)}
+async function saveIdea(){const t=document.getElementById('c1').value.trim();if(!t){toast('❌ Title required');return}if(await dbInsert('content_ideas',{title:t,description:document.getElementById('c2').value.trim(),content_type:document.getElementById('c3').value.trim(),platform:document.getElementById('c4').value,status:document.getElementById('c5').value})){toast('✅ Saved!');closeModal();await loadIdeas()}}
+
+function openAddSEOKW(){showModal(`<div class="modal-title">➕ SEO Keyword</div><div class="field-group"><label class="field-label">Keyword *</label><input class="intel-input" id="k1" placeholder="e.g. buy avakaya pickle online"></div><div class="field-group"><label class="field-label">Current Position</label><input class="intel-input" type="number" id="k2" placeholder="e.g. 12"></div><div class="field-group"><label class="field-label">Search Volume</label><input class="intel-input" id="k3" placeholder="e.g. 1.2K"></div><div class="field-group"><label class="field-label">Difficulty</label><select class="intel-input" id="k4"><option>Low</option><option selected>Medium</option><option>High</option></select></div><div class="field-group"><label class="field-label">Target URL</label><input class="intel-input" id="k5" placeholder="/products"></div><div style="display:flex;gap:10px;margin-top:8px"><button class="btn btn-emerald" onclick="saveSeoKw()">Add</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>`)}
+async function saveSeoKw(){const w=document.getElementById('k1').value.trim();if(!w){toast('❌ Keyword required');return}if(await dbInsert('keyword_rankings',{keyword:w,current_position:parseInt(document.getElementById('k2').value)||0,search_volume:document.getElementById('k3').value.trim(),difficulty:document.getElementById('k4').value,target_url:document.getElementById('k5').value.trim()})){toast('✅ Added!');closeModal();await loadSeoKw()}}
+
+function openAddHashtag(){showModal(`<div class="modal-title">🏷️ Add Hashtag</div><div class="field-group"><label class="field-label">Hashtag *</label><input class="intel-input" id="h1" placeholder="#AndhraPickles"></div><div class="field-group"><label class="field-label">Total Posts</label><input class="intel-input" id="h2" placeholder="e.g. 12.4K"></div><div class="field-group"><label class="field-label">Avg Engagement</label><input class="intel-input" id="h3" placeholder="e.g. 4.2%"></div><div style="display:flex;gap:10px;margin-top:8px"><button class="btn btn-blue" onclick="saveHash()">Add</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>`)}
+async function saveHash(){let h=document.getElementById('h1').value.trim();if(!h){toast('❌ Required');return}if(!h.startsWith('#'))h='#'+h;if(await dbInsert('hashtag_tracker',{hashtag:h,total_posts:document.getElementById('h2').value.trim(),avg_engagement:document.getElementById('h3').value.trim()})){toast('✅ Added!');closeModal();await loadHashtags()}}
+
+function openAddListenKW(){showModal(`<div class="modal-title">➕ Monitor Keyword</div><div class="field-group"><label class="field-label">Keyword *</label><input class="intel-input" id="l1" placeholder="e.g. seasalt pickles"></div><div class="field-group"><label class="field-label">Platforms</label><div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px"><label style="font-size:12px;color:var(--text-secondary);display:flex;gap:4px"><input type="checkbox" class="lPlat" value="instagram" checked> Instagram</label><label style="font-size:12px;color:var(--text-secondary);display:flex;gap:4px"><input type="checkbox" class="lPlat" value="twitter" checked> Twitter</label><label style="font-size:12px;color:var(--text-secondary);display:flex;gap:4px"><input type="checkbox" class="lPlat" value="google" checked> Google</label><label style="font-size:12px;color:var(--text-secondary);display:flex;gap:4px"><input type="checkbox" class="lPlat" value="youtube"> YouTube</label></div></div><div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-emerald" onclick="saveListenKW()">Start Monitoring</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>`)}
+async function saveListenKW(){const w=document.getElementById('l1').value.trim();if(!w){toast('❌ Required');return}const p=[...document.querySelectorAll('.lPlat:checked')].map(c=>c.value);if(await dbInsert('listener_keywords',{keyword:w,platforms:p})){toast('✅ Monitoring "'+w+'"');closeModal();await loadListenKw()}}
+
+function openLogMention(){showModal(`<div class="modal-title">📝 Log Mention</div><div class="field-group"><label class="field-label">Platform *</label><select class="intel-input" id="m1"><option>Instagram</option><option>Twitter</option><option>Google</option><option>Facebook</option><option>YouTube</option><option>Reddit</option></select></div><div class="field-group"><label class="field-label">Author</label><input class="intel-input" id="m2" placeholder="@username"></div><div class="field-group"><label class="field-label">Content *</label><textarea class="intel-input" id="m3" placeholder="What was said?"></textarea></div><div class="field-group"><label class="field-label">Sentiment</label><select class="intel-input" id="m4"><option value="positive">Positive</option><option value="neutral" selected>Neutral</option><option value="negative">Negative</option></select></div><div style="display:flex;gap:10px;margin-top:8px"><button class="btn btn-blue" onclick="saveMention()">Log</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>`)}
+async function saveMention(){const c=document.getElementById('m3').value.trim();if(!c){toast('❌ Content required');return}if(await dbInsert('brand_mentions',{source_platform:document.getElementById('m1').value,author:document.getElementById('m2').value.trim(),content:c,sentiment:document.getElementById('m4').value})){toast('✅ Logged!');closeModal();await loadMentions()}}
+
+function openLogAd(){showModal(`<div class="modal-title">📝 Log Ad</div><div class="field-group"><label class="field-label">Competitor *</label><select class="intel-input" id="a1">${COMP.length?COMP.map(c=>`<option value="${esc(c.name)}" data-code="${c.code}">${esc(c.name)}</option>`).join(''):'<option>Load competitors first</option>'}</select></div><div class="field-group"><label class="field-label">Platform *</label><select class="intel-input" id="a2"><option>Meta/Facebook</option><option>Instagram</option><option>Google Ads</option><option>YouTube</option></select></div><div class="field-group"><label class="field-label">Ad Type</label><select class="intel-input" id="a3"><option>Image Ad</option><option>Video Ad</option><option>Carousel</option><option>Story Ad</option><option>Search Ad</option></select></div><div class="field-group"><label class="field-label">Headline *</label><input class="intel-input" id="a4" placeholder="What does the ad say?"></div><div class="field-group"><label class="field-label">Est Monthly Spend</label><input class="intel-input" id="a5" placeholder="e.g. ₹10K"></div><div class="field-group"><label class="field-label">Status</label><select class="intel-input" id="a6"><option value="active">Active</option><option value="paused">Paused</option></select></div><div style="display:flex;gap:10px;margin-top:8px"><button class="btn btn-orange" onclick="saveAd()">Log Ad</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>`)}
+async function saveAd(){const h=document.getElementById('a4').value.trim();if(!h){toast('❌ Headline required');return}const sel=document.getElementById('a1');if(await dbInsert('competitor_ads',{competitor_name:sel.value,competitor_code:sel.selectedOptions[0]?.dataset?.code||'',platform:document.getElementById('a2').value,ad_type:document.getElementById('a3').value,headline:h,estimated_spend:document.getElementById('a5').value.trim(),status:document.getElementById('a6').value})){toast('✅ Ad logged!');closeModal();await loadAds()}}
+
+function openAddSocial(){showModal(`<div class="modal-title">➕ Social URLs</div><p style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Add social URLs to a competitor profile</p><div class="field-group"><label class="field-label">Competitor</label><select class="intel-input" id="s1">${COMP.map(c=>`<option value="${c.code}">${esc(c.name)}</option>`).join('')}</select></div><div class="field-group"><label class="field-label">Instagram URL</label><input class="intel-input" id="s2" placeholder="https://instagram.com/..."></div><div class="field-group"><label class="field-label">IG Followers</label><input class="intel-input" type="number" id="s3" placeholder="5000"></div><div class="field-group"><label class="field-label">YouTube URL</label><input class="intel-input" id="s4" placeholder="https://youtube.com/..."></div><div class="field-group"><label class="field-label">Facebook URL</label><input class="intel-input" id="s5" placeholder="https://facebook.com/..."></div><div style="display:flex;gap:10px;margin-top:8px"><button class="btn btn-violet" onclick="saveSocial()">Update</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>`)}
+async function saveSocial(){const code=document.getElementById('s1').value,u={};const ig=document.getElementById('s2').value.trim();if(ig)u.instagram_url=ig;const f=parseInt(document.getElementById('s3').value);if(f)u.instagram_followers=f;const yt=document.getElementById('s4').value.trim();if(yt)u.youtube_url=yt;const fb=document.getElementById('s5').value.trim();if(fb)u.facebook_url=fb;if(!Object.keys(u).length){toast('❌ Add at least one URL');return}try{const{error}=await db.from('competitor_profiles').update(u).eq('code',code);if(error)throw error;toast('✅ Updated!');closeModal();await loadComp();renderSocContent()}catch(e){toast('❌ '+e.message)}}
+
+function openLogPost(){showModal(`<div class="modal-title">📝 Log Post</div><div class="field-group"><label class="field-label">Competitor</label><select class="intel-input" id="p1">${COMP.map(c=>`<option value="${esc(c.name)}" data-code="${c.code}">${esc(c.name)}</option>`).join('')}</select></div><div class="field-group"><label class="field-label">Platform</label><select class="intel-input" id="p2"><option>Instagram</option><option>YouTube</option><option>Facebook</option></select></div><div class="field-group"><label class="field-label">Type</label><input class="intel-input" id="p3" placeholder="Reel, Carousel, Story..."></div><div class="field-group"><label class="field-label">Caption</label><textarea class="intel-input" id="p4" placeholder="Post description"></textarea></div><div class="field-group"><label class="field-label">Likes</label><input class="intel-input" type="number" id="p5" placeholder="5000"></div><div style="display:flex;gap:10px;margin-top:8px"><button class="btn btn-violet" onclick="savePost()">Log</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>`)}
+async function savePost(){const sel=document.getElementById('p1');if(await dbInsert('competitor_content',{competitor_name:sel.value,competitor_code:sel.selectedOptions[0]?.dataset?.code||'',platform:document.getElementById('p2').value,post_type:document.getElementById('p3').value.trim(),caption:document.getElementById('p4').value.trim(),likes:parseInt(document.getElementById('p5').value)||0})){toast('✅ Logged!');closeModal();await loadSocContent()}}
+
+function exportData(){toast('📥 Use Supabase Dashboard → Table Editor → Export CSV')}
+
+document.addEventListener('DOMContentLoaded',()=>{if(db)loadAll();else toast('⚠️ Supabase not connected')});
+</script>
+</body></html>
