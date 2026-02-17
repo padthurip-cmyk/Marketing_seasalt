@@ -9,52 +9,52 @@
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg-deep:#0c0a09;--bg-surface:#1c1917;--bg-card:#231f1d;--bg-elevated:#292524;--border:#3a3532;--border-subtle:#2a2623;--text-primary:#fafaf9;--text-secondary:#a8a29e;--text-muted:#78716c;--accent-red:#ef4444;--accent-orange:#f97316;--accent-amber:#f59e0b;--accent-emerald:#10b981;--accent-blue:#3b82f6;--accent-violet:#8b5cf6;--accent-pink:#ec4899}
+:root{--bg-deep:#f8f9fa;--bg-surface:#ffffff;--bg-card:#ffffff;--bg-elevated:#f1f3f5;--border:#e2e5e9;--border-subtle:#eceef1;--text-primary:#1a1a2e;--text-secondary:#4a5568;--text-muted:#8896a6;--accent-red:#dc2626;--accent-orange:#ea580c;--accent-amber:#d97706;--accent-emerald:#059669;--accent-blue:#2563eb;--accent-violet:#7c3aed;--accent-pink:#db2777}
 *{margin:0;padding:0;box-sizing:border-box}body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg-deep);color:var(--text-primary);min-height:100vh;display:flex;overflow:hidden}
-::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
-.sidebar{width:240px;min-width:240px;background:var(--bg-surface);border-right:1px solid var(--border-subtle);display:flex;flex-direction:column;height:100vh;z-index:50}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#d0d5dd;border-radius:10px}
+.sidebar{width:240px;min-width:240px;background:#ffffff;border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;z-index:50;box-shadow:2px 0 8px rgba(0,0,0,.04)}
 .sidebar-brand{padding:20px 20px 16px;border-bottom:1px solid var(--border-subtle)}.sidebar-brand h1{font-size:18px;font-weight:800}.sidebar-brand p{font-size:11px;color:var(--accent-red);font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px}
 .sidebar-section{padding:16px 12px 4px;font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:1.8px;text-transform:uppercase}
 .sidebar-nav{flex:1;overflow-y:auto;padding:4px 8px}
 .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:13.5px;font-weight:500;color:var(--text-secondary);transition:all .15s;margin-bottom:2px;position:relative;text-decoration:none}
-.nav-item:hover{background:var(--bg-card);color:var(--text-primary)}.nav-item.active{background:linear-gradient(135deg,rgba(239,68,68,.12),rgba(249,115,22,.08));color:var(--accent-red);font-weight:600}
+.nav-item:hover{background:#f1f3f5;color:var(--text-primary)}.nav-item.active{background:linear-gradient(135deg,rgba(220,38,38,.08),rgba(234,88,12,.05));color:var(--accent-red);font-weight:600}
 .nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:20px;background:var(--accent-red);border-radius:0 3px 3px 0}
 .nav-item .icon{font-size:16px;width:22px;text-align:center}
 .sidebar-footer{padding:12px 16px;border-top:1px solid var(--border-subtle)}.status-dot{width:7px;height:7px;border-radius:50%;display:inline-block;animation:pulse-dot 2s infinite}
 @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
 .main-content{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:var(--bg-surface);border-bottom:1px solid var(--border-subtle);min-height:58px}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:#ffffff;border-bottom:1px solid var(--border);min-height:58px}
 .topbar-left h2{font-size:18px;font-weight:700}.topbar-left .subtitle{font-size:12px;color:var(--text-muted)}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:inherit}
-.btn-primary{background:var(--accent-red);color:#fff}.btn-primary:hover{background:#dc2626}.btn-ghost{background:var(--bg-elevated);color:var(--text-secondary);border:1px solid var(--border)}.btn-ghost:hover{background:var(--border);color:var(--text-primary)}
+.btn-primary{background:var(--accent-red);color:#fff}.btn-primary:hover{background:#dc2626}.btn-ghost{background:#f8f9fa;color:var(--text-secondary);border:1px solid var(--border)}.btn-ghost:hover{background:var(--border);color:var(--text-primary)}
 .btn-blue{background:var(--accent-blue);color:#fff}.btn-emerald{background:var(--accent-emerald);color:#fff}.btn-orange{background:var(--accent-orange);color:#fff}.btn-violet{background:var(--accent-violet);color:#fff}
 .btn-sm{padding:6px 12px;font-size:11.5px}.btn:disabled{opacity:.5;cursor:not-allowed}
 .page-content{flex:1;overflow-y:auto;padding:24px 28px}.page{display:none}.page.active{display:block}
-.card{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:12px;padding:20px;transition:border-color .2s}.card:hover{border-color:var(--border)}
+.card{background:#ffffff;border:1px solid var(--border);border-radius:12px;padding:20px;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.06)}.card:hover{border-color:var(--accent-blue);box-shadow:0 4px 12px rgba(0,0,0,.08)}
 .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}.card-title{font-size:14px;font-weight:700}.card-subtitle{font-size:11px;color:var(--text-muted);margin-top:2px}
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
-.stat-card{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden}
+.stat-card{background:#ffffff;border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
 .stat-card.red::before{background:var(--accent-red)}.stat-card.blue::before{background:var(--accent-blue)}.stat-card.emerald::before{background:var(--accent-emerald)}.stat-card.amber::before{background:var(--accent-amber)}.stat-card.violet::before{background:var(--accent-violet)}.stat-card.orange::before{background:var(--accent-orange)}.stat-card.pink::before{background:var(--accent-pink)}
 .stat-label{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px}.stat-value{font-size:28px;font-weight:800;margin:6px 0 2px;letter-spacing:-1px}.stat-change{font-size:11px;font-weight:600}.stat-change.up{color:var(--accent-emerald)}.stat-change.down{color:var(--accent-red)}
 .data-table{width:100%;border-collapse:collapse}.data-table th{text-align:left;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;padding:10px 14px;border-bottom:1px solid var(--border-subtle)}
-.data-table td{padding:12px 14px;font-size:13px;color:var(--text-secondary);border-bottom:1px solid var(--border-subtle)}.data-table tr:hover td{background:var(--bg-elevated);color:var(--text-primary)}.data-table tr:last-child td{border-bottom:none}
+.data-table td{padding:12px 14px;font-size:13px;color:var(--text-secondary);border-bottom:1px solid var(--border-subtle)}.data-table tr:hover td{background:#f8f9fa;color:var(--text-primary)}.data-table tr:last-child td{border-bottom:none}
 .badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:6px;font-size:10.5px;font-weight:700}
-.badge-red{background:rgba(239,68,68,.15);color:#f87171}.badge-green{background:rgba(16,185,129,.15);color:#34d399}.badge-blue{background:rgba(59,130,246,.15);color:#60a5fa}.badge-amber{background:rgba(245,158,11,.15);color:#fbbf24}.badge-violet{background:rgba(139,92,246,.15);color:#a78bfa}.badge-orange{background:rgba(249,115,22,.15);color:#fb923c}
+.badge-red{background:rgba(220,38,38,.1);color:#dc2626}.badge-green{background:rgba(5,150,105,.1);color:#059669}.badge-blue{background:rgba(37,99,235,.1);color:#2563eb}.badge-amber{background:rgba(217,119,6,.1);color:#d97706}.badge-violet{background:rgba(124,58,237,.1);color:#7c3aed}.badge-orange{background:rgba(234,88,12,.1);color:#ea580c}
 .stars{color:#fbbf24;font-size:13px}.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.comp-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
 .chart-bar-container{display:flex;align-items:end;gap:6px;height:120px;padding-top:8px}.chart-bar{flex:1;border-radius:4px 4px 0 0;transition:height .5s;position:relative;min-width:24px}.chart-bar-label{position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--text-muted);white-space:nowrap}
-.intel-input{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text-primary);font-size:13px;font-family:inherit;width:100%;transition:border-color .2s}.intel-input:focus{outline:none;border-color:var(--accent-red)}.intel-input::placeholder{color:var(--text-muted)}
+.intel-input{background:#f8f9fa;border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text-primary);font-size:13px;font-family:inherit;width:100%;transition:border-color .2s}.intel-input:focus{outline:none;border-color:var(--accent-blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}.intel-input::placeholder{color:var(--text-muted)}
 textarea.intel-input{resize:vertical;min-height:80px}select.intel-input{appearance:none;padding-right:32px}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.animate-in{animation:fadeIn .35s ease-out}
 @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:100;align-items:center;justify-content:center}.modal-overlay.show{display:flex}
-.modal-box{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:28px;width:90%;max-width:600px;max-height:85vh;overflow-y:auto;animation:slideUp .3s ease}.modal-title{font-size:18px;font-weight:700;margin-bottom:4px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:100;align-items:center;justify-content:center}.modal-overlay.show{display:flex}
+.modal-box{background:#ffffff;border:1px solid var(--border);border-radius:16px;padding:28px;width:90%;max-width:600px;max-height:85vh;overflow-y:auto;animation:slideUp .3s ease;box-shadow:0 20px 60px rgba(0,0,0,.15)}.modal-title{font-size:18px;font-weight:700;margin-bottom:4px}
 .toast-container{position:fixed;top:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px}
-.toast{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px 18px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;animation:slideUp .3s ease;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.toast{background:#ffffff;border:1px solid var(--border);border-radius:10px;padding:12px 18px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;animation:slideUp .3s ease;box-shadow:0 8px 30px rgba(0,0,0,.12)}
 .empty-state{text-align:center;padding:60px 20px;color:var(--text-muted)}.empty-state .es-icon{font-size:48px;margin-bottom:12px}.empty-state h3{font-size:18px;font-weight:700;color:var(--text-secondary);margin-bottom:6px}.empty-state p{font-size:13px;max-width:400px;margin:0 auto 16px}
-.insight-card{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:12px;padding:20px;border-left:3px solid}
+.insight-card{background:#ffffff;border:1px solid var(--border);border-radius:12px;padding:20px;border-left:3px solid;box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .insight-card.opportunity{border-left-color:var(--accent-emerald)}.insight-card.threat{border-left-color:var(--accent-red)}.insight-card.trend{border-left-color:var(--accent-blue)}.insight-card.action{border-left-color:var(--accent-amber)}
-.social-profile{display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;transition:background .15s}.social-profile:hover{background:var(--bg-elevated)}
+.social-profile{display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;transition:background .15s}.social-profile:hover{background:#f1f3f5}
 .social-avatar{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700}
 .spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent-red);border-radius:50%;animation:spin .6s linear infinite;display:inline-block}@keyframes spin{to{transform:rotate(360deg)}}
 .field-group{margin-bottom:12px}.field-label{font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px}
@@ -72,6 +72,7 @@ textarea.intel-input{resize:vertical;min-height:80px}select.intel-input{appearan
 <div class="nav-item" onclick="go('insights',this)"><span class="icon">🧠</span><span class="nav-text">Insights</span></div>
 <div class="nav-item" onclick="go('content-studio',this)"><span class="icon">🎨</span><span class="nav-text">Content Studio</span></div>
 <div class="nav-item" onclick="go('social-listeners',this)"><span class="icon">📡</span><span class="nav-text">Social Listeners</span></div>
+<div class="nav-item" onclick="go('engagers',this)"><span class="icon">👥</span><span class="nav-text">Engagers</span></div>
 <div class="sidebar-section" style="margin-top:12px">Tools</div>
 <div class="nav-item" onclick="go('ad-library',this)"><span class="icon">📺</span><span class="nav-text">Ad Library</span></div>
 <div class="nav-item" onclick="go('keyword-tracker',this)"><span class="icon">🔑</span><span class="nav-text">Keyword Tracker</span></div>
@@ -152,6 +153,28 @@ textarea.intel-input{resize:vertical;min-height:80px}select.intel-input{appearan
 <div class="card"><div class="card-header"><div class="card-title">Competitor Ads</div></div><div id="adArea"></div></div>
 </div></div>
 <!-- KEYWORD TRACKER -->
+<div class="page" id="page-engagers"><div class="animate-in">
+<div class="stats-grid">
+<div class="stat-card pink"><div class="stat-label">Total Engagers</div><div class="stat-value" id="sEngTotal">—</div><div class="stat-change">People engaging with competitors</div></div>
+<div class="stat-card emerald"><div class="stat-label">Positive</div><div class="stat-value" id="sEngPos" style="color:var(--accent-emerald)">—</div></div>
+<div class="stat-card red"><div class="stat-label">Negative</div><div class="stat-value" id="sEngNeg" style="color:var(--accent-red)">—</div><div class="stat-change">Unhappy — target these!</div></div>
+<div class="stat-card blue"><div class="stat-label">Platforms</div><div class="stat-value" id="sEngPlat">—</div></div>
+</div>
+<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+<button class="btn btn-ghost btn-sm" onclick="filterEngagers('all')" id="engFilterAll" style="border-color:var(--accent-red)">All</button>
+<button class="btn btn-ghost btn-sm" onclick="filterEngagers('negative')">🔴 Negative</button>
+<button class="btn btn-ghost btn-sm" onclick="filterEngagers('positive')">🟢 Positive</button>
+<button class="btn btn-ghost btn-sm" onclick="filterEngagers('google_reviews')">📍 Google Reviews</button>
+<button class="btn btn-ghost btn-sm" onclick="filterEngagers('youtube')">📺 YouTube</button>
+<select class="intel-input" style="width:200px;padding:6px 12px;font-size:12px" id="engCompFilter" onchange="filterEngagers(document.querySelector('.eng-filter-active')?.dataset?.filter||'all')">
+<option value="">All Competitors</option>
+</select>
+</div>
+<div class="card"><div class="card-header"><div><div class="card-title">Competitor Engagers</div><div class="card-subtitle">People who review/comment on competitor brands — potential customers for SeaSalt</div></div><div><span style="font-size:12px;color:var(--text-muted)" id="engShowing"></span></div></div>
+<div id="engagersArea"></div>
+</div>
+</div></div>
+<!-- KEYWORD TRACKER -->
 <div class="page" id="page-keyword-tracker"><div class="animate-in">
 <div class="stats-grid">
 <div class="stat-card emerald"><div class="stat-label">Keywords</div><div class="stat-value" id="sKwCount">—</div></div>
@@ -164,9 +187,7 @@ textarea.intel-input{resize:vertical;min-height:80px}select.intel-input{appearan
 </div></div>
 <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()"><div class="modal-box" id="modalBox"></div></div>
 <script>
-// Supabase config — injected at build time by Netlify build plugin (see netlify.toml)
-const SB_URL=window.__SEASALT_SB_URL||'';
-const SB_KEY=window.__SEASALT_SB_KEY||'';
+const SB_URL=window.__SEASALT_SB_URL||'',SB_KEY=window.__SEASALT_SB_KEY||'';
 let db;try{db=supabase.createClient(SB_URL,SB_KEY);document.getElementById('statusDot').style.background='var(--accent-emerald)';document.getElementById('statusText').textContent='Live · Supabase Connected';}catch(e){document.getElementById('statusText').textContent='DB Error';}
 
 function toast(m){const c=document.getElementById('toastContainer'),t=document.createElement('div');t.className='toast';t.textContent=m;c.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='all .3s';setTimeout(()=>t.remove(),300)},3500)}
@@ -176,13 +197,13 @@ function showModal(h){document.getElementById('modalBox').innerHTML=h;document.g
 function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
 function empty(icon,title,desc,btn,action){return`<div class="empty-state"><div class="es-icon">${icon}</div><h3>${title}</h3><p>${desc}</p>${btn?`<button class="btn btn-primary" onclick="${action}">${btn}</button>`:''}</div>`}
 
-const PG={'competitors':{t:'🏆 Competitor Intelligence',s:'Real-time data from Google Places API → Supabase'},'social-spy':{t:'🔍 Social Spy',s:'Monitor competitor social activity'},'insights':{t:'🧠 Insights Engine',s:'Actionable intelligence from competitive data'},'content-studio':{t:'🎨 Content Studio',s:'Content ideas & pipeline'},'social-listeners':{t:'📡 Social Listeners',s:'Brand mention monitoring'},'ad-library':{t:'📺 Ad Library',s:'Competitor ads — powered by Meta Ad Library (public)'},'keyword-tracker':{t:'🔑 Keyword Tracker',s:'SEO ranking intelligence'}};
+const PG={'competitors':{t:'🏆 Competitor Intelligence',s:'Real-time data from Google Places API → Supabase'},'social-spy':{t:'🔍 Social Spy',s:'Monitor competitor social activity'},'insights':{t:'🧠 Insights Engine',s:'Actionable intelligence from competitive data'},'content-studio':{t:'🎨 Content Studio',s:'Content ideas & pipeline'},'social-listeners':{t:'📡 Social Listeners',s:'Brand mention monitoring'},'engagers':{t:'👥 Competitor Engagers',s:'People engaging with competitors — potential SeaSalt customers'},'ad-library':{t:'📺 Ad Library',s:'Competitor ads — powered by Meta Ad Library (public)'},'keyword-tracker':{t:'🔑 Keyword Tracker',s:'SEO ranking intelligence'}};
 function go(p,el){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));if(el)el.classList.add('active');document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));const t=document.getElementById('page-'+p);if(t)t.classList.add('active');const c=PG[p]||{};document.getElementById('pageTitle').textContent=c.t||p;document.getElementById('pageSubtitle').textContent=c.s||''}
 
 // DATA ARRAYS — filled from Supabase only
-let COMP=[],INSIGHTS=[],IDEAS=[],SEO_KW=[],HASHTAGS=[],LISTEN_KW=[],MENTIONS=[],ADS=[],SOC_CONTENT=[];
+let COMP=[],INSIGHTS=[],IDEAS=[],SEO_KW=[],HASHTAGS=[],LISTEN_KW=[],MENTIONS=[],ADS=[],SOC_CONTENT=[],ENGAGERS=[];
 
-async function loadAll(){await Promise.allSettled([loadComp(),loadInsights(),loadIdeas(),loadSeoKw(),loadHashtags(),loadListenKw(),loadMentions(),loadAds(),loadSocContent()]);document.getElementById('lastSync').textContent=new Date().toLocaleTimeString()}
+async function loadAll(){await Promise.allSettled([loadComp(),loadInsights(),loadIdeas(),loadSeoKw(),loadHashtags(),loadListenKw(),loadMentions(),loadAds(),loadSocContent(),loadEngagers()]);document.getElementById('lastSync').textContent=new Date().toLocaleTimeString()}
 
 async function q(table,opts={}){try{let query=db.from(table).select(opts.select||'*');if(opts.eq)for(const[k,v]of Object.entries(opts.eq))query=query.eq(k,v);if(opts.order)query=query.order(opts.order.col,{ascending:opts.order.asc??true});if(opts.limit)query=query.limit(opts.limit);const{data,error}=await query;if(error)throw error;return data||[];}catch(e){console.log(table+':',e.message);return[];}}
 
@@ -205,7 +226,7 @@ function renderComp(){
   const tot=COMP.reduce((s,c)=>s+(c.total_reviews||0),0);document.getElementById('sTotalReviews').textContent=tot.toLocaleString();
   const ls=COMP.reduce((l,c)=>{const d=new Date(c.synced_at||0);return d>l?d:l},new Date(0));
   if(ls.getTime()>0){document.getElementById('sLastSync').textContent=timeAgo(ls);document.getElementById('sCompSub').textContent='All synced'}
-  el.innerHTML=`<table class="data-table"><thead><tr><th></th><th>Competitor</th><th>Rating</th><th>Reviews</th><th>Status</th><th>Threat</th><th>Synced</th></tr></thead><tbody>${COMP.map(c=>`<tr><td><span class="comp-dot" style="background:${c.color||'#666'}"></span></td><td><div style="font-weight:600;color:var(--text-primary)">${esc(c.name)}</div><div style="font-size:11px;color:var(--text-muted)">${esc(c.website||c.url||'')}</div></td><td>${c.rating?`<span class="stars">${'★'.repeat(Math.round(c.rating))}</span> <b>${parseFloat(c.rating).toFixed(1)}</b>`:'—'}</td><td style="font-weight:600">${c.total_reviews?c.total_reviews.toLocaleString():'—'}</td><td><span class="badge ${c.business_status==='OPERATIONAL'?'badge-green':'badge-amber'}">${c.business_status||'—'}</span></td><td><span class="badge ${c.threat_level==='high'?'badge-red':c.threat_level==='medium'?'badge-amber':'badge-green'}">${(c.threat_level||'—').toUpperCase()}</span></td><td style="font-size:11px;color:var(--text-muted)">${timeAgo(c.synced_at)}</td></tr>`).join('')}</tbody></table>`;
+  el.innerHTML=`<table class="data-table"><thead><tr><th></th><th>Competitor</th><th>Rating</th><th>Reviews</th><th>YT Subs</th><th>Score</th><th>Threat</th><th>Synced</th></tr></thead><tbody>${COMP.map(c=>`<tr><td><span class="comp-dot" style="background:${c.color||'#666'}"></span></td><td><div style="font-weight:600;color:var(--text-primary)">${esc(c.name)}</div><div style="font-size:11px;color:var(--text-muted)">${esc(c.website||c.url||'')}${c.youtube_url?` · <a href="${esc(c.youtube_url)}" target="_blank" style="color:var(--accent-red)">YT</a>`:''}</div></td><td>${c.rating?`<span class="stars">${'★'.repeat(Math.round(c.rating))}</span> <b>${parseFloat(c.rating).toFixed(1)}</b>`:'—'}</td><td style="font-weight:600">${c.total_reviews?c.total_reviews.toLocaleString():'—'}</td><td>${c.youtube_subscribers?c.youtube_subscribers.toLocaleString():'—'}</td><td><b style="color:${(c.social_score||0)>=70?'var(--accent-red)':(c.social_score||0)>=40?'var(--accent-amber)':'var(--accent-emerald)'}">${c.social_score||0}</b><span style="font-size:10px;color:var(--text-muted)">/100</span></td><td><span class="badge ${c.threat_level==='critical'?'badge-red':c.threat_level==='high'?'badge-orange':c.threat_level==='medium'?'badge-amber':'badge-green'}">${(c.threat_level||'—').toUpperCase()}</span></td><td style="font-size:11px;color:var(--text-muted)">${timeAgo(c.synced_at)}</td></tr>`).join('')}</tbody></table>`;
   const mx=5;rc.innerHTML=COMP.slice(0,8).map(c=>`<div class="chart-bar" style="height:${(parseFloat(c.rating||0)/mx)*100}%;background:${c.color||'var(--accent-blue)'}"><span class="chart-bar-label">${c.code||''}<br>${parseFloat(c.rating||0).toFixed(1)}</span></div>`).join('');
   const mr=Math.max(...COMP.map(c=>c.total_reviews||0),1);rv.innerHTML=COMP.slice(0,8).map(c=>`<div class="chart-bar" style="height:${((c.total_reviews||0)/mr)*100}%;background:${c.color||'var(--accent-blue)'}"><span class="chart-bar-label">${c.code||''}<br>${c.total_reviews||0}</span></div>`).join('')}
 
@@ -293,6 +314,60 @@ async function saveSocial(){const code=document.getElementById('s1').value,u={};
 
 function openLogPost(){showModal(`<div class="modal-title">📝 Log Post</div><div class="field-group"><label class="field-label">Competitor</label><select class="intel-input" id="p1">${COMP.map(c=>`<option value="${esc(c.name)}" data-code="${c.code}">${esc(c.name)}</option>`).join('')}</select></div><div class="field-group"><label class="field-label">Platform</label><select class="intel-input" id="p2"><option>Instagram</option><option>YouTube</option><option>Facebook</option></select></div><div class="field-group"><label class="field-label">Type</label><input class="intel-input" id="p3" placeholder="Reel, Carousel, Story..."></div><div class="field-group"><label class="field-label">Caption</label><textarea class="intel-input" id="p4" placeholder="Post description"></textarea></div><div class="field-group"><label class="field-label">Likes</label><input class="intel-input" type="number" id="p5" placeholder="5000"></div><div style="display:flex;gap:10px;margin-top:8px"><button class="btn btn-violet" onclick="savePost()">Log</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>`)}
 async function savePost(){const sel=document.getElementById('p1');if(await dbInsert('competitor_content',{competitor_name:sel.value,competitor_code:sel.selectedOptions[0]?.dataset?.code||'',platform:document.getElementById('p2').value,post_type:document.getElementById('p3').value.trim(),caption:document.getElementById('p4').value.trim(),likes:parseInt(document.getElementById('p5').value)||0})){toast('✅ Logged!');closeModal();await loadSocContent()}}
+
+async function loadEngagers(){ENGAGERS=await q('competitor_engagers',{order:{col:'scraped_at',asc:false},limit:500});renderEngagers()}
+
+function renderEngagers(filter='all',compFilter=''){
+  const el=document.getElementById('engagersArea');
+  let filtered=ENGAGERS;
+  if(filter==='negative')filtered=filtered.filter(e=>e.sentiment==='negative');
+  else if(filter==='positive')filtered=filtered.filter(e=>e.sentiment==='positive');
+  else if(filter==='google_reviews')filtered=filtered.filter(e=>e.platform==='google_reviews');
+  else if(filter==='youtube')filtered=filtered.filter(e=>e.platform==='youtube');
+  if(compFilter)filtered=filtered.filter(e=>e.competitor_code===compFilter);
+
+  // Stats
+  document.getElementById('sEngTotal').textContent=ENGAGERS.length;
+  document.getElementById('sEngPos').textContent=ENGAGERS.filter(e=>e.sentiment==='positive').length;
+  document.getElementById('sEngNeg').textContent=ENGAGERS.filter(e=>e.sentiment==='negative').length;
+  const platforms=[...new Set(ENGAGERS.map(e=>e.platform))];
+  document.getElementById('sEngPlat').textContent=platforms.length;
+  document.getElementById('engShowing').textContent=`Showing ${filtered.length} of ${ENGAGERS.length}`;
+
+  // Populate competitor filter dropdown
+  const compSelect=document.getElementById('engCompFilter');
+  if(compSelect.options.length<=1&&COMP.length){
+    COMP.forEach(c=>{const o=document.createElement('option');o.value=c.code;o.textContent=c.name;compSelect.appendChild(o)});
+  }
+
+  if(!filtered.length){el.innerHTML=empty('👥','No Engagers Yet','Run Deep Sync to capture people reviewing and commenting on competitor brands.','🔄 Run Deep Sync','syncCompetitors()');return}
+
+  let html='<table class="data-table"><thead><tr><th>Person</th><th>Competitor</th><th>Platform</th><th>Sentiment</th><th>Content</th><th>Link</th></tr></thead><tbody>';
+  for(const e of filtered.slice(0,200)){
+    const sentBadge=e.sentiment==='positive'?'badge-green':e.sentiment==='negative'?'badge-red':'badge-blue';
+    const platIcon=e.platform==='youtube'?'📺':'📍';
+    const profileLink=e.profile_url?`<a href="${esc(e.profile_url)}" target="_blank" style="color:var(--accent-blue);text-decoration:none">${esc(e.person_name)}</a>`:esc(e.person_name);
+    const contentSnip=e.content?esc(e.content.substring(0,80))+(e.content.length>80?'...':''):'—';
+    const contentLink=e.content_url?`<a href="${esc(e.content_url)}" target="_blank" style="color:var(--accent-blue);font-size:11px">View →</a>`:'—';
+    html+=`<tr>
+      <td style="display:flex;align-items:center;gap:8px">${e.profile_photo?`<img src="${esc(e.profile_photo)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover">`:`<div style="width:28px;height:28px;border-radius:50%;background:var(--bg-elevated);display:flex;align-items:center;justify-content:center;font-size:12px">👤</div>`}<div>${profileLink}${e.rating?` <span class="stars">${'★'.repeat(e.rating)}${'☆'.repeat(5-e.rating)}</span>`:''}</div></td>
+      <td><span style="font-size:12px">${esc(e.competitor_name||'')}</span></td>
+      <td>${platIcon} ${e.platform==='youtube'?'YouTube':'Google'}</td>
+      <td><span class="badge ${sentBadge}">${e.sentiment||'neutral'}</span></td>
+      <td style="max-width:300px;font-size:12px;color:var(--text-muted)">${contentSnip}</td>
+      <td>${contentLink}</td>
+    </tr>`;
+  }
+  html+='</tbody></table>';
+  if(filtered.length>200)html+=`<p style="text-align:center;padding:12px;font-size:12px;color:var(--text-muted)">Showing 200 of ${filtered.length} — filter to see specific groups</p>`;
+  el.innerHTML=html;
+}
+
+function filterEngagers(filter){
+  document.querySelectorAll('.eng-filter-active').forEach(b=>b.classList.remove('eng-filter-active'));
+  const compFilter=document.getElementById('engCompFilter')?.value||'';
+  renderEngagers(filter,compFilter);
+}
 
 function exportData(){toast('📥 Use Supabase Dashboard → Table Editor → Export CSV')}
 
