@@ -451,16 +451,34 @@ function exportData(){toast('📥 Use Supabase Dashboard → Table Editor → Ex
 // ═══════ WEBSITE INTELLIGENCE ═══════
 async function loadWebIntel(){WEB_INTEL=await q('website_intelligence',{order:{col:'site_score',asc:false}});renderWebIntel();renderProducts()}
 
-async function syncWebIntel(site){
-  const b=document.getElementById('btnWebSync');b.disabled=true;b.innerHTML='<span class="spinner"></span> Scanning...';
-  toast('🌐 Scanning websites — this takes 3-5 minutes...');
-  try{
-    let url='/.netlify/functions/web-intel';
-    if(site)url+='?site='+encodeURIComponent(site);
-    const r=await fetch(url);const d=await r.json();
-    if(d.error){toast('❌ '+d.error)}
-    else{toast('✅ '+d.total_sites+' websites scanned');await loadWebIntel()}
-  }catch(e){toast('❌ '+e.message)}
+async function syncWebIntel(singleSite){
+  const b=document.getElementById('btnWebSync');b.disabled=true;
+  if(singleSite){
+    // Single site test mode
+    b.innerHTML='<span class="spinner"></span> Scanning '+singleSite+'...';
+    toast('🌐 Scanning '+singleSite+'...');
+    try{
+      const r=await fetch('/.netlify/functions/web-intel?site='+encodeURIComponent(singleSite));
+      const d=await r.json();toast('✅ '+singleSite+': '+d.products_found+' products, '+(d.products_with_prices||0)+' with prices');await loadWebIntel();
+    }catch(e){toast('❌ '+e.message)}
+    b.disabled=false;b.innerHTML='🌐 Scan All Websites';return;
+  }
+  // Sequential scan: one site at a time via ?scan=CODE&fast=1
+  const codes=['SS','VF','PP','SP','FH','JF','JD','NF','SG','AM','KF'];
+  const names={'SS':'SeaSalt','VF':'Vellanki','PP':'Priya','SP':'Sitara','FH':'Fia Home','JF':'Jampani','JD':'Jandhyala','NF':'Nirmala','SG':'Swagruha','AM':'Amaravathi','KF':'Konaseema'};
+  let done=0,failed=0;
+  for(const code of codes){
+    b.innerHTML=`<span class="spinner"></span> ${names[code]||code} (${done+1}/${codes.length})`;
+    toast(`🌐 Scanning ${names[code]||code}... (${done+1}/${codes.length})`);
+    try{
+      const r=await fetch('/.netlify/functions/web-intel?scan='+code+'&fast=1');
+      const d=await r.json();
+      if(d.error){toast('⚠️ '+code+': '+d.error);failed++}
+      else{done++;toast(`✅ ${names[code]}: ${d.products||0} products, ${d.products_with_prices||0} priced`)}
+    }catch(e){failed++;toast('❌ '+code+': timeout/error')}
+    await loadWebIntel(); // Refresh dashboard after each site
+  }
+  toast(`🎯 Scan complete: ${done} sites scanned, ${failed} failed`);
   b.disabled=false;b.innerHTML='🌐 Scan All Websites';
 }
 
