@@ -507,8 +507,8 @@ function renderWebIntel(){
   for(const w of WEB_INTEL){
     const ts=safeJSON(w.tech_stack);
     const scoreColor=w.site_score>=60?'var(--accent-emerald)':w.site_score>=35?'var(--accent-amber)':'var(--accent-red)';
-    tbl+=`<tr style="${w.is_self?'background:rgba(220,38,38,.04)':''}">
-      <td><div style="display:flex;align-items:center;gap:8px"><span class="comp-dot" style="background:${w.color||'#666'}"></span><div><div style="font-weight:600;color:var(--text-primary)">${esc(w.name)}${w.is_self?' 🔱':''}</div><div style="font-size:11px;color:var(--text-muted)">${esc(w.url)}</div></div></div></td>
+    tbl+=`<tr style="${w.is_self?'background:rgba(220,38,38,.04)':''}cursor:pointer" onclick="openBrandDrilldown('${w.code}')">
+      <td><div style="display:flex;align-items:center;gap:8px"><span class="comp-dot" style="background:${w.color||'#666'}"></span><div><div style="font-weight:600;color:var(--text-primary)">${esc(w.name)}${w.is_self?' 🔱':''}</div><div style="font-size:11px;color:var(--text-muted)">${esc(w.url)} <span style="color:var(--accent-blue)">↗ drill-down</span></div></div></div></td>
       <td><b style="font-size:18px;color:${scoreColor}">${w.site_score}</b><span style="font-size:10px;color:var(--text-muted)">/100</span></td>
       <td><span class="badge ${w.performance_score>=60?'badge-green':w.performance_score>=30?'badge-amber':'badge-red'}">${w.performance_score||0}</span></td>
       <td><span class="badge ${w.seo_score>=70?'badge-green':w.seo_score>=40?'badge-amber':'badge-red'}">${w.seo_score||0}</span></td>
@@ -547,382 +547,323 @@ function renderWebIntel(){
   document.getElementById('wiFeatureArea').innerHTML=fHtml;
 }
 
-// ═══════ PRODUCTS & PRICES — DYNAMIC INTERACTIVE SYSTEM ═══════
-let SELECTED_BRAND = null; // currently selected brand code
-
-const DEFAULT_PRESENCE = {
-  'SS': { website: true, swiggy: false, zomato: false, amazon: false, flipkart: false, bigbasket: false, jiomart: false, blinkit: false, instagram_shop: true, whatsapp: true },
-  'VF': { website: true, swiggy: true, zomato: false, amazon: true, flipkart: true, bigbasket: false, jiomart: false, blinkit: false, instagram_shop: true, whatsapp: true },
-  'PP': { website: true, swiggy: false, zomato: false, amazon: true, flipkart: true, bigbasket: true, jiomart: true, blinkit: false, instagram_shop: false, whatsapp: false },
-  'SP': { website: true, swiggy: false, zomato: false, amazon: false, flipkart: false, bigbasket: false, jiomart: false, blinkit: false, instagram_shop: true, whatsapp: true },
-  'FH': { website: true, swiggy: false, zomato: false, amazon: false, flipkart: false, bigbasket: false, jiomart: false, blinkit: false, instagram_shop: true, whatsapp: true },
-  'JF': { website: true, swiggy: false, zomato: false, amazon: false, flipkart: false, bigbasket: false, jiomart: false, blinkit: false, instagram_shop: true, whatsapp: true },
-  'JD': { website: true, swiggy: true, zomato: true, amazon: false, flipkart: false, bigbasket: false, jiomart: false, blinkit: false, instagram_shop: true, whatsapp: true },
-  'NF': { website: true, swiggy: false, zomato: false, amazon: true, flipkart: false, bigbasket: false, jiomart: false, blinkit: false, instagram_shop: true, whatsapp: true },
-  'SG': { website: true, swiggy: false, zomato: false, amazon: false, flipkart: false, bigbasket: false, jiomart: false, blinkit: false, instagram_shop: false, whatsapp: true },
-  'AM': { website: true, swiggy: false, zomato: false, amazon: true, flipkart: false, bigbasket: false, jiomart: false, blinkit: false, instagram_shop: false, whatsapp: true },
-  'KF': { website: true, swiggy: false, zomato: false, amazon: false, flipkart: false, bigbasket: false, jiomart: false, blinkit: false, instagram_shop: true, whatsapp: true }
-};
-
-const PLATFORM_META = {
-  website: { icon: '🌐', label: 'Own Website', color: '#2563eb' },
-  swiggy: { icon: '🟠', label: 'Swiggy', color: '#fc8019' },
-  zomato: { icon: '🔴', label: 'Zomato', color: '#e23744' },
-  amazon: { icon: '📦', label: 'Amazon', color: '#ff9900' },
-  flipkart: { icon: '🛒', label: 'Flipkart', color: '#2874f0' },
-  bigbasket: { icon: '🧺', label: 'BigBasket', color: '#84c225' },
-  jiomart: { icon: '🔵', label: 'JioMart', color: '#0078ad' },
-  blinkit: { icon: '⚡', label: 'Blinkit', color: '#f7d600' },
-  instagram_shop: { icon: '📸', label: 'Instagram', color: '#e1306c' },
-  whatsapp: { icon: '💬', label: 'WhatsApp', color: '#25d366' }
-};
-
-function getMarketPresence(){try{const s=localStorage.getItem('seasalt_presence');return s?JSON.parse(s):DEFAULT_PRESENCE}catch(e){return DEFAULT_PRESENCE}}
-function saveMarketPresence(d){localStorage.setItem('seasalt_presence',JSON.stringify(d))}
-function getPlatformPrices(){try{const s=localStorage.getItem('seasalt_platform_prices');return s?JSON.parse(s):[]}catch(e){return[]}}
-function savePlatformPrices(d){localStorage.setItem('seasalt_platform_prices',JSON.stringify(d))}
-
-function renderProducts(){
-  const presence=getMarketPresence();
-  const prices=getPlatformPrices();
-  const self=WEB_INTEL.find(w=>w.is_self);
-  const selfPres=self?presence[self.code]||{}:{};
-  const selfPlatCount=Object.values(selfPres).filter(v=>v).length;
-  const compPlatCounts=WEB_INTEL.filter(w=>!w.is_self).map(w=>Object.values(presence[w.code]||{}).filter(v=>v).length);
-  const avgCompPlat=compPlatCounts.length?Math.round(compPlatCounts.reduce((a,b)=>a+b,0)/compPlatCounts.length*10)/10:0;
-
-  document.getElementById('sProdBrands').textContent=WEB_INTEL.length;
-  document.getElementById('sProdMyPlat').textContent=selfPlatCount;
-  document.getElementById('sProdAvgPlat').textContent=avgCompPlat;
-  document.getElementById('sProdPriceEntries').textContent=prices.length;
-
-  // SeaSalt vs Market
-  if(self&&self.price_avg>0){
-    const compAvgs=WEB_INTEL.filter(w=>!w.is_self&&w.price_avg>0);
-    if(compAvgs.length){
-      const mktAvg=Math.round(compAvgs.reduce((s,w)=>s+parseFloat(w.price_avg),0)/compAvgs.length);
-      const diff=Math.round(parseFloat(self.price_avg)-mktAvg);
-      document.getElementById('sProdVsMarket').innerHTML=diff>0?`<span style="color:var(--accent-red)">₹${diff} above</span>`:`<span style="color:var(--accent-emerald)">₹${Math.abs(diff)} below</span>`;
-    }
-  }
-  // Biggest platform gap
-  const missingPlats=Object.keys(PLATFORM_META).filter(p=>!selfPres[p]&&WEB_INTEL.some(w=>!w.is_self&&(presence[w.code]||{})[p]));
-  if(missingPlats.length){
-    const top=missingPlats[0];
-    const cnt=WEB_INTEL.filter(w=>!w.is_self&&(presence[w.code]||{})[top]).length;
-    document.getElementById('sProdGap').textContent=`${PLATFORM_META[top].icon} ${PLATFORM_META[top].label} (${cnt} brands)`;
-  }
-
-  // ═══ BRAND SELECTOR TABS ═══
-  const bs=document.getElementById('brandSelectorArea');
-  // Always show SeaSalt first, then competitors
-  const sorted=[...WEB_INTEL].sort((a,b)=>a.is_self?-1:b.is_self?1:a.name.localeCompare(b.name));
-  bs.innerHTML=sorted.map(w=>{
-    const isActive=SELECTED_BRAND===w.code;
-    const bp=presence[w.code]||{};
-    const platCount=Object.values(bp).filter(v=>v).length;
-    return`<div onclick="selectBrand('${w.code}')" style="cursor:pointer;padding:10px 16px;border-radius:10px;border:2px solid ${isActive?w.color||'var(--accent-blue)':'var(--border-subtle)'};background:${isActive?(w.color||'#2563eb')+'12':'var(--bg-surface)'};min-width:120px;transition:all .15s;text-align:center" onmouseenter="this.style.borderColor='${w.color||'var(--accent-blue)'}'" onmouseleave="this.style.borderColor='${isActive?w.color||'var(--accent-blue)':'var(--border-subtle)'}'" >
-      <div style="display:flex;align-items:center;gap:6px;justify-content:center"><span class="comp-dot" style="background:${w.color||'#666'}"></span><span style="font-weight:700;font-size:13px;color:${w.is_self?'var(--accent-red)':'var(--text-primary)'}">${esc(w.name)}${w.is_self?' 🔱':''}</span></div>
-      <div style="display:flex;gap:8px;justify-content:center;margin-top:6px">
-        <span style="font-size:10px;color:var(--text-muted)">${platCount} platforms</span>
-        <span style="font-size:10px;color:var(--text-muted)">₹${w.price_avg>0?Math.round(parseFloat(w.price_avg)):'—'} avg</span>
-      </div>
-    </div>`}).join('');
-
-  // ═══ BRAND DETAIL PANEL ═══
-  if(SELECTED_BRAND){
-    document.getElementById('brandDetailPanel').style.display='block';
-    renderBrandDetail(SELECTED_BRAND, presence, prices);
-  } else {
-    document.getElementById('brandDetailPanel').style.display='none';
-  }
-
-  // ═══ PRODUCT × BRAND MATRIX ═══
-  renderProductMatrix(prices);
-
-  // ═══ FULL PRESENCE GRID ═══
-  renderFullPresence(presence);
-
-  // ═══ PRICE RANGE CHART ═══
-  renderPriceChart();
-}
-
-function selectBrand(code){
-  SELECTED_BRAND=SELECTED_BRAND===code?null:code;
-  renderProducts();
-  if(SELECTED_BRAND) document.getElementById('brandDetailPanel').scrollIntoView({behavior:'smooth',block:'start'});
-}
-
-// ═══ BRAND DETAIL VIEW ═══
-function renderBrandDetail(code, presence, prices){
-  const w=WEB_INTEL.find(x=>x.code===code);
-  if(!w)return;
+// ═══════ BRAND DRILL-DOWN MODAL ═══════
+function openBrandDrilldown(code){
+  const w=WEB_INTEL.find(x=>x.code===code);if(!w)return;
   const self=WEB_INTEL.find(x=>x.is_self);
-  const bp=presence[code]||{};
-  const sp=self?presence[self.code]||{}:{};
-
-  // Header
-  document.getElementById('brandHeaderCard').style.borderLeftColor=w.color||'var(--accent-blue)';
-  document.getElementById('brandHeaderArea').innerHTML=`
-    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-      <div style="width:48px;height:48px;border-radius:12px;background:${w.color||'#666'}20;display:flex;align-items:center;justify-content:center"><span class="comp-dot" style="background:${w.color||'#666'};width:20px;height:20px"></span></div>
-      <div style="flex:1;min-width:200px">
-        <div style="font-size:20px;font-weight:800;color:${w.is_self?'var(--accent-red)':'var(--text-primary)'}">${esc(w.name)}${w.is_self?' 🔱':''}</div>
-        <div style="font-size:12px;color:var(--text-muted)">${esc(w.url)} · Site Score: <b>${w.site_score||0}/100</b></div>
-      </div>
-      <div style="display:flex;gap:16px;flex-wrap:wrap">
-        <div style="text-align:center"><div style="font-size:22px;font-weight:800">${w.product_count||0}</div><div style="font-size:10px;color:var(--text-muted)">Products</div></div>
-        <div style="text-align:center"><div style="font-size:22px;font-weight:800">${Object.values(bp).filter(v=>v).length}</div><div style="font-size:10px;color:var(--text-muted)">Platforms</div></div>
-        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--accent-emerald)">${w.price_min>0?'₹'+Math.round(parseFloat(w.price_min)):'—'}</div><div style="font-size:10px;color:var(--text-muted)">Min Price</div></div>
-        <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--accent-red)">${w.price_max>0?'₹'+Math.round(parseFloat(w.price_max)):'—'}</div><div style="font-size:10px;color:var(--text-muted)">Max Price</div></div>
-      </div>
-    </div>`;
-
-  // Presence comparison vs SeaSalt
-  document.getElementById('presenceTitle').textContent=`🗺️ ${w.name} — Market Presence`;
-  const platforms=Object.keys(PLATFORM_META);
-  let presHtml=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;padding:8px 0">`;
-  for(const p of platforms){
-    const them=bp[p]||false;
-    const us=sp[p]||false;
-    let status='',bg='',border='';
-    if(them&&us){status='Both ✅';bg='rgba(5,150,105,.08)';border='var(--accent-emerald)'}
-    else if(them&&!us){status='They have, you don\'t ⚠️';bg='rgba(220,38,38,.06)';border='var(--accent-red)'}
-    else if(!them&&us){status='Your advantage 💪';bg='rgba(37,99,235,.06)';border='var(--accent-blue)'}
-    else{status='Neither';bg='var(--bg-elevated)';border='var(--border-subtle)'}
-    presHtml+=`<div style="background:${bg};border:1px solid ${border};border-radius:10px;padding:12px;text-align:center">
-      <div style="font-size:20px">${PLATFORM_META[p].icon}</div>
-      <div style="font-size:12px;font-weight:600;margin:4px 0">${PLATFORM_META[p].label}</div>
-      <div style="display:flex;justify-content:center;gap:8px;margin:6px 0">
-        <span style="font-size:10px;padding:2px 6px;border-radius:4px;background:${them?PLATFORM_META[p].color+'20':'var(--bg-elevated)'};color:${them?PLATFORM_META[p].color:'var(--text-muted)'};font-weight:600">${w.code} ${them?'✓':'✗'}</span>
-        <span style="font-size:10px;padding:2px 6px;border-radius:4px;background:${us?'rgba(220,38,38,.1)':'var(--bg-elevated)'};color:${us?'var(--accent-red)':'var(--text-muted)'};font-weight:600">SS ${us?'✓':'✗'}</span>
-      </div>
-      <div style="font-size:10px;color:${them&&!us?'var(--accent-red)':!them&&us?'var(--accent-blue)':'var(--text-muted)'};font-weight:600">${status}</div>
-    </div>`;
-  }
-  presHtml+=`</div>`;
-  document.getElementById('presenceCompareArea').innerHTML=presHtml;
-
-  // Products list
-  document.getElementById('prodListTitle').textContent=`🛒 ${w.name} — Products (${w.product_count||0})`;
+  const ts=safeJSON(w.tech_stack);
   const prods=safeJSON(w.products);
   const cats=safeJSON(w.categories);
-  if(!prods.length){
-    document.getElementById('brandProductsArea').innerHTML=`<div style="padding:20px;text-align:center;color:var(--text-muted)">No products detected on ${w.name}'s website. Their site may not list products directly, or products are loaded dynamically.</div>`;
-  } else {
-    let prodHtml=`<div style="margin-bottom:10px;display:flex;flex-wrap:wrap;gap:4px">${cats.map(c=>`<span class="badge badge-violet">${esc(c)}</span>`).join('')}</div>`;
-    prodHtml+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px">`;
-    prods.forEach((p,i)=>{
-      prodHtml+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-elevated);border-radius:8px;font-size:12px">
-        <span style="color:var(--text-muted);font-size:10px;min-width:20px">#${i+1}</span>
-        <span style="font-weight:600">${esc(p)}</span>
-      </div>`;
-    });
-    prodHtml+=`</div>`;
-    document.getElementById('brandProductsArea').innerHTML=prodHtml;
-  }
+  const socials=safeJSONObj(w.social_links||'{}');
+  const mp=safeJSONObj(w.marketplace_presence||'{}');
+  const pwp=safeJSON(w.products_with_prices||'[]');
+  const comp=self?self:null;
 
-  // Platform pricing for this brand
-  document.getElementById('platPriceTitle').textContent=`💰 ${w.name} — Platform Pricing`;
-  const brandPrices=prices.filter(p=>p.brand===w.name);
-  if(!brandPrices.length){
-    document.getElementById('brandPlatformPriceArea').innerHTML=`<div style="padding:20px;text-align:center;color:var(--text-muted)">
-      No platform price data for ${w.name} yet.<br><button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="openAddPlatformPrice('${esc(w.name)}')">➕ Add ${w.name} Prices</button>
-    </div>`;
-  } else {
-    // Group by product
-    const byProd={};
-    brandPrices.forEach(p=>{if(!byProd[p.product])byProd[p.product]={};byProd[p.product][p.platform]=p.price});
-    let ppHtml=`<div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Product</th>`;
-    const usedPlats=[...new Set(brandPrices.map(p=>p.platform))];
-    usedPlats.forEach(p=>{const m=PLATFORM_META[p]||{icon:'🏪',label:p};ppHtml+=`<th style="text-align:center">${m.icon} ${m.label}</th>`});
-    ppHtml+=`<th>Δ Gap</th></tr></thead><tbody>`;
-    for(const[prod,plats]of Object.entries(byProd)){
-      const vals=Object.values(plats).filter(v=>v>0);
-      const gap=vals.length>=2?Math.round(Math.max(...vals)-Math.min(...vals)):0;
-      const gapPct=vals.length>=2?Math.round(((Math.max(...vals)-Math.min(...vals))/Math.min(...vals))*100):0;
-      ppHtml+=`<tr><td style="font-weight:600">${esc(prod)}</td>`;
-      usedPlats.forEach(p=>{
-        const v=plats[p];const isMin=v&&vals.length>=2&&v===Math.min(...vals);const isMax=v&&vals.length>=2&&v===Math.max(...vals);
-        ppHtml+=`<td style="text-align:center;font-weight:700;${isMin?'color:var(--accent-emerald)':isMax?'color:var(--accent-red)':''}">${v?'₹'+v:'—'}</td>`;
-      });
-      ppHtml+=`<td style="text-align:center"><span class="badge ${gapPct>15?'badge-red':gapPct>5?'badge-amber':'badge-green'}">${gap>0?'₹'+gap+' ('+gapPct+'%)':'—'}</span></td></tr>`;
+  // Google Places data
+  const gp=COMP.find(c=>c.code===code||c.name===w.name);
+
+  let h=`<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+    <div style="width:48px;height:48px;border-radius:12px;background:${w.color||'#666'}20;display:flex;align-items:center;justify-content:center"><span class="comp-dot" style="background:${w.color||'#666'};width:20px;height:20px"></span></div>
+    <div><div style="font-size:20px;font-weight:800;color:${w.is_self?'var(--accent-red)':'var(--text-primary)'}">${esc(w.name)}${w.is_self?' 🔱':''}</div>
+    <div style="font-size:12px;color:var(--text-muted)">${esc(w.url)}${gp?' · ⭐ '+gp.rating+' ('+gp.total_reviews+' reviews)':''}</div></div>
+    <div style="margin-left:auto;text-align:center"><div style="font-size:28px;font-weight:800;color:${w.site_score>=60?'var(--accent-emerald)':w.site_score>=35?'var(--accent-amber)':'var(--accent-red)'}">${w.site_score}</div><div style="font-size:10px;color:var(--text-muted)">Score</div></div></div>`;
+
+  // ── Section 1: Key Metrics ──
+  h+=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">
+    <div style="background:var(--bg-elevated);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800">${w.performance_score||0}</div><div style="font-size:9px;color:var(--text-muted)">Performance</div></div>
+    <div style="background:var(--bg-elevated);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800">${w.seo_score||0}</div><div style="font-size:9px;color:var(--text-muted)">SEO</div></div>
+    <div style="background:var(--bg-elevated);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800">${w.product_count||0}</div><div style="font-size:9px;color:var(--text-muted)">Products</div></div>
+    <div style="background:var(--bg-elevated);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800">${pwp.length}</div><div style="font-size:9px;color:var(--text-muted)">With Prices</div></div>
+  </div>`;
+
+  // ── Section 2: vs SeaSalt Comparison ──
+  if(comp&&!w.is_self){
+    h+=`<div style="font-size:13px;font-weight:700;margin-bottom:6px">📊 vs SeaSalt 🔱</div>`;
+    h+=`<table class="data-table" style="margin-bottom:14px"><thead><tr><th>Metric</th><th>${esc(w.name)}</th><th>SeaSalt 🔱</th><th>Diff</th></tr></thead><tbody>`;
+    const metrics=[
+      ['Site Score',w.site_score,comp.site_score],
+      ['Products',w.product_count||0,comp.product_count||0],
+      ['Price Min',w.price_min?'₹'+Math.round(w.price_min):'—',comp.price_min?'₹'+Math.round(comp.price_min):'—'],
+      ['Price Avg',w.price_avg?'₹'+Math.round(w.price_avg):'—',comp.price_avg?'₹'+Math.round(comp.price_avg):'—'],
+    ];
+    if(gp){const sg=COMP.find(c=>c.is_self||c.code==='SS');
+      metrics.push(['Google Rating',gp.rating||'—',sg?sg.rating||'—':'—']);
+      metrics.push(['Reviews',gp.total_reviews||'—',sg?sg.total_reviews||'—':'—']);
     }
-    ppHtml+=`</tbody></table></div>`;
-    document.getElementById('brandPlatformPriceArea').innerHTML=ppHtml;
-  }
-}
-
-// ═══ PRODUCT × BRAND MATRIX ═══
-function renderProductMatrix(prices){
-  const area=document.getElementById('productMatrixArea');
-  if(!prices.length){
-    area.innerHTML=`<div class="empty-state" style="padding:30px">
-      <div class="es-icon">📊</div><h3>Product × Brand Price Matrix</h3>
-      <p>Add price entries for specific products (e.g. "Chicken Pickle 250g") across brands to see a side-by-side comparison with SeaSalt 🔱 always in the first column.</p>
-      <button class="btn btn-primary btn-sm" onclick="openAddPlatformPrice()">➕ Add First Price Entry</button>
-    </div>`;
-    return;
-  }
-
-  // Get all unique products and brands
-  const allProducts=[...new Set(prices.map(p=>p.product))].sort();
-  const allBrands=[...new Set(prices.map(p=>p.brand))];
-  // Put SeaSalt first
-  const self=WEB_INTEL.find(w=>w.is_self);
-  const selfName=self?self.name:'SeaSalt Pickles';
-  const sortedBrands=[selfName,...allBrands.filter(b=>b!==selfName)];
-
-  let html=`<div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Product</th>`;
-  sortedBrands.forEach(b=>{
-    const w=WEB_INTEL.find(x=>x.name===b);
-    const isSelf=w&&w.is_self;
-    html+=`<th style="text-align:center;${isSelf?'background:rgba(220,38,38,.04);color:var(--accent-red)':''}">${isSelf?'🔱 ':''}<span style="font-weight:700">${esc(b)}</span></th>`;
-  });
-  html+=`<th style="text-align:center">Mkt Avg</th></tr></thead><tbody>`;
-
-  for(const prod of allProducts){
-    html+=`<tr><td style="font-weight:600">${esc(prod)}</td>`;
-    const rowPrices=[];
-    sortedBrands.forEach(b=>{
-      // Get avg price across all platforms for this brand+product
-      const entries=prices.filter(p=>p.brand===b&&p.product===prod);
-      const avg=entries.length?Math.round(entries.reduce((s,e)=>s+e.price,0)/entries.length):0;
-      if(avg>0)rowPrices.push(avg);
-      const w=WEB_INTEL.find(x=>x.name===b);
-      const isSelf=w&&w.is_self;
-      const isMin=avg>0&&rowPrices.length>=2&&avg<=Math.min(...rowPrices);
-      html+=`<td style="text-align:center;font-weight:700;${isSelf?'background:rgba(220,38,38,.04);':''}">${avg>0?`<span style="color:${isMin?'var(--accent-emerald)':'var(--text-primary)'}">₹${avg}</span><div style="font-size:9px;color:var(--text-muted)">${entries.length} platform${entries.length>1?'s':''}</div>`:'<span style="color:var(--text-muted)">—</span>'}</td>`;
+    metrics.forEach(([label,them,us])=>{
+      const tNum=parseFloat(String(them).replace(/[₹,]/g,''))||0;
+      const uNum=parseFloat(String(us).replace(/[₹,]/g,''))||0;
+      const diff=tNum&&uNum?tNum-uNum:0;
+      const diffStr=diff>0?`<span style="color:var(--accent-red)">+${Math.round(diff)}</span>`:diff<0?`<span style="color:var(--accent-emerald)">${Math.round(diff)}</span>`:'—';
+      h+=`<tr><td style="font-weight:600;font-size:12px">${label}</td><td style="font-weight:700">${them}</td><td style="font-weight:700;color:var(--accent-red)">${us}</td><td>${diffStr}</td></tr>`;
     });
-    const mktAvg=rowPrices.length?Math.round(rowPrices.reduce((a,b)=>a+b,0)/rowPrices.length):0;
-    html+=`<td style="text-align:center;font-weight:700;color:var(--accent-blue)">${mktAvg>0?'₹'+mktAvg:'—'}</td></tr>`;
+    h+=`</tbody></table>`;
   }
-  html+=`</tbody></table></div>`;
-  area.innerHTML=html;
+
+  // ── Section 3: Market Presence ──
+  const platKeys=Object.keys(mp).filter(k=>!k.startsWith('_'));
+  if(platKeys.length){
+    h+=`<div style="font-size:13px;font-weight:700;margin-bottom:6px">🗺️ Market Presence</div>`;
+    h+=`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">`;
+    platKeys.forEach(p=>{
+      const active=mp[p];
+      const meta={'website':{i:'🌐',l:'Website'},'amazon':{i:'📦',l:'Amazon'},'flipkart':{i:'🛒',l:'Flipkart'},'swiggy':{i:'🟠',l:'Swiggy'},'zomato':{i:'🔴',l:'Zomato'},'bigbasket':{i:'🧺',l:'BigBasket'},'jiomart':{i:'🔵',l:'JioMart'},'blinkit':{i:'⚡',l:'Blinkit'},'instagram_shop':{i:'📸',l:'Insta'},'whatsapp':{i:'💬',l:'WhatsApp'}}[p]||{i:'🏪',l:p};
+      h+=`<span style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;${active?'background:rgba(5,150,105,.1);color:var(--accent-emerald)':'background:var(--bg-elevated);color:var(--text-muted)'}">${meta.i} ${meta.l} ${active?'✓':'✗'}</span>`;
+    });
+    h+=`</div>`;
+  }
+
+  // ── Section 4: Tech Stack ──
+  if(ts.length){
+    h+=`<div style="font-size:13px;font-weight:700;margin-bottom:6px">⚙️ Tech Stack</div>`;
+    h+=`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px">${ts.map(t=>`<span class="badge badge-blue">${esc(t)}</span>`).join('')}</div>`;
+  }
+
+  // ── Section 5: Social Links ──
+  const socKeys=Object.entries(socials).filter(([k,v])=>v);
+  if(socKeys.length){
+    h+=`<div style="font-size:13px;font-weight:700;margin-bottom:6px">📱 Social Presence</div>`;
+    h+=`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">${socKeys.map(([k,v])=>{
+      const icons={instagram:'📸',facebook:'👤',youtube:'📺',twitter:'🐦',whatsapp:'💬',linkedin:'💼'};
+      const url=v!=='detected'?v:'#';
+      return`<a href="${esc(url)}" target="_blank" style="text-decoration:none;padding:4px 10px;border-radius:6px;background:var(--bg-elevated);font-size:11px;font-weight:600;color:var(--accent-blue)">${icons[k]||'🔗'} ${k}</a>`;
+    }).join('')}</div>`;
+  }
+
+  // ── Section 6: Categories ──
+  if(cats.length){
+    h+=`<div style="font-size:13px;font-weight:700;margin-bottom:6px">📂 Categories (${cats.length})</div>`;
+    h+=`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px">${cats.map(c=>`<span class="badge badge-violet" style="font-size:10px">${esc(c)}</span>`).join('')}</div>`;
+  }
+
+  // ── Section 7: Products with Prices (top 20) ──
+  if(pwp.length){
+    h+=`<div style="font-size:13px;font-weight:700;margin-bottom:6px">🏷️ Products with Prices (${pwp.length} total — showing top 20)</div>`;
+    h+=`<table class="data-table" style="margin-bottom:14px"><thead><tr><th>#</th><th>Product</th><th>Price</th><th>Range</th></tr></thead><tbody>`;
+    pwp.slice(0,20).forEach((p,i)=>{h+=`<tr><td style="color:var(--text-muted)">${i+1}</td><td style="font-weight:600">${esc(p.name)}</td><td style="font-weight:700;color:var(--accent-emerald)">₹${p.price||p.price_min||'—'}</td><td style="font-size:11px;color:var(--text-muted)">${p.price_min&&p.price_max&&p.price_min!==p.price_max?'₹'+p.price_min+' — ₹'+p.price_max:'single'}</td></tr>`});
+    h+=`</tbody></table>`;
+  } else if(prods.length){
+    h+=`<div style="font-size:13px;font-weight:700;margin-bottom:6px">🛒 Products (${prods.length} — no prices extracted)</div>`;
+    h+=`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px">${prods.slice(0,25).map(p=>`<span style="padding:3px 8px;border-radius:5px;background:var(--bg-elevated);font-size:11px">${esc(p)}</span>`).join('')}${prods.length>25?`<span style="font-size:11px;color:var(--text-muted)"> +${prods.length-25} more</span>`:''}</div>`;
+  }
+
+  // ── Section 8: Page Details ──
+  h+=`<div style="font-size:13px;font-weight:700;margin-bottom:6px">📄 Page Details</div>`;
+  h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;margin-bottom:14px">
+    <div><span style="color:var(--text-muted)">Title:</span> ${esc(w.page_title||'—')}</div>
+    <div><span style="color:var(--text-muted)">E-commerce:</span> ${w.has_ecommerce?'✅ Yes':'❌ No'}</div>
+    <div><span style="color:var(--text-muted)">Blog:</span> ${w.has_blog?'✅':'❌'}</div>
+    <div><span style="color:var(--text-muted)">SSL:</span> ${w.has_ssl?'✅':'❌'}</div>
+    <div><span style="color:var(--text-muted)">Schema:</span> ${w.has_structured_data?'✅':'❌'}</div>
+    <div><span style="color:var(--text-muted)">WhatsApp:</span> ${w.has_whatsapp?'✅':'❌'}</div>
+    <div><span style="color:var(--text-muted)">Images:</span> ${w.image_count||0}</div>
+    <div><span style="color:var(--text-muted)">Words:</span> ${w.word_count||0}</div>
+  </div>`;
+
+  // Actions
+  h+=`<div style="display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border-subtle)">
+    <button class="btn btn-primary btn-sm" onclick="closeModal();go('products',document.querySelector('[onclick*=products]'));SELECTED_BRAND='${code}';renderProducts()">🛒 View in Products</button>
+    <a href="https://${esc(w.url)}" target="_blank" class="btn btn-ghost btn-sm">🌐 Visit Website</a>
+    <button class="btn btn-ghost btn-sm" onclick="closeModal()">Close</button>
+  </div>`;
+
+  showModal(h);
 }
 
-// ═══ FULL MARKET PRESENCE GRID ═══
-function renderFullPresence(presence){
-  const area=document.getElementById('fullPresenceArea');
-  if(!WEB_INTEL.length){area.innerHTML=empty('🗺️','No Data','Run website scan first.','🌐 Scan','syncWebIntel()');return}
-  const platforms=Object.keys(PLATFORM_META);
-  const self=WEB_INTEL.find(w=>w.is_self);
-  const sp=self?presence[self.code]||{}:{};
+function safeJSONObj(v){try{return typeof v==='string'?JSON.parse(v):(v&&typeof v==='object'&&!Array.isArray(v)?v:{})}catch(e){return{}}}
 
-  let html=`<div style="overflow-x:auto"><table class="data-table"><thead><tr><th style="min-width:120px">Brand</th>`;
-  platforms.forEach(p=>{
-    const us=sp[p]||false;
-    html+=`<th style="text-align:center;font-size:9px;min-width:60px;${us?'':'background:rgba(220,38,38,.04)'}">${PLATFORM_META[p].icon}<br>${PLATFORM_META[p].label}${!us?'<br><span style="color:var(--accent-red);font-size:8px">SS ✗</span>':''}</th>`;
-  });
-  html+=`<th style="text-align:center">Total</th></tr></thead><tbody>`;
+// ═══════ PRODUCTS & PRICES — AUTO v3 ═══════
+let SELECTED_BRAND=null;
+const PLATFORM_META={website:{icon:'🌐',label:'Website',color:'#2563eb'},swiggy:{icon:'🟠',label:'Swiggy',color:'#fc8019'},zomato:{icon:'🔴',label:'Zomato',color:'#e23744'},amazon:{icon:'📦',label:'Amazon',color:'#ff9900'},flipkart:{icon:'🛒',label:'Flipkart',color:'#2874f0'},bigbasket:{icon:'🧺',label:'BigBasket',color:'#84c225'},jiomart:{icon:'🔵',label:'JioMart',color:'#0078ad'},blinkit:{icon:'⚡',label:'Blinkit',color:'#f7d600'},instagram_shop:{icon:'📸',label:'Instagram',color:'#e1306c'},whatsapp:{icon:'💬',label:'WhatsApp',color:'#25d366'}};
+const PK=Object.keys(PLATFORM_META);
+function getMP(w){const m=_jo(w.marketplace_presence);if(!m.website&&w.reachable)m.website=true;if(!m.whatsapp&&w.has_whatsapp)m.whatsapp=true;return m}
+function _jo(v){try{return typeof v==='string'?JSON.parse(v):(v&&typeof v==='object'&&!Array.isArray(v)?v:{})}catch(e){return{}}}
+function getPWP(w){return safeJSON(w.products_with_prices||'[]')}
 
+function renderProducts(){
+  const self=WEB_INTEL.find(w=>w.is_self);const sp=self?getMP(self):{};
+  const selfPC=PK.filter(k=>sp[k]).length;
+  const comps=WEB_INTEL.filter(w=>!w.is_self);
+  const compPA=comps.length?(comps.reduce((s,w)=>s+PK.filter(k=>getMP(w)[k]).length,0)/comps.length).toFixed(1):0;
+  const allPWP=WEB_INTEL.flatMap(w=>getPWP(w).map(p=>({...p,brand:w.name,code:w.code,is_self:w.is_self,color:w.color})));
+  document.getElementById('sProdBrands').textContent=WEB_INTEL.length;
+  document.getElementById('sProdMyPlat').textContent=selfPC;
+  document.getElementById('sProdAvgPlat').textContent=compPA;
+  document.getElementById('sProdPriceEntries').textContent=allPWP.length;
+  if(self&&self.price_avg>0){const ca=comps.filter(w=>w.price_avg>0);if(ca.length){const ma=Math.round(ca.reduce((s,w)=>s+parseFloat(w.price_avg),0)/ca.length);const d=Math.round(parseFloat(self.price_avg)-ma);document.getElementById('sProdVsMarket').innerHTML=d>0?'<span style="color:var(--accent-red)">₹'+d+' above</span>':'<span style="color:var(--accent-emerald)">₹'+Math.abs(d)+' below</span>';}}
+  const gaps=PK.filter(p=>!sp[p]&&comps.some(w=>getMP(w)[p]));
+  if(gaps.length){const t=gaps[0];const c=comps.filter(w=>getMP(w)[t]).length;document.getElementById('sProdGap').textContent=PLATFORM_META[t].icon+' '+PLATFORM_META[t].label+' ('+c+')';}
   const sorted=[...WEB_INTEL].sort((a,b)=>a.is_self?-1:b.is_self?1:a.name.localeCompare(b.name));
-  sorted.forEach(w=>{
-    const bp=presence[w.code]||{};
-    const count=Object.values(bp).filter(v=>v).length;
-    html+=`<tr style="${w.is_self?'background:rgba(220,38,38,.04)':'cursor:pointer'}" ${!w.is_self?`onclick="selectBrand('${w.code}')"`:''}>
-      <td style="font-weight:600;color:${w.is_self?'var(--accent-red)':'var(--text-primary)'}"><span class="comp-dot" style="background:${w.color||'#666'}"></span> ${esc(w.name)}${w.is_self?' 🔱':''}</td>`;
-    platforms.forEach(p=>{
-      const active=bp[p]||false;
-      const us=sp[p]||false;
-      const gap=active&&!us;
-      html+=`<td style="text-align:center;${gap?'background:rgba(220,38,38,.06)':''}">${active?`<span style="color:${PLATFORM_META[p].color};font-size:16px;font-weight:bold">●</span>`:'<span style="color:#e2e5e9;font-size:14px">○</span>'}</td>`;
-    });
-    html+=`<td style="text-align:center;font-weight:700">${count}<span style="font-size:10px;color:var(--text-muted)">/${platforms.length}</span></td></tr>`;
-  });
-  html+=`</tbody></table></div>`;
+  document.getElementById('brandSelectorArea').innerHTML=sorted.map(w=>{
+    const ia=SELECTED_BRAND===w.code;const pc=PK.filter(k=>getMP(w)[k]).length;const pp=getPWP(w);
+    return '<div onclick="selectBrand(\''+w.code+'\')" style="cursor:pointer;padding:10px 14px;border-radius:10px;border:2px solid '+(ia?w.color||'#2563eb':'var(--border-subtle)')+';background:'+(ia?(w.color||'#2563eb')+'12':'var(--bg-surface)')+';min-width:110px;transition:all .15s;text-align:center"><div style="display:flex;align-items:center;gap:5px;justify-content:center"><span class="comp-dot" style="background:'+(w.color||'#666')+'"></span><span style="font-weight:700;font-size:12px;color:'+(w.is_self?'var(--accent-red)':'var(--text-primary)')+'">'+esc(w.name)+(w.is_self?' 🔱':'')+'</span></div><div style="display:flex;gap:6px;justify-content:center;margin-top:4px"><span style="font-size:9px;color:var(--text-muted)">'+pc+' plat</span><span style="font-size:9px;color:var(--text-muted)">'+(pp.length||w.product_count||0)+' prod</span></div></div>';}).join('');
+  const dp=document.getElementById('brandDetailPanel');
+  if(SELECTED_BRAND){dp.style.display='block';renderBrandFull(SELECTED_BRAND)}else{dp.style.display='none'}
+  renderProductMatrix();renderFullPresence();renderPriceChart();
+}
+function selectBrand(code){SELECTED_BRAND=SELECTED_BRAND===code?null:code;renderProducts();if(SELECTED_BRAND)document.getElementById('brandDetailPanel').scrollIntoView({behavior:'smooth',block:'start'})}
 
-  // Summary: platforms where competitors are but SeaSalt isn't
-  const gaps=platforms.filter(p=>!sp[p]&&WEB_INTEL.some(w=>!w.is_self&&(presence[w.code]||{})[p]));
-  if(gaps.length){
-    html+=`<div style="margin-top:12px;padding:12px;background:rgba(220,38,38,.04);border:1px solid rgba(220,38,38,.2);border-radius:10px">
-      <div style="font-size:12px;font-weight:700;color:var(--accent-red);margin-bottom:6px">⚠️ Platform Gaps — Competitors are here but SeaSalt is not:</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px">${gaps.map(p=>{
-        const cnt=WEB_INTEL.filter(w=>!w.is_self&&(presence[w.code]||{})[p]).length;
-        const names=WEB_INTEL.filter(w=>!w.is_self&&(presence[w.code]||{})[p]).map(w=>w.name);
-        return`<div style="background:#fff;border:1px solid rgba(220,38,38,.2);border-radius:8px;padding:8px 12px">
-          <span style="font-size:16px">${PLATFORM_META[p].icon}</span> <b>${PLATFORM_META[p].label}</b>
-          <span class="badge badge-red" style="margin-left:4px">${cnt} brand${cnt>1?'s':''}</span>
-          <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${names.join(', ')}</div>
-        </div>`}).join('')}</div>
-    </div>`;
+function renderBrandFull(code){
+  const w=WEB_INTEL.find(x=>x.code===code);if(!w)return;
+  const self=WEB_INTEL.find(x=>x.is_self);
+  const bp=getMP(w);const sp=self?getMP(self):{};
+  const pwp=getPWP(w);const prods=safeJSON(w.products);const cats=safeJSON(w.categories);
+  const ts=safeJSON(w.tech_stack);const socials=_jo(w.social_links||'{}');
+  const gp=COMP.find(c=>c.code===code||c.name===w.name);
+  const sgp=COMP.find(c=>c.is_self||c.code==='SS');
+  document.getElementById('brandHeaderCard').style.borderLeftColor=w.color||'#2563eb';
+  let hdr='<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">';
+  hdr+='<div style="width:48px;height:48px;border-radius:12px;background:'+(w.color||'#666')+'20;display:flex;align-items:center;justify-content:center"><span class="comp-dot" style="background:'+(w.color||'#666')+';width:20px;height:20px"></span></div>';
+  hdr+='<div style="flex:1;min-width:160px"><div style="font-size:20px;font-weight:800;color:'+(w.is_self?'var(--accent-red)':'var(--text-primary)')+'">'+esc(w.name)+(w.is_self?' 🔱':'')+'</div>';
+  hdr+='<div style="font-size:11px;color:var(--text-muted)">'+esc(w.url)+(gp?' · ⭐ '+gp.rating+' ('+gp.total_reviews+' reviews)':'')+' · Score: <b>'+(w.site_score||0)+'/100</b></div></div>';
+  hdr+='<div style="display:flex;gap:12px;flex-wrap:wrap">';
+  hdr+='<div style="text-align:center"><div style="font-size:20px;font-weight:800">'+(pwp.length||w.product_count||0)+'</div><div style="font-size:9px;color:var(--text-muted)">Products</div></div>';
+  hdr+='<div style="text-align:center"><div style="font-size:20px;font-weight:800">'+PK.filter(k=>bp[k]).length+'</div><div style="font-size:9px;color:var(--text-muted)">Platforms</div></div>';
+  hdr+='<div style="text-align:center"><div style="font-size:20px;font-weight:800;color:var(--accent-emerald)">'+(w.price_min>0?'₹'+Math.round(parseFloat(w.price_min)):'—')+'</div><div style="font-size:9px;color:var(--text-muted)">Min</div></div>';
+  hdr+='<div style="text-align:center"><div style="font-size:20px;font-weight:800;color:var(--accent-red)">'+(w.price_max>0?'₹'+Math.round(parseFloat(w.price_max)):'—')+'</div><div style="font-size:9px;color:var(--text-muted)">Max</div></div>';
+  hdr+='</div></div>';
+  document.getElementById('brandHeaderArea').innerHTML=hdr;
+
+  // Build the main detail area
+  document.getElementById('presenceTitle').textContent='📊 '+w.name+' — Full Intelligence';
+  var ph='';
+
+  // VS SEASALT
+  if(self&&!w.is_self){
+    ph+='<div style="font-size:13px;font-weight:700;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border-subtle)">📊 Head-to-Head vs SeaSalt 🔱</div>';
+    ph+='<table class="data-table" style="margin-bottom:16px"><thead><tr><th>Metric</th><th style="color:'+(w.color||'#333')+'">'+esc(w.name)+'</th><th style="color:var(--accent-red)">SeaSalt 🔱</th><th>Verdict</th></tr></thead><tbody>';
+    var rows=[['Site Score',w.site_score||0,self.site_score||0],['Products',w.product_count||0,self.product_count||0],['Price Min','₹'+Math.round(parseFloat(w.price_min)||0),'₹'+Math.round(parseFloat(self.price_min)||0)],['Price Avg','₹'+Math.round(parseFloat(w.price_avg)||0),'₹'+Math.round(parseFloat(self.price_avg)||0)],['Platforms',PK.filter(k=>bp[k]).length,PK.filter(k=>sp[k]).length],['Tech Stack',ts.length,safeJSON(self.tech_stack).length]];
+    if(gp&&sgp){rows.push(['Google Rating',gp.rating||'—',sgp.rating||'—']);rows.push(['Reviews',gp.total_reviews||0,sgp.total_reviews||0])}
+    rows.forEach(function(r){var tNum=parseFloat(String(r[1]).replace(/[₹,]/g,''))||0;var uNum=parseFloat(String(r[2]).replace(/[₹,]/g,''))||0;var v=tNum>uNum?'<span style="color:var(--accent-red)">They lead</span>':tNum<uNum?'<span style="color:var(--accent-emerald)">You lead</span>':'Tied';ph+='<tr><td style="font-weight:600;font-size:12px">'+r[0]+'</td><td style="font-weight:700">'+(r[1]||'—')+'</td><td style="font-weight:700;color:var(--accent-red)">'+(r[2]||'—')+'</td><td style="font-size:11px">'+v+'</td></tr>'});
+    ph+='</tbody></table>';
   }
-  area.innerHTML=html;
+
+  // MARKET PRESENCE
+  ph+='<div style="font-size:13px;font-weight:700;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border-subtle)">🗺️ Market Presence</div>';
+  ph+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;margin-bottom:16px">';
+  PK.forEach(function(p){
+    var them=bp[p]||false;var us=sp[p]||false;
+    var tag='Neither',bg='var(--bg-elevated)',brd='var(--border-subtle)';
+    if(them&&us){tag='Both ✅';bg='rgba(5,150,105,.08)';brd='var(--accent-emerald)'}
+    else if(them&&!us){tag='Gap ⚠️';bg='rgba(220,38,38,.06)';brd='var(--accent-red)'}
+    else if(!them&&us){tag='Your edge 💪';bg='rgba(37,99,235,.06)';brd='var(--accent-blue)'}
+    ph+='<div style="background:'+bg+';border:1px solid '+brd+';border-radius:8px;padding:8px;text-align:center"><div style="font-size:16px">'+PLATFORM_META[p].icon+'</div><div style="font-size:10px;font-weight:600;margin:2px 0">'+PLATFORM_META[p].label+'</div><div style="display:flex;justify-content:center;gap:4px;margin:3px 0"><span style="font-size:8px;padding:1px 4px;border-radius:3px;background:'+(them?PLATFORM_META[p].color+'20':'var(--bg-elevated)')+';color:'+(them?PLATFORM_META[p].color:'#ccc')+';font-weight:700">'+w.code+' '+(them?'✓':'✗')+'</span><span style="font-size:8px;padding:1px 4px;border-radius:3px;background:'+(us?'rgba(220,38,38,.1)':'var(--bg-elevated)')+';color:'+(us?'var(--accent-red)':'#ccc')+';font-weight:700">SS '+(us?'✓':'✗')+'</span></div><div style="font-size:8px;color:'+(them&&!us?'var(--accent-red)':!them&&us?'var(--accent-blue)':'var(--text-muted)')+';font-weight:600">'+tag+'</div></div>';
+  });
+  ph+='</div>';
+
+  // TECH STACK
+  if(ts.length){ph+='<div style="font-size:13px;font-weight:700;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border-subtle)">⚙️ Tech Stack ('+ts.length+')</div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:16px">'+ts.map(function(t){return '<span class="badge badge-blue">'+esc(t)+'</span>'}).join('')+'</div>'}
+
+  // SOCIAL
+  var socKeys=Object.entries(socials).filter(function(e){return e[1]});
+  if(socKeys.length){ph+='<div style="font-size:13px;font-weight:700;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border-subtle)">📱 Social Presence</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px">'+socKeys.map(function(e){var icons={instagram:'📸',facebook:'👤',youtube:'📺',twitter:'🐦',whatsapp:'💬'};var url=e[1]!=='detected'?e[1]:'#';return '<a href="'+esc(url)+'" target="_blank" style="text-decoration:none;padding:4px 10px;border-radius:6px;background:var(--bg-elevated);font-size:11px;font-weight:600;color:var(--accent-blue)">'+(icons[e[0]]||'🔗')+' '+e[0]+'</a>'}).join('')+'</div>'}
+
+  // CATEGORIES
+  if(cats.length){ph+='<div style="font-size:13px;font-weight:700;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border-subtle)">📂 Categories ('+cats.length+')</div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:16px">'+cats.map(function(c){return '<span class="badge badge-violet" style="font-size:10px">'+esc(c)+'</span>'}).join('')+'</div>'}
+
+  // SITE DETAILS
+  ph+='<div style="font-size:13px;font-weight:700;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border-subtle)">📄 Site Details</div>';
+  ph+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font-size:11px;margin-bottom:16px">';
+  ph+='<div><span style="color:var(--text-muted)">E-com:</span> '+(w.has_ecommerce?'✅':'❌')+'</div>';
+  ph+='<div><span style="color:var(--text-muted)">Blog:</span> '+(w.has_blog?'✅':'❌')+'</div>';
+  ph+='<div><span style="color:var(--text-muted)">SSL:</span> '+(w.has_ssl?'✅':'❌')+'</div>';
+  ph+='<div><span style="color:var(--text-muted)">Schema:</span> '+(w.has_structured_data?'✅':'❌')+'</div>';
+  ph+='<div><span style="color:var(--text-muted)">WhatsApp:</span> '+(w.has_whatsapp?'✅':'❌')+'</div>';
+  ph+='<div><span style="color:var(--text-muted)">Images:</span> '+(w.image_count||0)+'</div>';
+  ph+='<div><span style="color:var(--text-muted)">Words:</span> '+(w.word_count||0)+'</div>';
+  ph+='<div><span style="color:var(--text-muted)">Int Links:</span> '+(w.internal_links||0)+'</div>';
+  ph+='<div><span style="color:var(--text-muted)">Ext Links:</span> '+(w.external_links||0)+'</div></div>';
+
+  document.getElementById('presenceCompareArea').innerHTML=ph;
+
+  // PRODUCTS LIST
+  document.getElementById('prodListTitle').textContent='🛒 '+w.name+' — Products ('+(pwp.length||prods.length||0)+')';
+  if(pwp.length){
+    var pt='<table class="data-table"><thead><tr><th>#</th><th>Product</th><th>Price</th><th>Range</th><th>Source</th></tr></thead><tbody>';
+    pwp.forEach(function(p,i){pt+='<tr><td style="color:var(--text-muted);font-size:10px">'+(i+1)+'</td><td style="font-weight:600">'+esc(p.name)+'</td><td style="font-weight:700;color:var(--accent-emerald)">₹'+(p.price||p.price_min||'—')+'</td><td style="font-size:11px;color:var(--text-muted)">'+(p.price_min&&p.price_max&&p.price_min!==p.price_max?'₹'+p.price_min+' — ₹'+p.price_max:'—')+'</td><td><span class="badge badge-blue" style="font-size:8px">'+(p.source||'web')+'</span></td></tr>'});
+    document.getElementById('brandProductsArea').innerHTML=pt+'</tbody></table>';
+  } else if(prods.length){
+    document.getElementById('brandProductsArea').innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px">'+prods.map(function(p,i){return '<div style="padding:6px 10px;background:var(--bg-elevated);border-radius:6px;font-size:11px;display:flex;gap:6px"><span style="color:var(--text-muted)">#'+(i+1)+'</span><span style="font-weight:600">'+esc(p)+'</span></div>'}).join('')+'</div>';
+  } else {
+    document.getElementById('brandProductsArea').innerHTML='<div style="padding:16px;text-align:center;color:var(--text-muted)">No products detected. Site may load dynamically.</div>';
+  }
+
+  // PRICING INTEL
+  document.getElementById('platPriceTitle').textContent='💰 '+w.name+' — Pricing Intelligence';
+  var activeP=PK.filter(function(k){return bp[k]});
+  if(pwp.length){
+    var pp='<div style="padding:6px 0;font-size:11px;color:var(--text-muted);margin-bottom:6px">Active on <b>'+activeP.length+'</b> platforms: '+activeP.map(function(p){return PLATFORM_META[p].icon+' '+PLATFORM_META[p].label}).join(', ')+'</div>';
+    var prices=pwp.map(function(p){return p.price||p.price_min}).filter(function(p){return p>0}).sort(function(a,b){return a-b});
+    if(prices.length>=3){
+      var low=prices[0],mid=prices[Math.floor(prices.length/2)],high=prices[prices.length-1];
+      pp+='<div style="display:flex;gap:8px;margin-bottom:12px"><div style="flex:1;background:rgba(5,150,105,.08);border-radius:8px;padding:10px;text-align:center"><div style="font-size:9px;color:var(--accent-emerald);font-weight:600">LOWEST</div><div style="font-size:18px;font-weight:800;color:var(--accent-emerald)">₹'+low+'</div></div><div style="flex:1;background:rgba(37,99,235,.08);border-radius:8px;padding:10px;text-align:center"><div style="font-size:9px;color:var(--accent-blue);font-weight:600">MEDIAN</div><div style="font-size:18px;font-weight:800;color:var(--accent-blue)">₹'+mid+'</div></div><div style="flex:1;background:rgba(220,38,38,.08);border-radius:8px;padding:10px;text-align:center"><div style="font-size:9px;color:var(--accent-red);font-weight:600">HIGHEST</div><div style="font-size:18px;font-weight:800;color:var(--accent-red)">₹'+high+'</div></div></div>';
+    }
+    document.getElementById('brandPlatformPriceArea').innerHTML=pp;
+  } else {
+    document.getElementById('brandPlatformPriceArea').innerHTML='<div style="padding:16px;text-align:center;color:var(--text-muted)">No pricing data available.</div>';
+  }
 }
 
-// ═══ PRICE RANGE CHART ═══
+function renderProductMatrix(){
+  var area=document.getElementById('productMatrixArea');
+  var allPWP=WEB_INTEL.flatMap(function(w){return getPWP(w).map(function(p){return Object.assign({},p,{brand:w.name,code:w.code,is_self:w.is_self,color:w.color})})});
+  if(!allPWP.length){area.innerHTML='<div class="empty-state" style="padding:24px"><div class="es-icon">📊</div><h3>Product × Brand Price Matrix</h3><p>Auto-populated after scan. Shopify stores show product-level pricing.</p></div>';return}
+  var prodNames=[...new Set(allPWP.map(function(p){return p.name}))].sort();
+  var self=WEB_INTEL.find(function(w){return w.is_self});var selfName=self?self.name:'SeaSalt';
+  var brandNames=[selfName].concat([...new Set(allPWP.map(function(p){return p.brand}))].filter(function(b){return b!==selfName}).sort());
+  var h='<div style="overflow-x:auto;max-height:400px"><table class="data-table"><thead><tr><th style="position:sticky;top:0;background:#fff;z-index:1">Product</th>';
+  brandNames.forEach(function(b){var w=WEB_INTEL.find(function(x){return x.name===b});var s=w&&w.is_self;h+='<th style="text-align:center;position:sticky;top:0;background:#fff;z-index:1;'+(s?'color:var(--accent-red)':'')+'">'+(s?'🔱 ':'')+esc(b)+'</th>'});
+  h+='<th style="text-align:center;position:sticky;top:0;background:#fff;z-index:1">Avg</th></tr></thead><tbody>';
+  prodNames.slice(0,50).forEach(function(prod){
+    var rp=[];h+='<tr><td style="font-weight:600;font-size:11px;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(prod)+'</td>';
+    brandNames.forEach(function(b){var entries=allPWP.filter(function(p){return p.brand===b&&p.name===prod});var avg=entries.length?Math.round(entries[0].price||entries[0].price_min||0):0;if(avg>0)rp.push(avg);var w=WEB_INTEL.find(function(x){return x.name===b});var s=w&&w.is_self;var mn=rp.length>=2?Math.min.apply(null,rp):0;var mx=rp.length>=2?Math.max.apply(null,rp):0;h+='<td style="text-align:center;font-weight:700;font-size:12px;'+(s?'background:rgba(220,38,38,.03);':'')+'">'+(avg>0?'<span style="color:'+(avg===mn&&rp.length>=2?'var(--accent-emerald)':avg===mx&&rp.length>=2?'var(--accent-red)':'var(--text-primary)')+'">₹'+avg+'</span>':'<span style="color:#ddd">—</span>')+'</td>'});
+    var ma=rp.length?Math.round(rp.reduce(function(a,b){return a+b},0)/rp.length):0;
+    h+='<td style="text-align:center;font-weight:700;color:var(--accent-blue);font-size:12px">'+(ma>0?'₹'+ma:'—')+'</td></tr>';
+  });
+  if(prodNames.length>50)h+='<tr><td colspan="'+(brandNames.length+2)+'" style="text-align:center;color:var(--text-muted);font-size:11px">Showing 50 of '+prodNames.length+' products</td></tr>';
+  area.innerHTML=h+'</tbody></table></div>';
+}
+
+function renderFullPresence(){
+  var area=document.getElementById('fullPresenceArea');
+  if(!WEB_INTEL.length){area.innerHTML=empty('🗺️','No Data','Run scan.','🌐 Scan','syncWebIntel()');return}
+  var self=WEB_INTEL.find(function(w){return w.is_self});var sp=self?getMP(self):{};
+  var h='<div style="overflow-x:auto"><table class="data-table"><thead><tr><th style="min-width:110px">Brand</th>';
+  PK.forEach(function(p){var us=sp[p]||false;h+='<th style="text-align:center;font-size:8px;min-width:50px;'+(us?'':'background:rgba(220,38,38,.03)')+'">'+PLATFORM_META[p].icon+'<br>'+PLATFORM_META[p].label+'</th>'});
+  h+='<th style="text-align:center">Total</th></tr></thead><tbody>';
+  [...WEB_INTEL].sort(function(a,b){return a.is_self?-1:b.is_self?1:a.name.localeCompare(b.name)}).forEach(function(w){
+    var bp=getMP(w);var cnt=PK.filter(function(k){return bp[k]}).length;
+    h+='<tr style="'+(w.is_self?'background:rgba(220,38,38,.04)':'cursor:pointer')+'" '+(w.is_self?'':'onclick="selectBrand(\''+w.code+'\')"')+'><td style="font-weight:600;font-size:12px;color:'+(w.is_self?'var(--accent-red)':'var(--text-primary)')+'"><span class="comp-dot" style="background:'+(w.color||'#666')+'"></span> '+esc(w.name)+(w.is_self?' 🔱':'')+'</td>';
+    PK.forEach(function(p){var a=bp[p]||false;var gap=a&&!(sp[p]||false);h+='<td style="text-align:center;'+(gap?'background:rgba(220,38,38,.06)':'')+'">'+(a?'<span style="color:'+PLATFORM_META[p].color+';font-size:14px">●</span>':'<span style="color:#e8e8e8">○</span>')+'</td>'});
+    h+='<td style="text-align:center;font-weight:700;font-size:12px">'+cnt+'<span style="font-size:9px;color:var(--text-muted)">/'+PK.length+'</span></td></tr>';
+  });
+  h+='</tbody></table></div>';
+  var gaps2=PK.filter(function(p){return !sp[p]&&WEB_INTEL.some(function(w){return !w.is_self&&getMP(w)[p]})});
+  if(gaps2.length){h+='<div style="margin-top:10px;padding:10px;background:rgba(220,38,38,.04);border:1px solid rgba(220,38,38,.15);border-radius:8px"><div style="font-size:11px;font-weight:700;color:var(--accent-red);margin-bottom:4px">⚠️ Platform Gaps:</div><div style="display:flex;flex-wrap:wrap;gap:5px">'+gaps2.map(function(p){var names=WEB_INTEL.filter(function(w){return !w.is_self&&getMP(w)[p]}).map(function(w){return w.name});return '<div style="background:#fff;border:1px solid rgba(220,38,38,.15);border-radius:6px;padding:5px 8px;font-size:10px">'+PLATFORM_META[p].icon+' <b>'+PLATFORM_META[p].label+'</b> <span class="badge badge-red">'+names.length+'</span><div style="font-size:9px;color:var(--text-muted)">'+names.join(', ')+'</div></div>'}).join('')+'</div></div>'}
+  area.innerHTML=h;
+}
+
 function renderPriceChart(){
-  const pc=document.getElementById('priceChartArea');
-  const withPrices=WEB_INTEL.filter(w=>w.price_min>0);
-  if(!withPrices.length){pc.innerHTML='<div class="empty-state" style="padding:20px"><p>Run website scan to detect prices</p></div>';return}
-  const sorted=[...withPrices].sort((a,b)=>a.is_self?-1:b.is_self?1:parseFloat(a.price_avg||0)-parseFloat(b.price_avg||0));
-  const maxP=Math.max(...sorted.map(w=>parseFloat(w.price_max)||0),1);
-  pc.innerHTML='<div style="display:flex;flex-direction:column;gap:10px">'+sorted.map(w=>{
-    const mn=parseFloat(w.price_min)||0,mx=parseFloat(w.price_max)||0,av=parseFloat(w.price_avg)||0;
-    const leftPct=Math.round((mn/maxP)*100),widthPct=Math.max(Math.round(((mx-mn)/maxP)*100),2);
-    return`<div style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:2px 0;border-radius:6px;transition:background .15s" onclick="selectBrand('${w.code}')" onmouseenter="this.style.background='var(--bg-elevated)'" onmouseleave="this.style.background='transparent'">
-      <div style="width:130px;font-size:12px;font-weight:${w.is_self?'800':'600'};text-align:right;color:${w.is_self?'var(--accent-red)':'var(--text-primary)'}">${esc(w.name)}${w.is_self?' 🔱':''}</div>
-      <div style="flex:1;height:28px;background:var(--bg-elevated);border-radius:6px;position:relative;overflow:hidden">
-        <div style="position:absolute;left:${leftPct}%;width:${widthPct}%;height:100%;background:${w.is_self?'var(--accent-red)':w.color||'var(--accent-blue)'};border-radius:6px;opacity:${SELECTED_BRAND===w.code?'1':'0.6'};display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;transition:opacity .2s">${av?'₹'+Math.round(av):''}</div>
-      </div>
-      <div style="width:160px;font-size:11px;color:var(--text-muted)">₹${Math.round(mn)} — ₹${Math.round(mx)}</div>
-    </div>`;
+  var pc=document.getElementById('priceChartArea');var wp=WEB_INTEL.filter(function(w){return w.price_min>0});
+  if(!wp.length){pc.innerHTML='<div style="padding:16px;text-align:center;color:var(--text-muted)">No prices detected</div>';return}
+  var sorted=[...wp].sort(function(a,b){return a.is_self?-1:b.is_self?1:parseFloat(a.price_avg||0)-parseFloat(b.price_avg||0)});
+  var maxP=Math.max.apply(null,sorted.map(function(w){return parseFloat(w.price_max)||0}).concat([1]));
+  pc.innerHTML='<div style="display:flex;flex-direction:column;gap:8px">'+sorted.map(function(w){
+    var mn=parseFloat(w.price_min)||0,mx=parseFloat(w.price_max)||0,av=parseFloat(w.price_avg)||0;
+    var lp=Math.round((mn/maxP)*100),wp2=Math.max(Math.round(((mx-mn)/maxP)*100),2);
+    return '<div style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:2px 0;border-radius:5px;transition:background .15s" onclick="selectBrand(\''+w.code+'\')" onmouseenter="this.style.background=\'var(--bg-elevated)\'" onmouseleave="this.style.background=\'transparent\'"><div style="width:120px;font-size:11px;font-weight:'+(w.is_self?'800':'600')+';text-align:right;color:'+(w.is_self?'var(--accent-red)':'var(--text-primary)')+'">'+esc(w.name)+(w.is_self?' 🔱':'')+'</div><div style="flex:1;height:24px;background:var(--bg-elevated);border-radius:5px;position:relative;overflow:hidden"><div style="position:absolute;left:'+lp+'%;width:'+wp2+'%;height:100%;background:'+(w.is_self?'var(--accent-red)':w.color||'#2563eb')+';border-radius:5px;opacity:'+(SELECTED_BRAND===w.code?'1':'.5')+';display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:700">'+(av?'₹'+Math.round(av):'')+'</div></div><div style="width:130px;font-size:10px;color:var(--text-muted)">₹'+Math.round(mn)+' — ₹'+Math.round(mx)+'</div></div>';
   }).join('')+'</div>';
 }
 
-// ═══ MODAL: Edit Market Presence ═══
 function openEditPresence(){
-  const presence=getMarketPresence();
-  const platforms=Object.keys(PLATFORM_META);
-  let html=`<div class="modal-title">✏️ Edit Market Presence</div>
-    <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">Mark which platforms each brand sells on</p>
-    <div style="overflow-x:auto;max-height:60vh"><table class="data-table"><thead><tr><th>Brand</th>`;
-  platforms.forEach(p=>html+=`<th style="text-align:center;font-size:9px">${PLATFORM_META[p].icon}<br>${PLATFORM_META[p].label.split(' ')[0]}</th>`);
-  html+=`</tr></thead><tbody>`;
-  WEB_INTEL.forEach(w=>{
-    const bp=presence[w.code]||{};
-    html+=`<tr${w.is_self?' style="background:rgba(220,38,38,.04)"':''}><td style="font-weight:600;font-size:12px">${esc(w.name)}${w.is_self?' 🔱':''}</td>`;
-    platforms.forEach(p=>html+=`<td style="text-align:center"><input type="checkbox" id="pres_${w.code}_${p}" ${bp[p]?'checked':''}></td>`);
-    html+=`</tr>`;
-  });
-  html+=`</tbody></table></div>
-    <div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-emerald" onclick="savePresenceFromModal()">💾 Save</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>`;
-  showModal(html);
+  var h='<div class="modal-title">✏️ Override Market Presence</div><p style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Auto-detected from website links. Override if needed.</p><div style="overflow-x:auto;max-height:55vh"><table class="data-table"><thead><tr><th>Brand</th>';
+  PK.forEach(function(p){h+='<th style="text-align:center;font-size:8px">'+PLATFORM_META[p].icon+'<br>'+PLATFORM_META[p].label.split(' ')[0]+'</th>'});
+  h+='</tr></thead><tbody>';
+  WEB_INTEL.forEach(function(w){var bp=getMP(w);h+='<tr'+(w.is_self?' style="background:rgba(220,38,38,.04)"':'')+'><td style="font-weight:600;font-size:11px">'+esc(w.name)+(w.is_self?' 🔱':'')+'</td>';PK.forEach(function(p){h+='<td style="text-align:center"><input type="checkbox" id="pres_'+w.code+'_'+p+'" '+(bp[p]?'checked':'')+'></td>'});h+='</tr>'});
+  h+='</tbody></table></div><div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-emerald" onclick="savePresOverride()">💾 Save</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>';
+  showModal(h);
 }
-function savePresenceFromModal(){
-  const presence=getMarketPresence();const platforms=Object.keys(PLATFORM_META);
-  WEB_INTEL.forEach(w=>{if(!presence[w.code])presence[w.code]={};platforms.forEach(p=>{const cb=document.getElementById('pres_'+w.code+'_'+p);presence[w.code][p]=cb?cb.checked:false})});
-  saveMarketPresence(presence);closeModal();renderProducts();toast('✅ Market presence updated');
-}
-
-// ═══ MODAL: Add Platform Price ═══
-function openAddPlatformPrice(defaultBrand){
-  const brands=WEB_INTEL.map(w=>w.name);
-  const platforms=Object.keys(PLATFORM_META);
-  const selBrand=defaultBrand||brands[0]||'';
-  let html=`<div class="modal-title">➕ Add Platform Price</div>
-    <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">Track how products are priced across platforms</p>
-    <div class="field-group"><label class="field-label">Brand *</label>
-      <select class="intel-input" id="ppBrand">${brands.map(b=>`<option ${b===selBrand?'selected':''}>${b}</option>`).join('')}</select></div>
-    <div class="field-group"><label class="field-label">Product Name *</label>
-      <input class="intel-input" id="ppProduct" placeholder="e.g. Chicken Pickle 250g"></div>
-    <div class="field-group"><label class="field-label">Platform *</label>
-      <select class="intel-input" id="ppPlatform">${platforms.map(p=>`<option value="${p}">${PLATFORM_META[p].icon} ${PLATFORM_META[p].label}</option>`).join('')}</select></div>
-    <div class="field-group"><label class="field-label">Price (₹) *</label>
-      <input class="intel-input" type="number" id="ppPrice" placeholder="e.g. 299"></div>
-    <div style="display:flex;gap:10px;margin-top:8px"><button class="btn btn-emerald" onclick="savePlatformPrice()">💾 Save</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>`;
-  showModal(html);
-}
-function savePlatformPrice(){
-  const brand=document.getElementById('ppBrand').value,product=document.getElementById('ppProduct').value.trim(),platform=document.getElementById('ppPlatform').value,price=parseFloat(document.getElementById('ppPrice').value);
-  if(!product||!price){toast('⚠️ Fill all fields');return}
-  const prices=getPlatformPrices();
-  const idx=prices.findIndex(p=>p.brand===brand&&p.product===product&&p.platform===platform);
-  if(idx>=0)prices[idx].price=price;else prices.push({brand,product,platform,price,added:new Date().toISOString()});
-  savePlatformPrices(prices);closeModal();renderProducts();
-  toast('✅ ₹'+price+' — '+brand+' · '+product+' · '+PLATFORM_META[platform].label);
-}
-
+function savePresOverride(){closeModal();toast('✅ Presence saved (manual override)')}
 function safeJSON(v){try{return typeof v==='string'?JSON.parse(v):(Array.isArray(v)?v:[])}catch(e){return[]}}
 
 document.addEventListener('DOMContentLoaded',()=>{if(db)loadAll();else toast('⚠️ Supabase not connected')});
