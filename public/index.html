@@ -257,9 +257,16 @@ textarea.intel-input{resize:vertical;min-height:80px}select.intel-input{appearan
 <div class="stat-card emerald"><div class="stat-label">Keywords</div><div class="stat-value" id="sKwCount">—</div></div>
 <div class="stat-card blue"><div class="stat-label">Avg Position</div><div class="stat-value" id="sKwAvg">—</div></div>
 <div class="stat-card amber"><div class="stat-label">Top 10</div><div class="stat-value" id="sKwTop">—</div></div>
+<div class="stat-card violet"><div class="stat-label">Hashtags</div><div class="stat-value" id="sKwHash">—</div></div>
 </div>
-<div style="margin-bottom:20px"><button class="btn btn-emerald btn-sm" onclick="openAddSEOKW()">➕ Add Keyword</button></div>
-<div class="card"><div class="card-header"><div class="card-title">SEO Keyword Rankings</div></div><div id="kwArea"></div></div>
+<div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+<button class="btn btn-emerald btn-sm" onclick="autoExtractKeywords()" id="btnAutoKw">🤖 Auto-Extract from Competitors</button>
+<button class="btn btn-ghost btn-sm" onclick="openAddSEOKW()">➕ Add Keyword</button>
+<button class="btn btn-ghost btn-sm" onclick="openAddHashtag()">🏷️ Add Hashtag</button>
+</div>
+<div class="card" style="margin-bottom:16px"><div class="card-header"><div><div class="card-title">🔑 SEO Keyword Intelligence</div><div class="card-subtitle">Auto-extracted from competitor websites, products & categories + manual entries</div></div></div><div id="kwArea"></div></div>
+<div class="card" style="margin-bottom:16px"><div class="card-header"><div><div class="card-title">🏷️ Hashtag Intelligence</div><div class="card-subtitle">Auto-generated from competitor product names & categories</div></div></div><div id="hashArea2"></div></div>
+<div class="card"><div class="card-header"><div><div class="card-title">📊 Competitor Keyword Map</div><div class="card-subtitle">Keywords each competitor targets based on their website content</div></div></div><div id="compKwMap"></div></div>
 </div></div>
 </div></div>
 <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()"><div class="modal-box" id="modalBox"></div></div>
@@ -303,9 +310,84 @@ function renderComp(){
   const tot=COMP.reduce((s,c)=>s+(c.total_reviews||0),0);document.getElementById('sTotalReviews').textContent=tot.toLocaleString();
   const ls=COMP.reduce((l,c)=>{const d=new Date(c.synced_at||0);return d>l?d:l},new Date(0));
   if(ls.getTime()>0){document.getElementById('sLastSync').textContent=timeAgo(ls);document.getElementById('sCompSub').textContent='All synced'}
-  el.innerHTML=`<table class="data-table"><thead><tr><th></th><th>Competitor</th><th>Rating</th><th>Reviews</th><th>YT Subs</th><th>Score</th><th>Threat</th><th>Synced</th></tr></thead><tbody>${COMP.map(c=>`<tr><td><span class="comp-dot" style="background:${c.color||'#666'}"></span></td><td><div style="font-weight:600;color:var(--text-primary)">${esc(c.name)}</div><div style="font-size:11px;color:var(--text-muted)">${esc(c.website||c.url||'')}${c.youtube_url?` · <a href="${esc(c.youtube_url)}" target="_blank" style="color:var(--accent-red)">YT</a>`:''}</div></td><td>${c.rating?`<span class="stars">${'★'.repeat(Math.round(c.rating))}</span> <b>${parseFloat(c.rating).toFixed(1)}</b>`:'—'}</td><td style="font-weight:600">${c.total_reviews?c.total_reviews.toLocaleString():'—'}</td><td>${c.youtube_subscribers?c.youtube_subscribers.toLocaleString():'—'}</td><td><b style="color:${(c.social_score||0)>=70?'var(--accent-red)':(c.social_score||0)>=40?'var(--accent-amber)':'var(--accent-emerald)'}">${c.social_score||0}</b><span style="font-size:10px;color:var(--text-muted)">/100</span></td><td><span class="badge ${c.threat_level==='critical'?'badge-red':c.threat_level==='high'?'badge-orange':c.threat_level==='medium'?'badge-amber':'badge-green'}">${(c.threat_level||'—').toUpperCase()}</span></td><td style="font-size:11px;color:var(--text-muted)">${timeAgo(c.synced_at)}</td></tr>`).join('')}</tbody></table>`;
-  const mx=5;rc.innerHTML=COMP.slice(0,8).map(c=>`<div class="chart-bar" style="height:${(parseFloat(c.rating||0)/mx)*100}%;background:${c.color||'var(--accent-blue)'}"><span class="chart-bar-label">${c.code||''}<br>${parseFloat(c.rating||0).toFixed(1)}</span></div>`).join('');
-  const mr=Math.max(...COMP.map(c=>c.total_reviews||0),1);rv.innerHTML=COMP.slice(0,8).map(c=>`<div class="chart-bar" style="height:${((c.total_reviews||0)/mr)*100}%;background:${c.color||'var(--accent-blue)'}"><span class="chart-bar-label">${c.code||''}<br>${c.total_reviews||0}</span></div>`).join('')}
+
+  let tbl='<table class="data-table"><thead><tr><th></th><th>Competitor</th><th>Rating</th><th>Reviews</th><th>Social Links</th><th>YT Subs</th><th>Score</th><th>Threat</th></tr></thead><tbody>';
+  COMP.forEach(function(c){
+    var socHtml='';
+    if(c.instagram_url)socHtml+='<a href="'+esc(c.instagram_url)+'" target="_blank" style="text-decoration:none;font-size:14px" title="Instagram">📸</a> ';
+    if(c.youtube_url)socHtml+='<a href="'+esc(c.youtube_url)+'" target="_blank" style="text-decoration:none;font-size:14px" title="YouTube">📺</a> ';
+    if(c.facebook_url)socHtml+='<a href="'+esc(c.facebook_url)+'" target="_blank" style="text-decoration:none;font-size:14px" title="Facebook">📘</a> ';
+    if(c.google_maps_url)socHtml+='<a href="'+esc(c.google_maps_url)+'" target="_blank" style="text-decoration:none;font-size:14px" title="Google Maps">📍</a> ';
+    if(!socHtml)socHtml='<span style="color:var(--text-muted);font-size:11px">—</span>';
+    tbl+='<tr style="cursor:pointer" onclick="openCompDrilldown(\''+c.code+'\')">';
+    tbl+='<td><span class="comp-dot" style="background:'+(c.color||'#666')+'"></span></td>';
+    tbl+='<td><div style="font-weight:600;color:var(--text-primary)">'+esc(c.name)+' <span style="color:var(--accent-blue);font-size:10px">↗</span></div><div style="font-size:11px;color:var(--text-muted)">'+esc(c.website||c.url||'')+'</div></td>';
+    tbl+='<td>'+(c.rating?'<span class="stars">'+'★'.repeat(Math.round(c.rating))+'</span> <b>'+parseFloat(c.rating).toFixed(1)+'</b>':'—')+'</td>';
+    tbl+='<td style="font-weight:600">'+(c.total_reviews?c.total_reviews.toLocaleString():'—')+'</td>';
+    tbl+='<td>'+socHtml+'</td>';
+    tbl+='<td>'+(c.youtube_subscribers?c.youtube_subscribers.toLocaleString():'—')+'</td>';
+    tbl+='<td><b style="color:'+((c.social_score||0)>=70?'var(--accent-red)':(c.social_score||0)>=40?'var(--accent-amber)':'var(--accent-emerald)')+'">'+(c.social_score||0)+'</b><span style="font-size:10px;color:var(--text-muted)">/100</span></td>';
+    tbl+='<td><span class="badge '+(c.threat_level==='critical'?'badge-red':c.threat_level==='high'?'badge-orange':c.threat_level==='medium'?'badge-amber':'badge-green')+'">'+(c.threat_level||'—').toUpperCase()+'</span></td></tr>';
+  });
+  el.innerHTML=tbl+'</tbody></table>';
+  const mx=5;rc.innerHTML=COMP.slice(0,8).map(c=>'<div class="chart-bar" style="height:'+(parseFloat(c.rating||0)/mx)*100+'%;background:'+(c.color||'var(--accent-blue)')+'"><span class="chart-bar-label">'+(c.code||'')+'<br>'+parseFloat(c.rating||0).toFixed(1)+'</span></div>').join('');
+  const mr=Math.max.apply(null,COMP.map(c=>c.total_reviews||0).concat([1]));rv.innerHTML=COMP.slice(0,8).map(c=>'<div class="chart-bar" style="height:'+((c.total_reviews||0)/mr)*100+'%;background:'+(c.color||'var(--accent-blue)')+'"><span class="chart-bar-label">'+(c.code||'')+'<br>'+(c.total_reviews||0)+'</span></div>').join('')}
+
+// ═══ COMPETITOR DRILL-DOWN MODAL ═══
+function openCompDrilldown(code){
+  var c=COMP.find(function(x){return x.code===code});if(!c)return;
+  var wi=WEB_INTEL.find(function(x){return x.code===code||x.name===c.name});
+  var reviews=[];try{reviews=JSON.parse(c.recent_reviews||'[]')}catch(e){}
+  var h='<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">';
+  h+='<div style="width:48px;height:48px;border-radius:12px;background:'+(c.color||'#666')+'20;display:flex;align-items:center;justify-content:center"><span class="comp-dot" style="background:'+(c.color||'#666')+';width:20px;height:20px"></span></div>';
+  h+='<div style="flex:1"><div style="font-size:20px;font-weight:800">'+esc(c.name)+'</div><div style="font-size:11px;color:var(--text-muted)">'+esc(c.website||'')+' · '+esc(c.address||'')+'</div></div>';
+  h+='<div style="text-align:center"><div style="font-size:28px;font-weight:800;color:var(--accent-amber)">'+parseFloat(c.rating||0).toFixed(1)+'</div><div style="font-size:9px;color:var(--text-muted)">★ Rating</div></div></div>';
+
+  // Key metrics
+  h+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">';
+  h+='<div style="background:var(--bg-elevated);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800">'+(c.total_reviews||0).toLocaleString()+'</div><div style="font-size:9px;color:var(--text-muted)">Reviews</div></div>';
+  h+='<div style="background:var(--bg-elevated);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800">'+(c.youtube_subscribers||0).toLocaleString()+'</div><div style="font-size:9px;color:var(--text-muted)">YT Subs</div></div>';
+  h+='<div style="background:var(--bg-elevated);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800">'+(c.social_score||0)+'</div><div style="font-size:9px;color:var(--text-muted)">Score</div></div>';
+  h+='<div style="background:var(--bg-elevated);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800"><span class="badge '+(c.threat_level==='critical'?'badge-red':c.threat_level==='high'?'badge-orange':'badge-amber')+'">'+(c.threat_level||'—').toUpperCase()+'</span></div><div style="font-size:9px;color:var(--text-muted)">Threat</div></div></div>';
+
+  // Social handles
+  h+='<div style="font-size:13px;font-weight:700;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border-subtle)">📱 Social & Links</div>';
+  h+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">';
+  if(c.instagram_url)h+='<a href="'+esc(c.instagram_url)+'" target="_blank" style="text-decoration:none;padding:6px 12px;border-radius:8px;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:#fff;font-size:11px;font-weight:600">📸 Instagram</a>';
+  if(c.youtube_url)h+='<a href="'+esc(c.youtube_url)+'" target="_blank" style="text-decoration:none;padding:6px 12px;border-radius:8px;background:#ff0000;color:#fff;font-size:11px;font-weight:600">📺 YouTube</a>';
+  if(c.facebook_url)h+='<a href="'+esc(c.facebook_url)+'" target="_blank" style="text-decoration:none;padding:6px 12px;border-radius:8px;background:#1877f2;color:#fff;font-size:11px;font-weight:600">📘 Facebook</a>';
+  if(c.google_maps_url)h+='<a href="'+esc(c.google_maps_url)+'" target="_blank" style="text-decoration:none;padding:6px 12px;border-radius:8px;background:#34a853;color:#fff;font-size:11px;font-weight:600">📍 Google Maps</a>';
+  if(c.website)h+='<a href="https://'+esc(c.website)+'" target="_blank" style="text-decoration:none;padding:6px 12px;border-radius:8px;background:var(--bg-elevated);color:var(--accent-blue);font-size:11px;font-weight:600;border:1px solid var(--border-subtle)">🌐 Website</a>';
+  if(c.phone)h+='<span style="padding:6px 12px;border-radius:8px;background:var(--bg-elevated);font-size:11px;font-weight:600">📞 '+esc(c.phone)+'</span>';
+  h+='</div>';
+
+  // Website intelligence (if available)
+  if(wi){
+    h+='<div style="font-size:13px;font-weight:700;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border-subtle)">🌐 Website Intel</div>';
+    h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:11px;margin-bottom:14px">';
+    h+='<div><span style="color:var(--text-muted)">Score:</span> <b>'+(wi.site_score||0)+'/100</b></div>';
+    h+='<div><span style="color:var(--text-muted)">Products:</span> <b>'+(wi.product_count||0)+'</b></div>';
+    h+='<div><span style="color:var(--text-muted)">Price:</span> <b>'+(wi.price_min?'₹'+Math.round(wi.price_min)+'-₹'+Math.round(wi.price_max):'—')+'</b></div>';
+    var wts=safeJSON(wi.tech_stack);if(wts.length)h+='<div style="grid-column:span 3"><span style="color:var(--text-muted)">Tech:</span> '+wts.map(function(t){return '<span class="badge badge-blue" style="font-size:9px">'+esc(t)+'</span>'}).join(' ')+'</div>';
+    h+='</div>';
+  }
+
+  // Notes
+  if(c.notes){h+='<div style="font-size:13px;font-weight:700;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border-subtle)">📝 Intelligence Notes</div><div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6">'+esc(c.notes)+'</div>'}
+
+  // Recent reviews
+  if(reviews.length){
+    h+='<div style="font-size:13px;font-weight:700;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border-subtle)">💬 Recent Reviews ('+reviews.length+')</div>';
+    h+='<div style="max-height:200px;overflow-y:auto;margin-bottom:14px">';
+    reviews.slice(0,5).forEach(function(r){
+      h+='<div style="padding:8px 0;border-bottom:1px solid var(--border-subtle)"><div style="display:flex;justify-content:space-between"><span style="font-weight:600;font-size:12px">'+esc(r.author||'Anonymous')+'</span><span class="stars" style="font-size:11px">'+'★'.repeat(r.rating||0)+'☆'.repeat(5-(r.rating||0))+'</span></div><p style="font-size:11px;color:var(--text-secondary);margin-top:4px;line-height:1.5">'+esc((r.text||'').substring(0,200))+(r.text&&r.text.length>200?'...':'')+'</p></div>';
+    });
+    h+='</div>';
+  }
+
+  h+='<div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-subtle)"><button class="btn btn-ghost btn-sm" onclick="closeModal()">Close</button></div>';
+  showModal(h);
+}
 
 function renderInsights(){
   document.getElementById('sOpp').textContent=INSIGHTS.filter(i=>i.type==='opportunity').length;document.getElementById('sThreat').textContent=INSIGHTS.filter(i=>i.type==='threat').length;document.getElementById('sTrend').textContent=INSIGHTS.filter(i=>i.type==='trend').length;document.getElementById('sAction').textContent=INSIGHTS.filter(i=>i.type==='action').length;
@@ -318,14 +400,93 @@ function renderIdeas(){
   el.innerHTML=`<table class="data-table"><thead><tr><th>Title</th><th>Type</th><th>Platform</th><th>Status</th><th>Created</th></tr></thead><tbody>${IDEAS.map(c=>`<tr><td style="font-weight:600;color:var(--text-primary)">${esc(c.title)}</td><td><span class="badge badge-violet">${esc(c.content_type||'—')}</span></td><td><span class="badge badge-blue">${esc(c.platform||'—')}</span></td><td><span class="badge ${c.status==='published'?'badge-green':c.status==='planned'?'badge-amber':'badge-blue'}">${c.status||'idea'}</span></td><td style="font-size:11px;color:var(--text-muted)">${timeAgo(c.created_at)}</td></tr>`).join('')}</tbody></table>`}
 
 function renderSeoKw(){
-  document.getElementById('sKwCount').textContent=SEO_KW.length;const avg=SEO_KW.length?(SEO_KW.reduce((s,k)=>s+(k.current_position||0),0)/SEO_KW.length).toFixed(1):'—';document.getElementById('sKwAvg').textContent=avg;document.getElementById('sKwTop').textContent=SEO_KW.filter(k=>(k.current_position||99)<=10).length;
-  const el=document.getElementById('kwArea');if(!SEO_KW.length){el.innerHTML=empty('🔑','No Keywords','Track your SEO rankings.','➕ Add Keyword','openAddSEOKW()');return}
-  el.innerHTML=`<table class="data-table"><thead><tr><th>Keyword</th><th>Position</th><th>Change</th><th>Volume</th><th>Difficulty</th></tr></thead><tbody>${SEO_KW.map(k=>{const ch=k.change||0;return`<tr><td style="font-weight:600;color:var(--text-primary)">${esc(k.keyword)}</td><td><span style="font-size:18px;font-weight:800;color:${(k.current_position||99)<=5?'var(--accent-emerald)':(k.current_position||99)<=15?'var(--accent-amber)':'var(--accent-red)'}">#${k.current_position||'—'}</span></td><td><span class="stat-change ${ch>0?'up':ch<0?'down':''}" style="font-size:13px;font-weight:700">${ch>0?'↑'+ch:ch<0?'↓'+Math.abs(ch):'—'}</span></td><td>${esc(k.search_volume||'—')}</td><td><span class="badge ${k.difficulty==='Low'?'badge-green':k.difficulty==='High'?'badge-red':'badge-amber'}">${k.difficulty||'—'}</span></td></tr>`}).join('')}</tbody></table>`}
+  document.getElementById('sKwCount').textContent=SEO_KW.length;
+  var avg=SEO_KW.length?(SEO_KW.reduce(function(s,k){return s+(k.current_position||0)},0)/SEO_KW.length).toFixed(1):'—';
+  document.getElementById('sKwAvg').textContent=avg;
+  document.getElementById('sKwTop').textContent=SEO_KW.filter(function(k){return(k.current_position||99)<=10}).length;
+  document.getElementById('sKwHash').textContent=HASHTAGS.length;
+  var el=document.getElementById('kwArea');
+  if(!SEO_KW.length){el.innerHTML=empty('🔑','No Keywords Yet','Click "Auto-Extract from Competitors" to mine keywords from scraped competitor data, or add manually.','🤖 Auto-Extract','autoExtractKeywords()');renderCompKwMap();renderHash2();return}
+  var tbl='<table class="data-table"><thead><tr><th>Keyword</th><th>Source</th><th>Position</th><th>Volume</th><th>Difficulty</th><th>Competitors Using</th></tr></thead><tbody>';
+  SEO_KW.forEach(function(k){
+    var ch=k.change||0;
+    tbl+='<tr><td style="font-weight:600;color:var(--text-primary)">'+esc(k.keyword)+'</td>';
+    tbl+='<td><span class="badge badge-blue" style="font-size:9px">'+esc(k.source||'manual')+'</span></td>';
+    tbl+='<td><span style="font-size:16px;font-weight:800;color:'+((k.current_position||99)<=5?'var(--accent-emerald)':(k.current_position||99)<=15?'var(--accent-amber)':'var(--accent-red)')+'">'+(k.current_position?'#'+k.current_position:'—')+'</span></td>';
+    tbl+='<td>'+esc(k.search_volume||'—')+'</td>';
+    tbl+='<td><span class="badge '+(k.difficulty==='Low'?'badge-green':k.difficulty==='High'?'badge-red':'badge-amber')+'">'+esc(k.difficulty||'Medium')+'</span></td>';
+    tbl+='<td style="font-size:11px;color:var(--text-muted)">'+esc(k.competitors_using||'—')+'</td></tr>';
+  });
+  el.innerHTML=tbl+'</tbody></table>';
+  renderHash2();renderCompKwMap();
+}
 
 function renderHash(){
-  document.getElementById('sSocHash').textContent=HASHTAGS.length;const el=document.getElementById('hashArea');
-  if(!HASHTAGS.length){el.innerHTML='<div class="empty-state" style="padding:30px"><p>Add hashtags to track</p></div>';return}
-  el.innerHTML=`<table class="data-table"><thead><tr><th>Hashtag</th><th>Posts</th><th>Engagement</th><th>Growth</th><th>Trend</th></tr></thead><tbody>${HASHTAGS.map(h=>`<tr><td style="font-weight:700;color:var(--accent-blue)">${esc(h.hashtag)}</td><td>${esc(h.total_posts||'—')}</td><td>${esc(h.avg_engagement||'—')}</td><td>${esc(h.growth_rate||'—')}</td><td>${h.trend==='up'?'📈':'➡️'}</td></tr>`).join('')}</tbody></table>`}
+  document.getElementById('sKwHash').textContent=HASHTAGS.length;
+  renderHash2();
+}
+
+function renderHash2(){
+  var el=document.getElementById('hashArea2');if(!el)return;
+  if(!HASHTAGS.length){el.innerHTML='<div style="padding:16px;text-align:center;color:var(--text-muted)">Click "Auto-Extract" to generate hashtags from competitor data.</div>';return}
+  el.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:6px;padding:8px">'+HASHTAGS.map(function(h){return '<div style="padding:6px 12px;border-radius:20px;background:linear-gradient(135deg,rgba(37,99,235,.08),rgba(124,58,237,.08));border:1px solid rgba(37,99,235,.15);font-size:12px"><span style="font-weight:700;color:var(--accent-blue)">'+esc(h.hashtag)+'</span>'+(h.total_posts?' <span style="font-size:10px;color:var(--text-muted)">'+esc(h.total_posts)+' posts</span>':'')+'</div>'}).join('')+'</div>';
+}
+
+function renderCompKwMap(){
+  var el=document.getElementById('compKwMap');if(!el)return;
+  if(!WEB_INTEL.length){el.innerHTML='<div style="padding:16px;text-align:center;color:var(--text-muted)">Run website scan first to extract competitor keyword data.</div>';return}
+  var h='<table class="data-table"><thead><tr><th>Competitor</th><th>Page Title Keywords</th><th>Products</th><th>Categories</th></tr></thead><tbody>';
+  WEB_INTEL.forEach(function(w){
+    var title=(w.page_title||'').toLowerCase().split(/[\s|·\-–,]+/).filter(function(t){return t.length>3&&!['home','page','the','and','for','with','from','online','india','best'].includes(t)}).slice(0,6);
+    var cats=safeJSON(w.categories).slice(0,6);
+    var prods=safeJSON(w.products).slice(0,4);
+    h+='<tr><td style="font-weight:600"><span class="comp-dot" style="background:'+(w.color||'#666')+'"></span> '+esc(w.name)+(w.is_self?' 🔱':'')+'</td>';
+    h+='<td>'+title.map(function(t){return '<span class="badge badge-blue" style="font-size:9px">'+esc(t)+'</span>'}).join(' ')+'</td>';
+    h+='<td style="font-size:10px">'+prods.map(function(p){return esc(p)}).join(', ')+(prods.length?'':'—')+'</td>';
+    h+='<td>'+cats.map(function(c){return '<span class="badge badge-violet" style="font-size:9px">'+esc(c)+'</span>'}).join(' ')+(cats.length?'':'—')+'</td></tr>';
+  });
+  el.innerHTML=h+'</tbody></table>';
+}
+
+async function autoExtractKeywords(){
+  var btn=document.getElementById('btnAutoKw');btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Extracting...';
+  toast('🤖 Mining keywords from competitor data...');
+  var kwSet={},hashSet={};
+  // Extract from WEB_INTEL
+  WEB_INTEL.forEach(function(w){
+    var title=(w.page_title||'').toLowerCase();
+    var desc=(w.meta_description||'').toLowerCase();
+    var cats=safeJSON(w.categories);
+    var prods=safeJSON(w.products);
+    // Title keywords
+    title.split(/[\s|·\-–,]+/).forEach(function(t){t=t.replace(/[^a-z0-9]/g,'');if(t.length>3&&!['home','page','the','and','for','with','from','this','that','have','been','more','about'].includes(t)){if(!kwSet[t])kwSet[t]={kw:t,count:0,brands:[]};kwSet[t].count++;kwSet[t].brands.push(w.code);kwSet[t].source='title'}});
+    // Categories as keywords
+    cats.forEach(function(c){var k=c.toLowerCase().trim();if(k.length>2){if(!kwSet[k])kwSet[k]={kw:k,count:0,brands:[]};kwSet[k].count++;kwSet[k].brands.push(w.code);kwSet[k].source='category';hashSet['#'+k.replace(/\s+/g,'')]=k}});
+    // Product-based keywords
+    prods.slice(0,10).forEach(function(p){var words=p.toLowerCase().split(/\s+/).filter(function(w){return w.length>4});words.forEach(function(wrd){wrd=wrd.replace(/[^a-z0-9]/g,'');if(wrd.length>4){if(!kwSet[wrd])kwSet[wrd]={kw:wrd,count:0,brands:[]};kwSet[wrd].count++;kwSet[wrd].brands.push(w.code);kwSet[wrd].source='product'}});
+    // Generate hashtags from product names
+    var tag='#'+p.replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'');if(tag.length>4&&tag.length<30)hashSet[tag]=p});
+  });
+  // Add common pickle/food industry hashtags
+  ['#AndhraPickles','#HomemadePickles','#IndianPickles','#TeluguFood','#HyderabadFood','#Avakaya','#MangoPickle','#ChickenPickle','#PrawnPickle','#GonguraPickle','#SpicyFood','#TraditionalFood','#HandmadePickles','#PickleLove','#FoodieHyderabad','#TeluguPickles','#AndhraCuisine','#DesiFoodLovers'].forEach(function(h){hashSet[h]=h.replace('#','')});
+  // Save keywords to Supabase
+  var sorted=Object.values(kwSet).sort(function(a,b){return b.count-a.count}).slice(0,40);
+  var saved=0;
+  for(var i=0;i<sorted.length;i++){
+    var k=sorted[i];
+    var ok=await dbInsert('keyword_rankings',{keyword:k.kw,source:k.source||'auto',difficulty:k.count>=4?'High':k.count>=2?'Medium':'Low',competitors_using:k.brands.join(', '),search_volume:k.count>=3?'High':k.count>=2?'Medium':'Low'});
+    if(ok)saved++;
+  }
+  // Save hashtags
+  var hashes=Object.keys(hashSet).slice(0,30);var hSaved=0;
+  for(var j=0;j<hashes.length;j++){
+    var ok2=await dbInsert('hashtag_tracker',{hashtag:hashes[j],source:'auto',total_posts:'—',trend:'up'});
+    if(ok2)hSaved++;
+  }
+  toast('✅ Extracted '+saved+' keywords + '+hSaved+' hashtags from competitor data');
+  await loadSeoKw();await loadHashtags();
+  btn.disabled=false;btn.innerHTML='🤖 Auto-Extract from Competitors';
+}
 
 function renderListenKw(){
   document.getElementById('sLkCount').textContent=LISTEN_KW.length;const el=document.getElementById('lkArea');
@@ -352,7 +513,27 @@ function renderSocContent(){
   else sc.innerHTML=SOC_CONTENT.slice(0,8).map(p=>`<div class="social-profile"><div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text-primary)">${esc(p.caption||p.post_type||'Post')}</div><div style="font-size:11px;color:var(--text-muted)">${esc(p.competitor_name)} · ${esc(p.platform)}</div></div>${p.likes?`<div style="font-size:12px;font-weight:700;color:var(--accent-pink)">♥ ${p.likes.toLocaleString()}</div>`:''}</div>`).join('')}
 
 // SYNC
-async function syncCompetitors(){const b=document.getElementById('btnSync');b.disabled=true;b.innerHTML='<span class="spinner"></span> Syncing...';toast('🔄 Calling Google Places API...');try{const r=await fetch('/.netlify/functions/intel-sync');const d=await r.json();if(d.error){toast('❌ '+d.error)}else{toast('✅ '+d.success+'/'+d.total+' synced');await loadComp()}document.getElementById('lastSync').textContent=new Date().toLocaleTimeString()}catch(e){toast('❌ '+e.message)}b.disabled=false;b.innerHTML='🔄 Sync Live Data'}
+async function syncCompetitors(){const b=document.getElementById('btnSync');b.disabled=true;
+  // Use COMP from Supabase (includes manually added brands)
+  var targets=COMP.length?COMP:[];
+  // Fallback: if no COMP data yet, use hardcoded codes
+  if(!targets.length){targets=[{code:'VF',name:'Vellanki Foods'},{code:'TP',name:'Tulasi Pickles'},{code:'AP',name:'Aavarampoo Pickles'},{code:'NP',name:'Nirupama Pickles'},{code:'PP',name:'Priya Pickles'},{code:'AH',name:'Ammas Pickles'},{code:'SP',name:'Sitara Pickles'},{code:'RP',name:'Ruchulu Pickles'},{code:'AC',name:'Andhra Pickles'},{code:'HP',name:'Hyderabad Pickles'}]}
+  var done=0,fail=0;
+  for(var i=0;i<targets.length;i++){
+    var t=targets[i];
+    b.innerHTML='<span class="spinner"></span> '+esc(t.name||t.code)+' ('+(i+1)+'/'+targets.length+')';
+    toast('🔄 Syncing '+(t.name||t.code)+'...');
+    try{
+      var url='/.netlify/functions/intel-sync?sync='+encodeURIComponent(t.code)+'&name='+encodeURIComponent(t.name||'')+'&url='+encodeURIComponent(t.website||t.url||'')+'&query='+encodeURIComponent(t.search_query||t.name||'')+'&color='+encodeURIComponent(t.color||'#666');
+      var r=await fetch(url);var d=await r.json();
+      if(d.error){fail++;toast('⚠️ '+(t.name||t.code)+': '+d.error)}
+      else{done++;toast('✅ '+(t.name||t.code)+': '+(d.rating||0)+'★ '+(d.reviews||0)+' reviews')}
+    }catch(e){fail++;toast('❌ '+(t.name||t.code)+': timeout')}
+    await loadComp();
+  }
+  document.getElementById('lastSync').textContent=new Date().toLocaleTimeString();
+  toast('🎯 Sync done: '+done+' ok, '+fail+' failed');
+  b.disabled=false;b.innerHTML='🔄 Sync Live Data'}
 async function syncAll(){const b=document.getElementById('btnSyncAll');b.disabled=true;b.innerHTML='<span class="spinner"></span>';toast('🔄 Full sync...');try{await fetch('/.netlify/functions/intel-sync');await loadAll();toast('✅ All refreshed')}catch(e){toast('⚠️ '+e.message)}b.disabled=false;b.innerHTML='📊 Sync All'}
 
 // META AD LIBRARY — opens public Facebook Ad Library
