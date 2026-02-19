@@ -2,34 +2,57 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#dc2626">
+<meta name="apple-mobile-web-app-title" content="SeaSalt Intel">
+<link rel="manifest" href="/manifest.json">
 <title>SeaSalt Intelligence Hub</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="/_config.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg-deep:#f8f9fa;--bg-surface:#ffffff;--bg-card:#ffffff;--bg-elevated:#f1f3f5;--border:#e2e5e9;--border-subtle:#eceef1;--text-primary:#1a1a2e;--text-secondary:#4a5568;--text-muted:#8896a6;--accent-red:#dc2626;--accent-orange:#ea580c;--accent-amber:#d97706;--accent-emerald:#059669;--accent-blue:#2563eb;--accent-violet:#7c3aed;--accent-pink:#db2777}
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg-deep);color:var(--text-primary);min-height:100vh;display:flex;overflow:hidden}
+:root{--bg-deep:#f8f9fa;--bg-surface:#ffffff;--bg-card:#ffffff;--bg-elevated:#f1f3f5;--border:#e2e5e9;--border-subtle:#eceef1;--text-primary:#1a1a2e;--text-secondary:#4a5568;--text-muted:#8896a6;--accent-red:#dc2626;--accent-orange:#ea580c;--accent-amber:#d97706;--accent-emerald:#059669;--accent-blue:#2563eb;--accent-violet:#7c3aed;--accent-pink:#db2777;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg-deep);color:var(--text-primary);min-height:100vh;min-height:100dvh;display:flex;overflow:hidden;-webkit-tap-highlight-color:transparent}
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#d0d5dd;border-radius:10px}
-.sidebar{width:240px;min-width:240px;background:#ffffff;border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;z-index:50;box-shadow:2px 0 8px rgba(0,0,0,.04)}
+/* ═══ SIDEBAR — Desktop ═══ */
+.sidebar{width:240px;min-width:240px;background:#ffffff;border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;height:100dvh;z-index:50;box-shadow:2px 0 8px rgba(0,0,0,.04);transition:all .25s}
 .sidebar-brand{padding:20px 20px 16px;border-bottom:1px solid var(--border-subtle)}.sidebar-brand h1{font-size:18px;font-weight:800}.sidebar-brand p{font-size:11px;color:var(--accent-red);font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px}
 .sidebar-section{padding:16px 12px 4px;font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:1.8px;text-transform:uppercase}
 .sidebar-nav{flex:1;overflow-y:auto;padding:4px 8px}
-.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:13.5px;font-weight:500;color:var(--text-secondary);transition:all .15s;margin-bottom:2px;position:relative;text-decoration:none}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:13.5px;font-weight:500;color:var(--text-secondary);transition:all .15s;margin-bottom:2px;position:relative;text-decoration:none;-webkit-touch-callout:none;user-select:none}
 .nav-item:hover{background:#f1f3f5;color:var(--text-primary)}.nav-item.active{background:linear-gradient(135deg,rgba(220,38,38,.08),rgba(234,88,12,.05));color:var(--accent-red);font-weight:600}
 .nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:20px;background:var(--accent-red);border-radius:0 3px 3px 0}
 .nav-item .icon{font-size:16px;width:22px;text-align:center}
 .sidebar-footer{padding:12px 16px;border-top:1px solid var(--border-subtle)}.status-dot{width:7px;height:7px;border-radius:50%;display:inline-block;animation:pulse-dot 2s infinite}
 @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
-.main-content{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:#ffffff;border-bottom:1px solid var(--border);min-height:58px}
+.sidebar-links{display:flex;gap:4px;flex-wrap:wrap;padding:0 8px 8px}
+/* ═══ MOBILE BOTTOM NAV ═══ */
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#ffffff;border-top:1px solid var(--border);z-index:60;padding:4px 0 calc(4px + var(--safe-bottom));box-shadow:0 -4px 20px rgba(0,0,0,.08)}
+.mobile-nav-inner{display:flex;justify-content:space-around;align-items:center}
+.mob-tab{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 4px;border-radius:8px;cursor:pointer;font-size:9px;font-weight:600;color:var(--text-muted);transition:all .15s;min-width:48px;-webkit-touch-callout:none;user-select:none}
+.mob-tab.active{color:var(--accent-red)}.mob-tab .mob-icon{font-size:18px}
+.mob-tab:active{transform:scale(.92);background:rgba(220,38,38,.05)}
+/* ═══ MOBILE MENU OVERLAY ═══ */
+.mobile-menu-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:55;backdrop-filter:blur(2px)}
+.mobile-menu{position:fixed;left:0;top:0;bottom:0;width:280px;background:#fff;z-index:56;transform:translateX(-100%);transition:transform .25s ease;overflow-y:auto;box-shadow:4px 0 20px rgba(0,0,0,.15);padding-top:var(--safe-top)}
+.mobile-menu.open{transform:translateX(0)}
+.mobile-menu-overlay.show{display:block}
+/* ═══ MAIN CONTENT ═══ */
+.main-content{flex:1;display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:#ffffff;border-bottom:1px solid var(--border);min-height:58px;padding-top:calc(14px + var(--safe-top))}
 .topbar-left h2{font-size:18px;font-weight:700}.topbar-left .subtitle{font-size:12px;color:var(--text-muted)}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:inherit}
+.hamburger{display:none;width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:18px;align-items:center;justify-content:center}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:inherit;-webkit-touch-callout:none;user-select:none}
+.btn:active{transform:scale(.96)}
 .btn-primary{background:var(--accent-red);color:#fff}.btn-primary:hover{background:#dc2626}.btn-ghost{background:#f8f9fa;color:var(--text-secondary);border:1px solid var(--border)}.btn-ghost:hover{background:var(--border);color:var(--text-primary)}
 .btn-blue{background:var(--accent-blue);color:#fff}.btn-emerald{background:var(--accent-emerald);color:#fff}.btn-orange{background:var(--accent-orange);color:#fff}.btn-violet{background:var(--accent-violet);color:#fff}
 .btn-sm{padding:6px 12px;font-size:11.5px}.btn:disabled{opacity:.5;cursor:not-allowed}
-.page-content{flex:1;overflow-y:auto;padding:24px 28px}.page{display:none}.page.active{display:block}
+.page-content{flex:1;overflow-y:auto;padding:24px 28px;-webkit-overflow-scrolling:touch}.page{display:none}.page.active{display:block}
 .card{background:#ffffff;border:1px solid var(--border);border-radius:12px;padding:20px;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.06)}.card:hover{border-color:var(--accent-blue);box-shadow:0 4px 12px rgba(0,0,0,.08)}
 .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}.card-title{font-size:14px;font-weight:700}.card-subtitle{font-size:11px;color:var(--text-muted);margin-top:2px}
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
@@ -48,8 +71,9 @@ textarea.intel-input{resize:vertical;min-height:80px}select.intel-input{appearan
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.animate-in{animation:fadeIn .35s ease-out}
 @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:100;align-items:center;justify-content:center}.modal-overlay.show{display:flex}
-.modal-box{background:#ffffff;border:1px solid var(--border);border-radius:16px;padding:28px;width:90%;max-width:600px;max-height:85vh;overflow-y:auto;animation:slideUp .3s ease;box-shadow:0 20px 60px rgba(0,0,0,.15)}.modal-title{font-size:18px;font-weight:700;margin-bottom:4px}
-.toast-container{position:fixed;top:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px}
+.modal-box{background:#ffffff;border:1px solid var(--border);border-radius:16px;padding:28px;width:90%;max-width:600px;max-height:85vh;overflow-y:auto;animation:slideUp .3s ease;box-shadow:0 20px 60px rgba(0,0,0,.15);-webkit-overflow-scrolling:touch}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:4px}
+.toast-container{position:fixed;top:calc(20px + var(--safe-top));right:20px;z-index:200;display:flex;flex-direction:column;gap:8px}
 .toast{background:#ffffff;border:1px solid var(--border);border-radius:10px;padding:12px 18px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;animation:slideUp .3s ease;box-shadow:0 8px 30px rgba(0,0,0,.12)}
 .empty-state{text-align:center;padding:60px 20px;color:var(--text-muted)}.empty-state .es-icon{font-size:48px;margin-bottom:12px}.empty-state h3{font-size:18px;font-weight:700;color:var(--text-secondary);margin-bottom:6px}.empty-state p{font-size:13px;max-width:400px;margin:0 auto 16px}
 .insight-card{background:#ffffff;border:1px solid var(--border);border-radius:12px;padding:20px;border-left:3px solid;box-shadow:0 1px 3px rgba(0,0,0,.06)}
@@ -58,7 +82,41 @@ textarea.intel-input{resize:vertical;min-height:80px}select.intel-input{appearan
 .social-avatar{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700}
 .spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent-red);border-radius:50%;animation:spin .6s linear infinite;display:inline-block}@keyframes spin{to{transform:rotate(360deg)}}
 .field-group{margin-bottom:12px}.field-label{font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px}
-@media(max-width:768px){.sidebar{width:60px;min-width:60px}.sidebar .nav-text,.sidebar-brand p,.sidebar-section,.sidebar-footer span{display:none}.grid-2{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr 1fr}.page-content{padding:16px}}
+/* ═══ TABLET — 768-1024px ═══ */
+@media(max-width:1024px){
+  .sidebar{width:64px;min-width:64px}.sidebar .nav-text,.sidebar-brand p,.sidebar-section,.sidebar-footer span,.sidebar-links a span{display:none}
+  .sidebar-brand h1{font-size:14px;text-align:center}.sidebar-brand{padding:14px 8px}
+  .nav-item{justify-content:center;padding:10px 8px}.nav-item .icon{width:auto;font-size:18px}.nav-item.active::before{width:3px;height:16px}
+  .sidebar-footer{padding:8px;text-align:center}.sidebar-links{justify-content:center;padding:4px}
+  .page-content{padding:16px 20px}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+}
+/* ═══ MOBILE — <768px ═══ */
+@media(max-width:768px){
+  .sidebar{display:none}
+  .mobile-nav{display:block}
+  .hamburger{display:flex}
+  .main-content{padding-bottom:calc(56px + var(--safe-bottom))}
+  .page-content{padding:12px 14px;padding-bottom:calc(80px + var(--safe-bottom))}
+  .topbar{padding:10px 14px;padding-top:calc(10px + var(--safe-top));min-height:50px}
+  .topbar-left h2{font-size:15px}
+  .topbar-right .btn{padding:6px 10px;font-size:11px}
+  .stats-grid{grid-template-columns:1fr 1fr;gap:8px}
+  .stat-card{padding:12px 14px}.stat-value{font-size:22px}
+  .grid-2{grid-template-columns:1fr}
+  .card{padding:14px;border-radius:10px}
+  .card-header{flex-direction:column;align-items:flex-start;gap:6px}
+  .data-table{font-size:11px}.data-table th{padding:8px 10px;font-size:9px}.data-table td{padding:8px 10px;font-size:11px}
+  .modal-box{width:95%;max-width:none;padding:20px;border-radius:12px;max-height:90vh}
+  .toast-container{left:12px;right:12px}
+  .toast{font-size:12px;padding:10px 14px}
+  .empty-state{padding:30px 16px}
+}
+/* ═══ SMALL MOBILE — <400px ═══ */
+@media(max-width:400px){
+  .stats-grid{grid-template-columns:1fr}.stat-card{padding:10px 12px}.stat-value{font-size:20px}
+  .topbar-right .btn span.btn-text{display:none}
+}
 </style>
 </head>
 <body>
@@ -85,7 +143,7 @@ textarea.intel-input{resize:vertical;min-height:80px}select.intel-input{appearan
 <div class="sidebar-footer"><div style="display:flex;align-items:center;gap:8px"><span class="status-dot" id="statusDot" style="background:var(--accent-amber)"></span><span style="font-size:11px;color:var(--text-muted)" id="statusText">Connecting...</span></div><div style="font-size:10px;color:var(--text-muted);margin-top:4px">Last sync: <span id="lastSync">—</span></div></div>
 </aside>
 <div class="main-content">
-<div class="topbar"><div class="topbar-left"><div><h2 id="pageTitle">🏆 Competitor Intelligence</h2><div class="subtitle" id="pageSubtitle">Real-time data from Google Places API → Supabase</div></div></div>
+<div class="topbar"><div class="topbar-left" style="display:flex;align-items:center;gap:10px"><button class="hamburger" onclick="toggleMobileMenu()">☰</button><div><h2 id="pageTitle">🏆 Competitor Intelligence</h2><div class="subtitle" id="pageSubtitle">Real-time data from Google Places API → Supabase</div></div></div>
 <div class="topbar-actions"><button class="btn btn-ghost btn-sm" onclick="syncAll()" id="btnSyncAll">📊 Sync All</button><button class="btn btn-primary btn-sm" onclick="exportData()">📥 Export</button></div></div>
 <div class="page-content">
 <!-- COMPETITORS -->
@@ -104,14 +162,14 @@ textarea.intel-input{resize:vertical;min-height:80px}select.intel-input{appearan
 <!-- SOCIAL SPY -->
 <div class="page" id="page-social-spy"><div class="animate-in">
 <div class="stats-grid">
-<div class="stat-card violet"><div class="stat-label">With Social URLs</div><div class="stat-value" id="sSocial">—</div></div>
+<div class="stat-card violet"><div class="stat-label">Brands with Social</div><div class="stat-value" id="sSocial">—</div></div>
 <div class="stat-card blue"><div class="stat-label">Content Logged</div><div class="stat-value" id="sSocContent">—</div></div>
-<div class="stat-card amber"><div class="stat-label">Hashtags Tracked</div><div class="stat-value" id="sSocHash">—</div></div>
+<div class="stat-card amber"><div class="stat-label">YT Videos Tracked</div><div class="stat-value" id="sSocVids">—</div></div>
+<div class="stat-card emerald"><div class="stat-label">Total Engagements</div><div class="stat-value" id="sSocEng">—</div></div>
 </div>
-<div style="display:flex;gap:10px;margin-bottom:20px"><button class="btn btn-violet btn-sm" onclick="openAddSocial()">➕ Add Social URLs</button><button class="btn btn-ghost btn-sm" onclick="openLogPost()">📝 Log Post</button><button class="btn btn-ghost btn-sm" onclick="openAddHashtag()">🏷️ Add Hashtag</button></div>
-<div class="grid-2"><div class="card"><div class="card-header"><div class="card-title">Social Profiles</div></div><div id="socProfiles"></div></div>
-<div class="card"><div class="card-header"><div class="card-title">Logged Posts</div></div><div id="socPosts"></div></div></div>
-<div class="card" style="margin-top:16px"><div class="card-header"><div class="card-title">Hashtag Tracker</div></div><div id="hashArea"></div></div>
+<div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap"><button class="btn btn-violet btn-sm" onclick="openAddSocial()">➕ Add Social URLs</button><button class="btn btn-ghost btn-sm" onclick="openLogPost()">📝 Log Post</button></div>
+<div class="card" style="margin-bottom:16px"><div class="card-header"><div><div class="card-title">📱 All Brand Social Profiles</div><div class="card-subtitle">Click any brand to see full social detail + last activity</div></div></div><div id="socProfiles"></div></div>
+<div class="card" style="margin-bottom:16px"><div class="card-header"><div><div class="card-title">📺 Recent Content Activity</div><div class="card-subtitle">YouTube videos + logged posts across all brands</div></div></div><div id="socPosts"></div></div>
 </div></div>
 <!-- INSIGHTS -->
 <div class="page" id="page-insights"><div class="animate-in">
@@ -504,13 +562,123 @@ function renderAds(){
   el.innerHTML=`<table class="data-table"><thead><tr><th>Competitor</th><th>Platform</th><th>Type</th><th>Description</th><th>Status</th><th>Est Spend</th><th>Found</th></tr></thead><tbody>${ADS.map(a=>`<tr><td style="font-weight:600">${esc(a.competitor_name)}</td><td><span class="badge badge-blue">${esc(a.platform)}</span></td><td>${esc(a.ad_type||'—')}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a.headline||a.description||'—')}</td><td><span class="badge ${a.status==='active'?'badge-green':'badge-amber'}">${a.status||'—'}</span></td><td style="font-weight:600;color:var(--accent-amber)">${esc(a.estimated_spend||'—')}</td><td style="font-size:11px;color:var(--text-muted)">${timeAgo(a.scraped_at)}</td></tr>`).join('')}</tbody></table>`}
 
 function renderSocContent(){
-  const ws=COMP.filter(c=>c.instagram_url||c.youtube_url||c.facebook_url);document.getElementById('sSocial').textContent=ws.length;document.getElementById('sSocContent').textContent=SOC_CONTENT.length;
-  const sp=document.getElementById('socProfiles');
-  if(!ws.length)sp.innerHTML='<div class="empty-state" style="padding:30px"><p>Add social URLs to competitor profiles</p></div>';
-  else sp.innerHTML=ws.map(c=>`<div class="social-profile"><div class="social-avatar" style="background:${c.color}20;color:${c.color}">${c.code}</div><div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text-primary)">${esc(c.name)}</div><div style="font-size:11px;color:var(--text-muted)">${c.instagram_url?'📸 IG ':''}${c.youtube_url?'📹 YT ':''}${c.facebook_url?'📘 FB':''}</div></div>${c.instagram_followers?`<div style="font-size:12px;font-weight:700">${c.instagram_followers.toLocaleString()}</div>`:''}</div>`).join('');
-  const sc=document.getElementById('socPosts');
-  if(!SOC_CONTENT.length)sc.innerHTML='<div class="empty-state" style="padding:30px"><p>Log competitor posts</p></div>';
-  else sc.innerHTML=SOC_CONTENT.slice(0,8).map(p=>`<div class="social-profile"><div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text-primary)">${esc(p.caption||p.post_type||'Post')}</div><div style="font-size:11px;color:var(--text-muted)">${esc(p.competitor_name)} · ${esc(p.platform)}</div></div>${p.likes?`<div style="font-size:12px;font-weight:700;color:var(--accent-pink)">♥ ${p.likes.toLocaleString()}</div>`:''}</div>`).join('')}
+  var ws=COMP.filter(function(c){return c.instagram_url||c.youtube_url||c.facebook_url||c.google_maps_url});
+  document.getElementById('sSocial').textContent=ws.length||COMP.length;
+  document.getElementById('sSocContent').textContent=SOC_CONTENT.length;
+  var ytVids=SOC_CONTENT.filter(function(p){return p.platform==='YouTube'});
+  document.getElementById('sSocVids').textContent=ytVids.length;
+  var totalEng=SOC_CONTENT.reduce(function(s,p){return s+(p.likes||0)+(p.comments||0)},0);
+  document.getElementById('sSocEng').textContent=totalEng>1000?(totalEng/1000).toFixed(1)+'K':totalEng;
+
+  // ── ALL BRAND SOCIAL PROFILES ──
+  var sp=document.getElementById('socProfiles');
+  var allBrands=COMP.length?COMP:[];
+  if(!allBrands.length){sp.innerHTML='<div class="empty-state" style="padding:30px"><div class="es-icon">📱</div><h3>No Brands</h3><p>Sync competitors first to see their social profiles.</p></div>';} 
+  else {
+    var tbl='<table class="data-table"><thead><tr><th>Brand</th><th>📸 Instagram</th><th>📺 YouTube</th><th>📘 Facebook</th><th>📍 Google</th><th>YT Subs</th><th>Last Activity</th><th></th></tr></thead><tbody>';
+    allBrands.forEach(function(c){
+      var lastAct=SOC_CONTENT.filter(function(p){return p.competitor_code===c.code||p.competitor_name===c.name}).sort(function(a,b){return new Date(b.scraped_at||b.posted_at||0)-new Date(a.scraped_at||a.posted_at||0)})[0];
+      tbl+='<tr style="cursor:pointer" onclick="openSocialDrilldown(\''+c.code+'\')">';
+      tbl+='<td><div style="display:flex;align-items:center;gap:6px"><span class="comp-dot" style="background:'+(c.color||'#666')+'"></span><span style="font-weight:600">'+esc(c.name)+'</span></div></td>';
+      tbl+='<td>'+(c.instagram_url?'<a href="'+esc(c.instagram_url)+'" target="_blank" onclick="event.stopPropagation()" style="color:#e1306c;text-decoration:none;font-weight:600;font-size:11px">📸 '+(c.instagram_followers?c.instagram_followers.toLocaleString()+' followers':'View')+'</a>':'<span style="color:#ddd">—</span>')+'</td>';
+      tbl+='<td>'+(c.youtube_url?'<a href="'+esc(c.youtube_url)+'" target="_blank" onclick="event.stopPropagation()" style="color:#ff0000;text-decoration:none;font-weight:600;font-size:11px">📺 View</a>':'<span style="color:#ddd">—</span>')+'</td>';
+      tbl+='<td>'+(c.facebook_url?'<a href="'+esc(c.facebook_url)+'" target="_blank" onclick="event.stopPropagation()" style="color:#1877f2;text-decoration:none;font-weight:600;font-size:11px">📘 View</a>':'<span style="color:#ddd">—</span>')+'</td>';
+      tbl+='<td>'+(c.google_maps_url?'<a href="'+esc(c.google_maps_url)+'" target="_blank" onclick="event.stopPropagation()" style="color:#34a853;text-decoration:none;font-weight:600;font-size:11px">📍 Maps</a>':'<span style="color:#ddd">—</span>')+'</td>';
+      tbl+='<td style="font-weight:700">'+(c.youtube_subscribers?c.youtube_subscribers.toLocaleString():'—')+'</td>';
+      tbl+='<td style="font-size:11px">'+(lastAct?'<span class="badge badge-blue">'+esc(lastAct.platform)+'</span> '+timeAgo(lastAct.scraped_at||lastAct.posted_at):'<span style="color:var(--text-muted)">No activity</span>')+'</td>';
+      tbl+='<td><span style="color:var(--accent-blue);font-size:10px">↗ detail</span></td></tr>';
+    });
+    sp.innerHTML=tbl+'</tbody></table>';
+  }
+
+  // ── RECENT CONTENT ──
+  var sc=document.getElementById('socPosts');
+  if(!SOC_CONTENT.length){sc.innerHTML='<div style="padding:16px;text-align:center;color:var(--text-muted)">No content logged yet. Run "Sync Live Data" on Competitors page to pull YouTube videos automatically.</div>'}
+  else {
+    var ptbl='<table class="data-table"><thead><tr><th>Brand</th><th>Platform</th><th>Type</th><th>Title</th><th>♥ Likes</th><th>💬 Comments</th><th>Date</th><th>Link</th></tr></thead><tbody>';
+    SOC_CONTENT.slice(0,25).forEach(function(p){
+      var comp=COMP.find(function(c){return c.code===p.competitor_code||c.name===p.competitor_name});
+      ptbl+='<tr><td style="font-weight:600;font-size:11px"><span class="comp-dot" style="background:'+(comp?comp.color:'#666')+'"></span>'+esc(p.competitor_name||'—')+'</td>';
+      ptbl+='<td><span class="badge '+(p.platform==='YouTube'?'badge-red':'badge-violet')+'">'+esc(p.platform||'—')+'</span></td>';
+      ptbl+='<td style="font-size:11px">'+esc(p.post_type||'—')+'</td>';
+      ptbl+='<td style="font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(p.caption||'—')+'</td>';
+      ptbl+='<td style="font-weight:700;color:var(--accent-pink)">'+(p.likes?p.likes.toLocaleString():'—')+'</td>';
+      ptbl+='<td style="font-weight:600">'+(p.comments?p.comments.toLocaleString():'—')+'</td>';
+      ptbl+='<td style="font-size:10px;color:var(--text-muted)">'+timeAgo(p.posted_at||p.scraped_at)+'</td>';
+      ptbl+='<td>'+(p.post_url?'<a href="'+esc(p.post_url)+'" target="_blank" style="color:var(--accent-blue);font-size:11px;text-decoration:none">View →</a>':'—')+'</td></tr>';
+    });
+    sc.innerHTML=ptbl+'</tbody></table>';
+  }
+}
+
+function openSocialDrilldown(code){
+  var c=COMP.find(function(x){return x.code===code});if(!c)return;
+  var posts=SOC_CONTENT.filter(function(p){return p.competitor_code===code||p.competitor_name===c.name}).sort(function(a,b){return new Date(b.scraped_at||b.posted_at||0)-new Date(a.scraped_at||a.posted_at||0)});
+  var engagers=ENGAGERS.filter(function(e){return e.competitor_code===code||e.competitor_name===c.name});
+  var wi=WEB_INTEL.find(function(x){return x.code===code||x.name===c.name});
+  var socials=wi?_jo(wi.social_links||'{}'):{};
+
+  var h='<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">';
+  h+='<div style="width:48px;height:48px;border-radius:12px;background:'+(c.color||'#666')+'20;display:flex;align-items:center;justify-content:center"><span class="comp-dot" style="background:'+(c.color||'#666')+';width:20px;height:20px"></span></div>';
+  h+='<div style="flex:1"><div style="font-size:20px;font-weight:800">'+esc(c.name)+'</div>';
+  h+='<div style="font-size:11px;color:var(--text-muted)">⭐ '+(c.rating||'—')+' · '+(c.total_reviews||0)+' reviews · '+(c.youtube_subscribers||0)+' YT subs</div></div></div>';
+
+  // Social handles with branded buttons
+  h+='<div style="font-size:13px;font-weight:700;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border-subtle)">📱 Social Handles</div>';
+  h+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">';
+  if(c.instagram_url)h+='<a href="'+esc(c.instagram_url)+'" target="_blank" style="text-decoration:none;padding:8px 14px;border-radius:8px;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:#fff;font-size:12px;font-weight:600">📸 Instagram'+(c.instagram_followers?' · '+c.instagram_followers.toLocaleString():'')+'</a>';
+  else h+='<span style="padding:8px 14px;border-radius:8px;background:var(--bg-elevated);font-size:12px;color:var(--text-muted)">📸 No Instagram</span>';
+  if(c.youtube_url)h+='<a href="'+esc(c.youtube_url)+'" target="_blank" style="text-decoration:none;padding:8px 14px;border-radius:8px;background:#ff0000;color:#fff;font-size:12px;font-weight:600">📺 YouTube · '+(c.youtube_subscribers?c.youtube_subscribers.toLocaleString()+' subs':'View')+'</a>';
+  else h+='<span style="padding:8px 14px;border-radius:8px;background:var(--bg-elevated);font-size:12px;color:var(--text-muted)">📺 No YouTube</span>';
+  if(c.facebook_url)h+='<a href="'+esc(c.facebook_url)+'" target="_blank" style="text-decoration:none;padding:8px 14px;border-radius:8px;background:#1877f2;color:#fff;font-size:12px;font-weight:600">📘 Facebook</a>';
+  if(c.google_maps_url)h+='<a href="'+esc(c.google_maps_url)+'" target="_blank" style="text-decoration:none;padding:8px 14px;border-radius:8px;background:#34a853;color:#fff;font-size:12px;font-weight:600">📍 Google Maps</a>';
+  // Also show social links from website scrape
+  if(socials.instagram&&!c.instagram_url)h+='<a href="'+esc(socials.instagram)+'" target="_blank" style="text-decoration:none;padding:8px 14px;border-radius:8px;background:linear-gradient(45deg,#f09433,#dc2743);color:#fff;font-size:12px;font-weight:600">📸 IG (from website)</a>';
+  if(socials.facebook&&!c.facebook_url)h+='<a href="'+esc(socials.facebook)+'" target="_blank" style="text-decoration:none;padding:8px 14px;border-radius:8px;background:#1877f2;color:#fff;font-size:12px;font-weight:600">📘 FB (from website)</a>';
+  if(socials.youtube&&!c.youtube_url)h+='<a href="'+esc(socials.youtube)+'" target="_blank" style="text-decoration:none;padding:8px 14px;border-radius:8px;background:#ff0000;color:#fff;font-size:12px;font-weight:600">📺 YT (from website)</a>';
+  h+='</div>';
+
+  // Quick stats
+  h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">';
+  h+='<div style="background:var(--bg-elevated);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800">'+posts.length+'</div><div style="font-size:9px;color:var(--text-muted)">Content Posts</div></div>';
+  h+='<div style="background:var(--bg-elevated);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800">'+engagers.length+'</div><div style="font-size:9px;color:var(--text-muted)">Engagers</div></div>';
+  var totLikes=posts.reduce(function(s,p){return s+(p.likes||0)},0);
+  h+='<div style="background:var(--bg-elevated);border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--accent-pink)">'+totLikes.toLocaleString()+'</div><div style="font-size:9px;color:var(--text-muted)">Total Likes</div></div></div>';
+
+  // Recent content
+  if(posts.length){
+    h+='<div style="font-size:13px;font-weight:700;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border-subtle)">📺 Recent Content ('+posts.length+')</div>';
+    h+='<div style="max-height:250px;overflow-y:auto;margin-bottom:14px">';
+    posts.slice(0,10).forEach(function(p){
+      h+='<div style="padding:8px 0;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;gap:8px">';
+      h+='<span class="badge '+(p.platform==='YouTube'?'badge-red':'badge-violet')+'" style="font-size:9px">'+esc(p.platform)+'</span>';
+      h+='<div style="flex:1"><div style="font-size:12px;font-weight:600">'+esc(p.caption||p.post_type||'Post')+'</div>';
+      h+='<div style="font-size:10px;color:var(--text-muted)">'+(p.post_type?esc(p.post_type)+' · ':'')+timeAgo(p.posted_at||p.scraped_at)+'</div></div>';
+      h+='<div style="text-align:right;font-size:11px">'+(p.likes?'<span style="color:var(--accent-pink)">♥'+p.likes.toLocaleString()+'</span> ':'')+(p.comments?'<span style="color:var(--accent-blue)">💬'+p.comments.toLocaleString()+'</span>':'')+'</div>';
+      if(p.post_url)h+='<a href="'+esc(p.post_url)+'" target="_blank" style="color:var(--accent-blue);font-size:11px;text-decoration:none">View →</a>';
+      h+='</div>';
+    });
+    h+='</div>';
+  }
+
+  // Recent engagers
+  if(engagers.length){
+    h+='<div style="font-size:13px;font-weight:700;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border-subtle)">👥 Engagers ('+engagers.length+')</div>';
+    h+='<div style="max-height:150px;overflow-y:auto;margin-bottom:10px">';
+    engagers.slice(0,8).forEach(function(e){
+      var sentColor=e.sentiment==='positive'?'var(--accent-emerald)':e.sentiment==='negative'?'var(--accent-red)':'var(--text-muted)';
+      h+='<div style="padding:4px 0;display:flex;gap:6px;align-items:center;font-size:11px">';
+      h+=(e.profile_photo?'<img src="'+esc(e.profile_photo)+'" style="width:20px;height:20px;border-radius:50%">':'<span style="width:20px;height:20px;border-radius:50%;background:var(--bg-elevated);display:inline-flex;align-items:center;justify-content:center;font-size:8px">👤</span>');
+      h+='<span style="font-weight:600">'+esc(e.person_name)+'</span>';
+      h+='<span class="badge" style="font-size:8px;background:'+sentColor+'20;color:'+sentColor+'">'+esc(e.sentiment)+'</span>';
+      h+='<span style="color:var(--text-muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(e.content?esc(e.content.substring(0,60)):'')+'</span></div>';
+    });
+    h+='</div>';
+  }
+
+  h+='<div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border-subtle)"><button class="btn btn-violet btn-sm" onclick="closeModal();openAddSocial()">➕ Add URLs</button><button class="btn btn-ghost btn-sm" onclick="closeModal()">Close</button></div>';
+  showModal(h);
+}
 
 // SYNC
 async function syncCompetitors(){const b=document.getElementById('btnSync');b.disabled=true;
@@ -542,8 +710,26 @@ function scanMetaAds(){const c=COMP.length?COMP:[{name:'Vellanki Foods'},{name:'
 // CRUD — all write to Supabase
 async function dbInsert(table,row){try{const{error}=await db.from(table).insert(row);if(error)throw error;return true}catch(e){toast('❌ '+e.message);return false}}
 
-function openAddCompetitor(){showModal(`<div class="modal-title">➕ Add Competitor</div><div class="field-group"><label class="field-label">Name *</label><input class="intel-input" id="f1" placeholder="Business name"></div><div class="field-group"><label class="field-label">Code (2-4 letters) *</label><input class="intel-input" id="f2" maxlength="4" placeholder="e.g. VF"></div><div class="field-group"><label class="field-label">Website</label><input class="intel-input" id="f3" placeholder="domain.com"></div><div class="field-group"><label class="field-label">Google Search Query</label><input class="intel-input" id="f4" placeholder="Business Name City"></div><div class="field-group"><label class="field-label">Threat Level</label><select class="intel-input" id="f5"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select></div><div class="field-group"><label class="field-label">Color</label><input class="intel-input" type="color" id="f6" value="#ef4444" style="height:40px;padding:4px"></div><div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-primary" onclick="saveComp()">Add</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>`)}
-async function saveComp(){const n=document.getElementById('f1').value.trim(),c=document.getElementById('f2').value.trim().toUpperCase();if(!n||!c){toast('❌ Name & Code required');return}if(await dbInsert('competitor_profiles',{name:n,code:c,url:document.getElementById('f3').value.trim(),search_query:document.getElementById('f4').value.trim(),threat_level:document.getElementById('f5').value,color:document.getElementById('f6').value})){toast('✅ '+n+' added!');closeModal();await loadComp()}}
+function openAddCompetitor(){showModal('<div class="modal-title">➕ Add Competitor</div><div class="field-group"><label class="field-label">Business Name *</label><input class="intel-input" id="f1" placeholder="e.g. Vellanki Foods"></div><div class="field-group"><label class="field-label">Code (2-4 letters) *</label><input class="intel-input" id="f2" maxlength="4" placeholder="e.g. VF" style="text-transform:uppercase"></div><div class="field-group"><label class="field-label">Website</label><input class="intel-input" id="f3" placeholder="https://domain.com"></div><div class="field-group"><label class="field-label">Google Search Query</label><input class="intel-input" id="f4" placeholder="Business Name Hyderabad"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="field-group"><label class="field-label">Instagram URL</label><input class="intel-input" id="f7" placeholder="https://instagram.com/..."></div><div class="field-group"><label class="field-label">YouTube URL</label><input class="intel-input" id="f8" placeholder="https://youtube.com/..."></div><div class="field-group"><label class="field-label">Facebook URL</label><input class="intel-input" id="f9" placeholder="https://facebook.com/..."></div><div class="field-group"><label class="field-label">Threat Level</label><select class="intel-input" id="f5"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select></div></div><div class="field-group"><label class="field-label">Color</label><input class="intel-input" type="color" id="f6" value="#ef4444" style="height:40px;padding:4px"></div><div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-primary" onclick="saveComp()">➕ Add & Sync</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>')}
+async function saveComp(){
+  var n=document.getElementById('f1').value.trim(),c=document.getElementById('f2').value.trim().toUpperCase();
+  if(!n||!c){toast('❌ Name & Code required');return}
+  var row={name:n,code:c,website:document.getElementById('f3').value.trim(),search_query:document.getElementById('f4').value.trim()||n+' Hyderabad',threat_level:document.getElementById('f5').value,color:document.getElementById('f6').value};
+  var ig=document.getElementById('f7').value.trim();if(ig)row.instagram_url=ig;
+  var yt=document.getElementById('f8').value.trim();if(yt)row.youtube_url=yt;
+  var fb=document.getElementById('f9').value.trim();if(fb)row.facebook_url=fb;
+  if(await dbInsert('competitor_profiles',row)){
+    toast('✅ '+n+' added! Syncing...');closeModal();await loadComp();
+    // Auto-sync the new competitor
+    try{
+      var url='/.netlify/functions/intel-sync?sync='+encodeURIComponent(c)+'&name='+encodeURIComponent(n)+'&url='+encodeURIComponent(row.website||'')+'&query='+encodeURIComponent(row.search_query)+'&color='+encodeURIComponent(row.color);
+      var r=await fetch(url);var d=await r.json();
+      if(d.rating)toast('✅ '+n+': '+d.rating+'★ '+d.reviews+' reviews found!');
+      else toast('ℹ️ '+n+' saved. Google Places may not find it yet — try running Sync again later.');
+      await loadComp();
+    }catch(e){toast('ℹ️ '+n+' saved. Sync will happen next time you click "Sync Live Data".')}
+  }
+}
 
 function openAddInsight(){showModal(`<div class="modal-title">➕ Add Insight</div><div class="field-group"><label class="field-label">Type *</label><select class="intel-input" id="i1"><option value="opportunity">💡 Opportunity</option><option value="threat">⚠️ Threat</option><option value="trend">📈 Trend</option><option value="action">⚡ Action</option></select></div><div class="field-group"><label class="field-label">Title *</label><input class="intel-input" id="i2" placeholder="What's the insight?"></div><div class="field-group"><label class="field-label">Details</label><textarea class="intel-input" id="i3" placeholder="Context and analysis..."></textarea></div><div class="field-group"><label class="field-label">Priority</label><select class="intel-input" id="i4"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option><option value="critical">Critical</option></select></div><div style="display:flex;gap:10px;margin-top:8px"><button class="btn btn-emerald" onclick="saveInsight()">Save</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>`)}
 async function saveInsight(){const t=document.getElementById('i2').value.trim();if(!t){toast('❌ Title required');return}if(await dbInsert('intel_insights',{type:document.getElementById('i1').value,title:t,body:document.getElementById('i3').value.trim(),priority:document.getElementById('i4').value})){toast('✅ Saved!');closeModal();await loadInsights()}}
@@ -1048,5 +1234,52 @@ function savePresOverride(){closeModal();toast('✅ Presence saved (manual overr
 function safeJSON(v){try{return typeof v==='string'?JSON.parse(v):(Array.isArray(v)?v:[])}catch(e){return[]}}
 
 document.addEventListener('DOMContentLoaded',()=>{if(db)loadAll();else toast('⚠️ Supabase not connected')});
+</script>
+<!-- MOBILE BOTTOM NAV -->
+<div class="mobile-nav">
+<div class="mobile-nav-inner">
+<div class="mob-tab active" onclick="mobileGo('competitors',this)" data-page="competitors"><div class="mob-icon">🏆</div>Intel</div>
+<div class="mob-tab" onclick="mobileGo('web-intel',this)" data-page="web-intel"><div class="mob-icon">🌐</div>Sites</div>
+<div class="mob-tab" onclick="mobileGo('products',this)" data-page="products"><div class="mob-icon">🛒</div>Prices</div>
+<div class="mob-tab" onclick="mobileGo('social-spy',this)" data-page="social-spy"><div class="mob-icon">🔍</div>Social</div>
+<div class="mob-tab" onclick="toggleMobileMenu()" data-page="more"><div class="mob-icon">☰</div>More</div>
+</div>
+</div>
+<!-- MOBILE SLIDE MENU -->
+<div class="mobile-menu-overlay" id="mobileMenuOverlay" onclick="closeMobileMenu()"></div>
+<div class="mobile-menu" id="mobileMenu">
+<div style="padding:20px;border-bottom:1px solid var(--border-subtle)">
+<div style="display:flex;align-items:center;gap:10px"><span style="font-size:24px">🔱</span><div><div style="font-weight:800;font-size:16px">SeaSalt</div><div style="font-size:10px;color:var(--accent-red);font-weight:600;letter-spacing:1px">INTELLIGENCE HUB</div></div></div>
+</div>
+<div style="padding:8px">
+<div class="nav-item" onclick="mobileGo('competitors',this);closeMobileMenu()"><span class="icon">🏆</span><span class="nav-text">Competitors</span></div>
+<div class="nav-item" onclick="mobileGo('social-spy',this);closeMobileMenu()"><span class="icon">🔍</span><span class="nav-text">Social Spy</span></div>
+<div class="nav-item" onclick="mobileGo('insights',this);closeMobileMenu()"><span class="icon">🧠</span><span class="nav-text">Insights</span></div>
+<div class="nav-item" onclick="mobileGo('content-studio',this);closeMobileMenu()"><span class="icon">🎨</span><span class="nav-text">Content Studio</span></div>
+<div class="nav-item" onclick="mobileGo('social-listeners',this);closeMobileMenu()"><span class="icon">📡</span><span class="nav-text">Social Listeners</span></div>
+<div class="nav-item" onclick="mobileGo('engagers',this);closeMobileMenu()"><span class="icon">👥</span><span class="nav-text">Engagers</span></div>
+<div class="nav-item" onclick="mobileGo('web-intel',this);closeMobileMenu()"><span class="icon">🌐</span><span class="nav-text">Website Intel</span></div>
+<div class="nav-item" onclick="mobileGo('products',this);closeMobileMenu()"><span class="icon">🛒</span><span class="nav-text">Products & Prices</span></div>
+<div class="nav-item" onclick="mobileGo('ad-library',this);closeMobileMenu()"><span class="icon">📺</span><span class="nav-text">Ad Library</span></div>
+<div class="nav-item" onclick="mobileGo('keyword-tracker',this);closeMobileMenu()"><span class="icon">🔑</span><span class="nav-text">Keyword Tracker</span></div>
+</div>
+<div style="padding:12px 16px;border-top:1px solid var(--border-subtle);margin-top:8px">
+<div style="display:flex;gap:8px"><a href="https://seasaltpickles.com" target="_blank" class="btn btn-ghost btn-sm" style="flex:1;justify-content:center">🌐 Store</a><a href="#" class="btn btn-ghost btn-sm" style="flex:1;justify-content:center" onclick="closeMobileMenu()">🗄️ Supabase</a></div>
+<div style="margin-top:8px;font-size:10px;color:var(--text-muted);text-align:center"><span class="status-dot" id="statusDotMob" style="background:var(--accent-emerald)"></span> Connected · <span id="lastSyncMob"></span></div>
+</div>
+</div>
+<script>
+function toggleMobileMenu(){var m=document.getElementById('mobileMenu'),o=document.getElementById('mobileMenuOverlay');m.classList.toggle('open');o.classList.toggle('show')}
+function closeMobileMenu(){document.getElementById('mobileMenu').classList.remove('open');document.getElementById('mobileMenuOverlay').classList.remove('show')}
+function mobileGo(p,el){
+  go(p,null);
+  // Update mobile bottom nav active state
+  document.querySelectorAll('.mob-tab').forEach(function(t){t.classList.remove('active')});
+  if(el&&el.classList.contains('mob-tab'))el.classList.add('active');
+  // Also update sidebar nav for consistency
+  document.querySelectorAll('.sidebar .nav-item').forEach(function(n){n.classList.remove('active')});
+  var sideItem=document.querySelector('.sidebar .nav-item[onclick*="'+p+'"]');
+  if(sideItem)sideItem.classList.add('active');
+}
 </script>
 </body></html>
