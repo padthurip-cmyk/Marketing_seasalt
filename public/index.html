@@ -357,7 +357,7 @@ function openCompDrilldown(code){
   if(c.youtube_url)h+='<a href="'+esc(c.youtube_url)+'" target="_blank" style="text-decoration:none;padding:6px 12px;border-radius:8px;background:#ff0000;color:#fff;font-size:11px;font-weight:600">📺 YouTube</a>';
   if(c.facebook_url)h+='<a href="'+esc(c.facebook_url)+'" target="_blank" style="text-decoration:none;padding:6px 12px;border-radius:8px;background:#1877f2;color:#fff;font-size:11px;font-weight:600">📘 Facebook</a>';
   if(c.google_maps_url)h+='<a href="'+esc(c.google_maps_url)+'" target="_blank" style="text-decoration:none;padding:6px 12px;border-radius:8px;background:#34a853;color:#fff;font-size:11px;font-weight:600">📍 Google Maps</a>';
-  if(c.website)h+='<a href="https://'+esc(c.website)+'" target="_blank" style="text-decoration:none;padding:6px 12px;border-radius:8px;background:var(--bg-elevated);color:var(--accent-blue);font-size:11px;font-weight:600;border:1px solid var(--border-subtle)">🌐 Website</a>';
+  if(c.website)h+='<a href="'+(c.website.startsWith('http')?esc(c.website):'https://'+esc(c.website))+'" target="_blank" style="text-decoration:none;padding:6px 12px;border-radius:8px;background:var(--bg-elevated);color:var(--accent-blue);font-size:11px;font-weight:600;border:1px solid var(--border-subtle)">🌐 Website</a>';
   if(c.phone)h+='<span style="padding:6px 12px;border-radius:8px;background:var(--bg-elevated);font-size:11px;font-weight:600">📞 '+esc(c.phone)+'</span>';
   h+='</div>';
 
@@ -844,7 +844,7 @@ function openBrandDrilldown(code){
   // Actions
   h+=`<div style="display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border-subtle)">
     <button class="btn btn-primary btn-sm" onclick="closeModal();go('products',document.querySelector('[onclick*=products]'));SELECTED_BRAND='${code}';renderProducts()">🛒 View in Products</button>
-    <a href="https://${esc(w.url)}" target="_blank" class="btn btn-ghost btn-sm">🌐 Visit Website</a>
+    <a href="${w.url.startsWith('http')?esc(w.url):'https://'+esc(w.url)}" target="_blank" class="btn btn-ghost btn-sm">🌐 Visit Website</a>
     <button class="btn btn-ghost btn-sm" onclick="closeModal()">Close</button>
   </div>`;
 
