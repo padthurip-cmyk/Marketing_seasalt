@@ -14,10 +14,26 @@ const SITE_URL = process.env.URL || 'https://sage-paletas-ad2239.netlify.app';
 const GRAPH_URL = 'https://graph.facebook.com/v25.0';
 
 // ═══ Supabase fetch helpers ═══
-const SB_H = () => ({ 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY });
-async function dbSelect(table, q) { return (await fetch(SB_URL + '/rest/v1/' + table + '?' + q, { headers: SB_H() })).json(); }
-async function dbInsert(table, row) { return (await fetch(SB_URL + '/rest/v1/' + table, { method: 'POST', headers: { ...SB_H(), 'Prefer': 'return=representation' }, body: JSON.stringify(row) })).json(); }
-async function dbUpdate(table, match, upd) { return (await fetch(SB_URL + '/rest/v1/' + table + '?' + match, { method: 'PATCH', headers: { ...SB_H(), 'Prefer': 'return=representation' }, body: JSON.stringify(upd) })).json(); }
+function sbHeaders(extra) {
+  var h = { 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY };
+  if (extra) h['Prefer'] = extra;
+  return h;
+}
+async function dbSelect(table, q) {
+  if (!SB_URL || !SB_KEY) return [];
+  const r = await fetch(SB_URL + '/rest/v1/' + table + '?' + q, { headers: sbHeaders() });
+  return r.json();
+}
+async function dbInsert(table, row) {
+  if (!SB_URL || !SB_KEY) return null;
+  const r = await fetch(SB_URL + '/rest/v1/' + table, { method: 'POST', headers: sbHeaders('return=representation'), body: JSON.stringify(row) });
+  return r.json();
+}
+async function dbUpdate(table, match, upd) {
+  if (!SB_URL || !SB_KEY) return null;
+  const r = await fetch(SB_URL + '/rest/v1/' + table + '?' + match, { method: 'PATCH', headers: sbHeaders('return=representation'), body: JSON.stringify(upd) });
+  return r.json();
+}
 
 // ═══ Product catalog fallback ═══
 const PRODUCTS = [
