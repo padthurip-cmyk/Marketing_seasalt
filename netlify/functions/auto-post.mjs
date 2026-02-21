@@ -96,7 +96,7 @@ export const handler = async function(event) {
     if (action === 'generate') return { statusCode: 200, headers: H, body: JSON.stringify(await generateAndPublish()) };
     return { statusCode: 400, headers: H, body: JSON.stringify({ error: 'Unknown action' }) };
   } catch (e) {
-    return { statusCode: 500, headers: H, body: JSON.stringify({ error: e.message || 'Error' }) };
+    return { statusCode: 500, headers: H, body: JSON.stringify({ error: e.message || 'Error', stack: (e.stack || '').substring(0, 200) }) };
   }
 };
 
@@ -152,9 +152,24 @@ async function generateAndPublish() {
   var gData = await gRes.json();
   if (gData.error) throw new Error('Gemini: ' + (gData.error.message || 'error'));
 
+  // Gemini 2.5 Flash is a "thinking" model - text may be in different parts
   var txt = '';
-  if (gData.candidates && gData.candidates[0] && gData.candidates[0].content && gData.candidates[0].content.parts && gData.candidates[0].content.parts[0]) {
-    txt = gData.candidates[0].content.parts[0].text || '';
+  try {
+    var parts = gData.candidates[0].content.parts;
+    for (var pi = 0; pi < parts.length; pi++) {
+      // Skip "thought" parts, get the actual text response
+      if (parts[pi].text && !parts[pi].thought) {
+        txt = parts[pi].text;
+        break;
+      }
+    }
+    // If no non-thought text found, try last part
+    if (!txt && parts.length > 0) {
+      txt = parts[parts.length - 1].text || '';
+    }
+  } catch(e) {
+    // Fallback: stringify entire response for debugging
+    throw new Error('Gemini response parse failed: ' + JSON.stringify(gData).substring(0, 300));
   }
 
   var parsed;
