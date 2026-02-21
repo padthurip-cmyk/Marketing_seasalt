@@ -89,7 +89,7 @@ RESPOND IN THIS EXACT JSON FORMAT (no markdown, no backticks):
     parts.push({ text: prompt });
   }
 
-  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${GEMINI_KEY}`;
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
   
   const res = await fetch(apiUrl, {
     method: 'POST',
