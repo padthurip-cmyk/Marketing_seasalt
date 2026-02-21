@@ -109,7 +109,15 @@ RESPOND IN THIS EXACT JSON FORMAT (no markdown, no backticks):
     throw new Error(data.error.message || 'Gemini API error');
   }
 
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  // Gemini 2.5 Flash returns "thinking" parts - find the actual text
+  let text = '';
+  try {
+    const parts = data.candidates[0].content.parts;
+    for (let pi = 0; pi < parts.length; pi++) {
+      if (parts[pi].text && !parts[pi].thought) { text = parts[pi].text; break; }
+    }
+    if (!text && parts.length > 0) text = parts[parts.length - 1].text || '';
+  } catch(e) { text = ''; }
   console.log('[Gemini] Raw response:', text.substring(0, 200));
 
   // Parse JSON from response
