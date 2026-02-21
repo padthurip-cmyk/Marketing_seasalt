@@ -173,8 +173,21 @@ async function generateAndPublish() {
   }
 
   var parsed;
-  try { parsed = JSON.parse(txt.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()); }
-  catch (e) { parsed = { caption: txt.substring(0, 500), hashtags: '#SeaSaltPickles #AndhraPickles', cta: 'Order at seasaltpickles.com', content_type: ct, product_featured: product.name }; }
+  // Clean up Gemini response - strip markdown, thinking blocks, etc.
+  var cleanTxt = txt.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+  // Sometimes Gemini wraps in thinking tags
+  if (cleanTxt.indexOf('<think>') >= 0) {
+    cleanTxt = cleanTxt.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+  }
+  // Find the JSON object
+  var jsonMatch = cleanTxt.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    try { parsed = JSON.parse(jsonMatch[0]); }
+    catch (e) { parsed = null; }
+  }
+  if (!parsed) {
+    parsed = { caption: cleanTxt.substring(0, 500), hashtags: '#SeaSaltPickles #AndhraPickles #HomemadePickles #HyderabadFood', cta: 'Order at seasaltpickles.com', content_type: ct, product_featured: product.name };
+  }
 
   // === 3. BUILD FULL MESSAGE ===
   var fullMsg = (parsed.caption || '') + '\n\n' + (parsed.hashtags || '');
@@ -188,16 +201,15 @@ async function generateAndPublish() {
   // === 4. POST TO FACEBOOK (with image!) ===
   if (PAGE_TOKEN && PAGE_ID) {
     try {
+      // First try: photo post to /PAGE_ID/photos
       var fbParams = new URLSearchParams();
       fbParams.append('access_token', PAGE_TOKEN);
       
       if (imageUrl) {
-        // Photo post - use /photos with 'message' not 'caption'
         fbParams.append('url', imageUrl);
         fbParams.append('message', fullMsg);
         var fbRes = await fetch(GRAPH_URL + '/' + PAGE_ID + '/photos', { method: 'POST', body: fbParams });
       } else {
-        // Text-only post
         fbParams.append('message', fullMsg);
         var fbRes = await fetch(GRAPH_URL + '/' + PAGE_ID + '/feed', { method: 'POST', body: fbParams });
       }
@@ -208,7 +220,8 @@ async function generateAndPublish() {
         postUrl = 'https://facebook.com/' + fbPostId;
         results.push('Facebook: POSTED ✅');
       } else {
-        // If photo endpoint fails, try text-only as fallback
+        var fbErr = fbData.error && fbData.error.message ? fbData.error.message : JSON.stringify(fbData);
+        // Try /feed as fallback (text only)
         var fb2 = new URLSearchParams();
         fb2.append('access_token', PAGE_TOKEN);
         fb2.append('message', fullMsg);
@@ -219,12 +232,12 @@ async function generateAndPublish() {
           postUrl = 'https://facebook.com/' + fbData2.id;
           results.push('Facebook: POSTED ✅ (text only)');
         } else {
-          results.push('Facebook: FAILED ❌ ' + (fbData2.error && fbData2.error.message ? fbData2.error.message : JSON.stringify(fbData)));
+          results.push('Facebook: FAILED ❌ (PAGE_ID=' + PAGE_ID + ') ' + fbErr);
         }
       }
     } catch (e) { results.push('Facebook: ERROR ❌ ' + e.message); }
   } else {
-    results.push('Facebook: SKIPPED (no token)');
+    results.push('Facebook: SKIPPED (PAGE_TOKEN=' + (PAGE_TOKEN ? 'set' : 'missing') + ', PAGE_ID=' + (PAGE_ID || 'missing') + ')');
   }
 
   // === 5. POST TO INSTAGRAM (with product image!) ===
