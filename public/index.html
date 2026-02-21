@@ -325,6 +325,7 @@ textarea.intel-input{resize:vertical;min-height:80px}select.intel-input{appearan
 <button class="btn btn-ghost btn-sm" onclick="openQuickFBPost()">📘 Quick FB Post</button>
 <button class="btn btn-sm" style="background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:#fff;border:0" onclick="openQuickIGPost()">📸 Quick IG Post</button>
 <button class="btn btn-sm" style="background:linear-gradient(45deg,#f09433,#dc2743,#bc1888);color:#fff;border:0" onclick="pullIGFeed()">📡 Pull IG Feed</button>
+<button class="btn btn-sm" style="background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;border:0" onclick="triggerAutoPost()">⚡ Generate Daily Post</button>
 <button class="btn btn-ghost btn-sm" onclick="openConnectPlatforms()">🔗 Connect Platforms</button>
 </div>
 <div class="card" style="margin-bottom:16px"><div class="card-header"><div><div class="card-title">🔗 Connected Platforms</div><div class="card-subtitle">Connect your social media accounts to post directly</div></div></div><div id="platformsArea"></div></div>
@@ -1655,6 +1656,52 @@ async function pullIGFeed(){
       toast('✅ Pulled '+d.posts.length+' posts from Instagram!');
       await loadSCPosts();
     }else{toast('ℹ️ No posts found on Instagram')}
+  }catch(e){toast('❌ '+e.message)}
+}
+
+// ═══ AUTO DAILY POST ═══
+async function triggerAutoPost(){
+  toast('⚡ Generating daily AI post...');
+  try{
+    var r=await fetch('/.netlify/functions/auto-post',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'generate'})});
+    var d=await r.json();
+    if(d.success){
+      toast('✅ Daily post generated!');
+      // Show the approval modal
+      var h='<div class="modal-title">⚡ Daily Post Generated</div>';
+      h+='<div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">AI created content from your product catalog</div>';
+      if(d.post){
+        h+='<div style="background:var(--bg-elevated);border-radius:10px;padding:16px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:var(--accent-violet);margin-bottom:6px">📝 CAPTION</div><div style="font-size:13px;line-height:1.6;white-space:pre-wrap">'+esc(d.post.caption||'')+'</div></div>';
+        if(d.post.hashtags)h+='<div style="background:var(--bg-elevated);border-radius:10px;padding:12px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:var(--accent-blue);margin-bottom:4px">🏷️ HASHTAGS</div><div style="font-size:11px;color:var(--accent-blue)">'+esc(d.post.hashtags)+'</div></div>';
+        if(d.post.cta)h+='<div style="background:var(--bg-elevated);border-radius:10px;padding:12px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:var(--accent-emerald);margin-bottom:4px">🎯 CTA</div><div style="font-size:12px">'+esc(d.post.cta)+'</div></div>';
+        if(d.post.image_ideas)h+='<div style="background:var(--bg-elevated);border-radius:10px;padding:12px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:var(--accent-orange);margin-bottom:4px">📸 IMAGE IDEAS</div><div style="font-size:12px">'+esc(d.post.image_ideas)+'</div></div>';
+      }
+      h+='<div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Status: <b>Pending Approval</b> · Token: '+esc(d.token||'')+'</div>';
+      h+='<div style="display:flex;gap:10px">';
+      h+='<button class="btn btn-emerald" onclick="approveAutoPost(\''+esc(d.token||'')+'\')">✅ Approve & Publish</button>';
+      h+='<button class="btn" style="background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3)" onclick="rejectAutoPost(\''+esc(d.token||'')+'\')">❌ Reject</button>';
+      h+='<button class="btn btn-ghost" onclick="closeModal()">Later</button>';
+      h+='</div>';
+      if(d.approve_url){h+='<div style="margin-top:12px;font-size:10px;color:var(--text-muted)">Or use email link when it arrives</div>'}
+      showModal(h);
+      await loadSCPosts();
+    }else{toast('❌ '+(d.error||'Failed to generate'))}
+  }catch(e){toast('❌ '+e.message)}
+}
+async function approveAutoPost(token){
+  toast('🚀 Approving & publishing...');closeModal();
+  try{
+    var r=await fetch('/.netlify/functions/auto-post',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'approve',token:token})});
+    var d=await r.text();
+    toast('✅ Post approved & published!');
+    await loadSCPosts();
+  }catch(e){toast('❌ '+e.message)}
+}
+async function rejectAutoPost(token){
+  try{
+    await fetch('/.netlify/functions/auto-post',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'reject',token:token})});
+    toast('❌ Post rejected. New one tomorrow.');closeModal();
+    await loadSCPosts();
   }catch(e){toast('❌ '+e.message)}
 }
 
