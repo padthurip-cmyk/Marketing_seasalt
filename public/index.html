@@ -134,6 +134,7 @@ textarea.intel-input{resize:vertical;min-height:80px}select.intel-input{appearan
 <div class="nav-item" onclick="go('web-intel',this)"><span class="icon">🌐</span><span class="nav-text">Website Intel</span></div>
 <div class="nav-item" onclick="go('products',this)"><span class="icon">🛒</span><span class="nav-text">Products & Prices</span></div>
 <div class="sidebar-section" style="margin-top:12px">Tools</div>
+<div class="nav-item" onclick="go('social-command',this)"><span class="icon">🚀</span><span class="nav-text">Social Command</span></div>
 <div class="nav-item" onclick="go('ad-library',this)"><span class="icon">📺</span><span class="nav-text">Ad Library</span></div>
 <div class="nav-item" onclick="go('keyword-tracker',this)"><span class="icon">🔑</span><span class="nav-text">Keyword Tracker</span></div>
 <div class="sidebar-section" style="margin-top:12px">Links</div>
@@ -309,6 +310,26 @@ textarea.intel-input{resize:vertical;min-height:80px}select.intel-input{appearan
 <div id="priceChartArea" style="padding:12px 0"></div></div>
 
 </div></div>
+<!-- SOCIAL COMMAND CENTER -->
+<div class="page" id="page-social-command"><div class="animate-in">
+<div class="stats-grid">
+<div class="stat-card red"><div class="stat-label">Total Posts</div><div class="stat-value" id="scTotal">—</div><div class="stat-change">Across all platforms</div></div>
+<div class="stat-card emerald"><div class="stat-label">Published</div><div class="stat-value" id="scPublished" style="color:var(--accent-emerald)">—</div></div>
+<div class="stat-card amber"><div class="stat-label">Scheduled</div><div class="stat-value" id="scScheduled" style="color:var(--accent-amber)">—</div></div>
+<div class="stat-card violet"><div class="stat-label">AI Drafts</div><div class="stat-value" id="scDrafts" style="color:var(--accent-violet)">—</div></div>
+</div>
+<div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+<button class="btn btn-violet btn-sm" onclick="openAIPostCreator()">🤖 AI Create Post</button>
+<button class="btn btn-ghost btn-sm" onclick="openManualPost()">✍️ Manual Post</button>
+<button class="btn btn-blue btn-sm" onclick="pullFBFeed()">📡 Pull FB Feed</button>
+<button class="btn btn-ghost btn-sm" onclick="openQuickFBPost()">📘 Quick FB Post</button>
+<button class="btn btn-ghost btn-sm" onclick="openConnectPlatforms()">🔗 Connect Platforms</button>
+</div>
+<div class="card" style="margin-bottom:16px"><div class="card-header"><div><div class="card-title">🔗 Connected Platforms</div><div class="card-subtitle">Connect your social media accounts to post directly</div></div></div><div id="platformsArea"></div></div>
+<div class="card" style="margin-bottom:16px;display:none" id="aiResultCard"><div class="card-header"><div><div class="card-title">🤖 AI Generated Content</div><div class="card-subtitle">Powered by Google Gemini — edit before posting</div></div><button class="btn btn-ghost btn-sm" onclick="document.getElementById('aiResultCard').style.display='none'">✕</button></div><div id="aiResultArea"></div></div>
+<div class="card" style="margin-bottom:16px"><div class="card-header"><div><div class="card-title">📋 Post Feed & Schedule</div><div class="card-subtitle">All your posts — drafts, scheduled, and published</div></div><div style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm sc-filter" onclick="filterSCPosts('all',this)" style="border-color:var(--accent-red)">All</button><button class="btn btn-ghost btn-sm sc-filter" onclick="filterSCPosts('draft',this)">Drafts</button><button class="btn btn-ghost btn-sm sc-filter" onclick="filterSCPosts('scheduled',this)">Scheduled</button><button class="btn btn-ghost btn-sm sc-filter" onclick="filterSCPosts('published',this)">Published</button></div></div><div id="postFeedArea"></div></div>
+<div class="card"><div class="card-header"><div><div class="card-title">📊 Post Performance</div><div class="card-subtitle">Track engagement across your published posts</div></div></div><div id="postPerfArea"></div></div>
+</div></div>
 <!-- KEYWORD TRACKER -->
 <div class="page" id="page-keyword-tracker"><div class="animate-in">
 <div class="stats-grid">
@@ -339,13 +360,13 @@ function showModal(h){document.getElementById('modalBox').innerHTML=h;document.g
 function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
 function empty(icon,title,desc,btn,action){return`<div class="empty-state"><div class="es-icon">${icon}</div><h3>${title}</h3><p>${desc}</p>${btn?`<button class="btn btn-primary" onclick="${action}">${btn}</button>`:''}</div>`}
 
-const PG={'competitors':{t:'🏆 Competitor Intelligence',s:'Real-time data from Google Places API → Supabase'},'social-spy':{t:'🔍 Social Spy',s:'Monitor competitor social activity'},'insights':{t:'🧠 Insights Engine',s:'Actionable intelligence from competitive data'},'content-studio':{t:'🎨 Content Studio',s:'Content ideas & pipeline'},'social-listeners':{t:'📡 Social Listeners',s:'Brand mention monitoring'},'engagers':{t:'👥 Competitor Engagers',s:'People engaging with competitors — potential SeaSalt customers'},'web-intel':{t:'🌐 Website Intelligence',s:'PageSpeed · SEO · Tech Stack · Products — scanned from live websites'},'products':{t:'🛒 Products & Prices',s:'Product groups · Market presence · Platform pricing · Price intelligence'},'ad-library':{t:'📺 Ad Library',s:'Competitor ads — powered by Meta Ad Library (public)'},'keyword-tracker':{t:'🔑 Keyword Tracker',s:'SEO ranking intelligence'}};
+const PG={'competitors':{t:'🏆 Competitor Intelligence',s:'Real-time data from Google Places API → Supabase'},'social-spy':{t:'🔍 Social Spy',s:'Monitor competitor social activity'},'insights':{t:'🧠 Insights Engine',s:'Actionable intelligence from competitive data'},'content-studio':{t:'🎨 Content Studio',s:'Content ideas & pipeline'},'social-listeners':{t:'📡 Social Listeners',s:'Brand mention monitoring'},'engagers':{t:'👥 Competitor Engagers',s:'People engaging with competitors — potential SeaSalt customers'},'web-intel':{t:'🌐 Website Intelligence',s:'PageSpeed · SEO · Tech Stack · Products — scanned from live websites'},'products':{t:'🛒 Products & Prices',s:'Product groups · Market presence · Platform pricing · Price intelligence'},'social-command':{t:'🚀 Social Command Center',s:'AI-powered post creation · Multi-platform publishing · Performance tracking'},'ad-library':{t:'📺 Ad Library',s:'Competitor ads — powered by Meta Ad Library (public)'},'keyword-tracker':{t:'🔑 Keyword Tracker',s:'SEO ranking intelligence'}};
 function go(p,el){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));if(el)el.classList.add('active');document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));const t=document.getElementById('page-'+p);if(t)t.classList.add('active');const c=PG[p]||{};document.getElementById('pageTitle').textContent=c.t||p;document.getElementById('pageSubtitle').textContent=c.s||''}
 
 // DATA ARRAYS — filled from Supabase only
-let COMP=[],INSIGHTS=[],IDEAS=[],SEO_KW=[],HASHTAGS=[],LISTEN_KW=[],MENTIONS=[],ADS=[],SOC_CONTENT=[],ENGAGERS=[],WEB_INTEL=[];
+let COMP=[],INSIGHTS=[],IDEAS=[],SEO_KW=[],HASHTAGS=[],LISTEN_KW=[],MENTIONS=[],ADS=[],SOC_CONTENT=[],ENGAGERS=[],WEB_INTEL=[],SC_POSTS=[],SC_PLATFORMS=[];
 
-async function loadAll(){await Promise.allSettled([loadComp(),loadInsights(),loadIdeas(),loadSeoKw(),loadHashtags(),loadListenKw(),loadMentions(),loadAds(),loadSocContent(),loadEngagers(),loadWebIntel()]);document.getElementById('lastSync').textContent=new Date().toLocaleTimeString()}
+async function loadAll(){await Promise.allSettled([loadComp(),loadInsights(),loadIdeas(),loadSeoKw(),loadHashtags(),loadListenKw(),loadMentions(),loadAds(),loadSocContent(),loadEngagers(),loadWebIntel(),loadSCPosts(),loadSCPlatforms()]);document.getElementById('lastSync').textContent=new Date().toLocaleTimeString()}
 
 async function q(table,opts={}){try{let query=db.from(table).select(opts.select||'*');if(opts.eq)for(const[k,v]of Object.entries(opts.eq))query=query.eq(k,v);if(opts.order)query=query.order(opts.order.col,{ascending:opts.order.asc??true});if(opts.limit)query=query.limit(opts.limit);const{data,error}=await query;if(error)throw error;return data||[];}catch(e){console.log(table+':',e.message);return[];}}
 
@@ -1233,14 +1254,354 @@ function openEditPresence(){
 function savePresOverride(){closeModal();toast('✅ Presence saved (manual override)')}
 function safeJSON(v){try{return typeof v==='string'?JSON.parse(v):(Array.isArray(v)?v:[])}catch(e){return[]}}
 
+// ═══════════════════════════════════════════════
+// SOCIAL COMMAND CENTER — AI Post Creator + Feed
+// ═══════════════════════════════════════════════
+var SC_FILTER='all';
+async function loadSCPosts(){SC_POSTS=await q('social_posts',{order:{col:'created_at',asc:false},limit:100});renderSCPosts()}
+async function loadSCPlatforms(){SC_PLATFORMS=await q('social_platforms',{order:{col:'platform',asc:true}});renderPlatforms()}
+
+function renderSCPosts(){
+  document.getElementById('scTotal').textContent=SC_POSTS.length;
+  document.getElementById('scPublished').textContent=SC_POSTS.filter(function(p){return p.status==='published'}).length;
+  document.getElementById('scScheduled').textContent=SC_POSTS.filter(function(p){return p.status==='scheduled'}).length;
+  document.getElementById('scDrafts').textContent=SC_POSTS.filter(function(p){return p.status==='draft'}).length;
+  var filtered=SC_FILTER==='all'?SC_POSTS:SC_POSTS.filter(function(p){return p.status===SC_FILTER});
+  var el=document.getElementById('postFeedArea');
+  if(!filtered.length){el.innerHTML='<div style="padding:30px;text-align:center;color:var(--text-muted)"><div style="font-size:36px;margin-bottom:8px">🤖</div><p>No posts yet. Click "AI Create Post" to generate content with Gemini AI.</p></div>';renderPostPerf();return}
+  var h='<div style="display:flex;flex-direction:column;gap:12px">';
+  filtered.forEach(function(p){
+    var platIcons={'instagram':'📸','facebook':'📘','youtube':'📺','twitter':'𝕏','linkedin':'💼','whatsapp':'💬'};
+    var platforms=(p.platforms||[]).map(function(pl){return '<span style="font-size:14px" title="'+esc(pl)+'">'+(platIcons[pl.toLowerCase()]||'📱')+'</span>'}).join(' ');
+    var statusBadge=p.status==='published'?'badge-green':p.status==='scheduled'?'badge-amber':'badge-blue';
+    h+='<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer" onclick="openPostDetail('+p.id+')">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px"><div style="display:flex;gap:8px;align-items:center"><span class="badge '+statusBadge+'">'+esc(p.status||'draft')+'</span>'+platforms;
+    if(p.ai_generated)h+=' <span class="badge badge-violet">🤖 AI</span>';
+    h+='</div><span style="font-size:10px;color:var(--text-muted)">'+timeAgo(p.created_at)+'</span></div>';
+    h+='<div style="font-weight:600;font-size:13px;margin-bottom:4px">'+esc((p.caption||'').substring(0,120))+(p.caption&&p.caption.length>120?'...':'')+'</div>';
+    if(p.hashtags)h+='<div style="font-size:11px;color:var(--accent-blue);margin-bottom:6px">'+esc((p.hashtags||'').substring(0,80))+'</div>';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text-muted)">';
+    if(p.scheduled_at)h+='<span>📅 '+new Date(p.scheduled_at).toLocaleString()+'</span>';
+    else h+='<span></span>';
+    h+='<div style="display:flex;gap:12px">';
+    if(p.likes!=null)h+='<span style="color:var(--accent-pink)">♥ '+p.likes+'</span>';
+    if(p.comments_count!=null)h+='<span style="color:var(--accent-blue)">💬 '+p.comments_count+'</span>';
+    if(p.shares!=null)h+='<span style="color:var(--accent-emerald)">↗ '+p.shares+'</span>';
+    h+='</div></div></div>';
+  });
+  el.innerHTML=h+'</div>';
+  renderPostPerf();
+}
+
+function filterSCPosts(f,el){SC_FILTER=f;document.querySelectorAll('.sc-filter').forEach(function(b){b.style.borderColor='var(--border)'});if(el)el.style.borderColor='var(--accent-red)';renderSCPosts()}
+
+function renderPlatforms(){
+  var el=document.getElementById('platformsArea');
+  var allPlat=[
+    {key:'instagram',icon:'📸',name:'Instagram',color:'linear-gradient(45deg,#f09433,#dc2743,#bc1888)',desc:'Reels, Stories, Posts'},
+    {key:'facebook',icon:'📘',name:'Facebook',color:'#1877f2',desc:'Posts, Stories, Ads'},
+    {key:'youtube',icon:'📺',name:'YouTube',color:'#ff0000',desc:'Videos, Shorts, Community'},
+    {key:'twitter',icon:'𝕏',name:'X / Twitter',color:'#000000',desc:'Tweets, Threads'},
+    {key:'linkedin',icon:'💼',name:'LinkedIn',color:'#0a66c2',desc:'Posts, Articles'},
+    {key:'whatsapp',icon:'💬',name:'WhatsApp Business',color:'#25d366',desc:'Status, Catalog'}
+  ];
+  var h='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">';
+  allPlat.forEach(function(pl){
+    var connected=SC_PLATFORMS.find(function(p){return p.platform===pl.key});
+    h+='<div style="border:1px solid '+(connected?'var(--accent-emerald)':'var(--border)')+';border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:all .15s;background:'+(connected?'rgba(5,150,105,.04)':'var(--bg-card)')+'" onclick="managePlatform(\''+pl.key+'\')">';
+    h+='<div style="font-size:28px;margin-bottom:4px">'+pl.icon+'</div>';
+    h+='<div style="font-weight:700;font-size:12px">'+pl.name+'</div>';
+    h+='<div style="font-size:10px;color:var(--text-muted);margin-bottom:6px">'+pl.desc+'</div>';
+    if(connected){h+='<span class="badge badge-green" style="font-size:9px">✅ Connected</span>';if(connected.handle)h+='<div style="font-size:10px;color:var(--accent-blue);margin-top:2px">@'+esc(connected.handle)+'</div>'}
+    else h+='<span class="badge" style="font-size:9px;background:rgba(0,0,0,.05);color:var(--text-muted)">Click to connect</span>';
+    h+='</div>';
+  });
+  el.innerHTML=h+'</div>';
+}
+
+function renderPostPerf(){
+  var pub=SC_POSTS.filter(function(p){return p.status==='published'&&(p.likes||p.comments_count||p.shares||p.reach)});
+  var el=document.getElementById('postPerfArea');
+  if(!pub.length){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--text-muted)">Publish posts and update their metrics to see performance data here.</div>';return}
+  var h='<table class="data-table"><thead><tr><th>Post</th><th>Platform</th><th>♥ Likes</th><th>💬 Comments</th><th>↗ Shares</th><th>👁️ Reach</th><th>📊 Rate</th><th>Posted</th></tr></thead><tbody>';
+  pub.forEach(function(p){
+    var eng=(p.likes||0)+(p.comments_count||0)+(p.shares||0);
+    var rate=p.reach?((eng/p.reach)*100).toFixed(1)+'%':'—';
+    h+='<tr><td style="font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc((p.caption||'').substring(0,40))+'</td>';
+    h+='<td>'+(p.platforms||[]).map(function(pl){return '<span class="badge badge-blue" style="font-size:9px">'+esc(pl)+'</span>'}).join(' ')+'</td>';
+    h+='<td style="font-weight:700;color:var(--accent-pink)">'+(p.likes||'—')+'</td>';
+    h+='<td style="font-weight:600">'+(p.comments_count||'—')+'</td>';
+    h+='<td style="color:var(--accent-emerald)">'+(p.shares||'—')+'</td>';
+    h+='<td>'+(p.reach?p.reach.toLocaleString():'—')+'</td>';
+    h+='<td style="font-weight:700;color:'+(parseFloat(rate)>=5?'var(--accent-emerald)':'var(--accent-amber)')+'">'+rate+'</td>';
+    h+='<td style="font-size:10px;color:var(--text-muted)">'+timeAgo(p.published_at||p.created_at)+'</td></tr>';
+  });
+  el.innerHTML=h+'</tbody></table>';
+}
+
+// ═══ AI POST CREATOR (Gemini) ═══
+function openAIPostCreator(){
+  var h='<div class="modal-title">🤖 AI Post Creator</div>';
+  h+='<div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Powered by Google Gemini — generates captions, hashtags & content ideas</div>';
+  h+='<div class="field-group"><label class="field-label">What do you want to post about? *</label><textarea class="intel-input" id="aiTopic" placeholder="e.g. New mango avakaya pickle launch, behind-the-scenes making video, customer testimonial, festival offer..." style="min-height:80px"></textarea></div>';
+  h+='<div class="field-group"><label class="field-label">Upload Image (optional)</label><input type="file" id="aiImage" accept="image/*" class="intel-input" style="padding:8px"></div>';
+  h+='<div class="field-group"><label class="field-label">Platform</label><div style="display:flex;gap:6px;flex-wrap:wrap" id="aiPlatformPicks">';
+  ['Instagram','Facebook','YouTube','Twitter','LinkedIn','WhatsApp'].forEach(function(p){
+    h+='<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:6px"><input type="checkbox" class="aiPlat" value="'+p.toLowerCase()+'" '+(p==='Instagram'?'checked':'')+'>'+p+'</label>';
+  });
+  h+='</div></div>';
+  h+='<div class="field-group"><label class="field-label">Tone</label><select class="intel-input" id="aiTone"><option value="casual">Casual & Fun</option><option value="professional">Professional</option><option value="promotional" selected>Promotional</option><option value="storytelling">Storytelling</option><option value="educational">Educational</option><option value="festive">Festive / Seasonal</option></select></div>';
+  h+='<div class="field-group"><label class="field-label">Language</label><select class="intel-input" id="aiLang"><option value="english">English</option><option value="telugu_english">Telugu + English Mix</option><option value="hindi_english">Hindi + English Mix</option><option value="telugu">Telugu</option></select></div>';
+  h+='<div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-violet" onclick="generateAIPost()" id="btnGenAI">🤖 Generate with Gemini</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>';
+  showModal(h);
+}
+
+async function generateAIPost(){
+  var topic=document.getElementById('aiTopic').value.trim();
+  if(!topic){toast('❌ Tell AI what to post about');return}
+  var platforms=[].slice.call(document.querySelectorAll('.aiPlat:checked')).map(function(c){return c.value});
+  var tone=document.getElementById('aiTone').value;
+  var lang=document.getElementById('aiLang').value;
+  var imgFile=document.getElementById('aiImage').files[0];
+  var btn=document.getElementById('btnGenAI');btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Gemini thinking...';
+
+  // Build image base64 if uploaded
+  var imgData=null;
+  if(imgFile){
+    imgData=await new Promise(function(resolve){
+      var reader=new FileReader();
+      reader.onload=function(){resolve(reader.result.split(',')[1])};
+      reader.readAsDataURL(imgFile);
+    });
+  }
+
+  try{
+    var r=await fetch('/.netlify/functions/gemini-ai',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'create_post',topic:topic,platforms:platforms,tone:tone,language:lang,image:imgData,image_type:imgFile?imgFile.type:null})
+    });
+    var d=await r.json();
+    if(d.error){toast('❌ '+d.error);btn.disabled=false;btn.innerHTML='🤖 Generate with Gemini';return}
+    closeModal();
+    showAIResult(d,platforms);
+    toast('✅ AI content generated!');
+  }catch(e){toast('❌ Gemini error: '+e.message)}
+  btn.disabled=false;btn.innerHTML='🤖 Generate with Gemini';
+}
+
+function showAIResult(data,platforms){
+  var card=document.getElementById('aiResultCard');card.style.display='block';
+  var h='<div style="display:flex;flex-direction:column;gap:14px">';
+  // Main caption
+  h+='<div style="background:var(--bg-elevated);border-radius:10px;padding:16px"><div style="font-size:11px;font-weight:700;color:var(--accent-violet);margin-bottom:6px">📝 CAPTION</div>';
+  h+='<div style="font-size:13px;line-height:1.6;white-space:pre-wrap" id="aiCaption">'+esc(data.caption||'')+'</div></div>';
+  // Hashtags
+  if(data.hashtags){h+='<div style="background:var(--bg-elevated);border-radius:10px;padding:16px"><div style="font-size:11px;font-weight:700;color:var(--accent-blue);margin-bottom:6px">🏷️ HASHTAGS</div><div style="font-size:12px;color:var(--accent-blue)" id="aiHashtags">'+esc(data.hashtags)+'</div></div>'}
+  // Alt versions
+  if(data.short_version){h+='<div style="background:var(--bg-elevated);border-radius:10px;padding:16px"><div style="font-size:11px;font-weight:700;color:var(--accent-amber);margin-bottom:6px">📱 SHORT VERSION (Stories/Reels)</div><div style="font-size:12px" id="aiShort">'+esc(data.short_version)+'</div></div>'}
+  if(data.cta){h+='<div style="background:var(--bg-elevated);border-radius:10px;padding:16px"><div style="font-size:11px;font-weight:700;color:var(--accent-emerald);margin-bottom:6px">🎯 CALL TO ACTION</div><div style="font-size:12px">'+esc(data.cta)+'</div></div>'}
+  if(data.image_ideas){h+='<div style="background:var(--bg-elevated);border-radius:10px;padding:16px"><div style="font-size:11px;font-weight:700;color:var(--accent-orange);margin-bottom:6px">📸 IMAGE/VIDEO IDEAS</div><div style="font-size:12px;line-height:1.5">'+esc(data.image_ideas)+'</div></div>'}
+  // Actions
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:8px">';
+  h+='<button class="btn btn-emerald btn-sm" onclick="saveAIDraft()">💾 Save as Draft</button>';
+  h+='<button class="btn btn-amber btn-sm" onclick="scheduleAIPost()">📅 Schedule</button>';
+  h+='<button class="btn btn-violet btn-sm" onclick="publishAIPost()">🚀 Publish Now</button>';
+  h+='<button class="btn btn-ghost btn-sm" onclick="copyAIContent()">📋 Copy All</button></div>';
+  document.getElementById('aiResultArea').innerHTML=h+'</div>';
+  // Store for saving
+  window._aiResult=data;window._aiPlatforms=platforms;
+}
+
+async function saveAIDraft(){
+  var d=window._aiResult;if(!d)return;
+  var ok=await dbInsert('social_posts',{caption:d.caption,hashtags:d.hashtags||'',platforms:window._aiPlatforms||['instagram'],status:'draft',ai_generated:true,tone:d.tone||'',short_version:d.short_version||'',cta:d.cta||'',image_ideas:d.image_ideas||''});
+  if(ok){toast('✅ Saved as draft!');await loadSCPosts()}
+}
+async function scheduleAIPost(){
+  var d=window._aiResult;if(!d)return;
+  showModal('<div class="modal-title">📅 Schedule Post</div><div class="field-group"><label class="field-label">Date & Time</label><input type="datetime-local" class="intel-input" id="schedDT"></div><div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-amber" onclick="confirmSchedule()">Schedule</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>');
+}
+async function confirmSchedule(){
+  var dt=document.getElementById('schedDT').value;if(!dt){toast('❌ Pick a date');return}
+  var d=window._aiResult;
+  var ok=await dbInsert('social_posts',{caption:d.caption,hashtags:d.hashtags||'',platforms:window._aiPlatforms||['instagram'],status:'scheduled',scheduled_at:new Date(dt).toISOString(),ai_generated:true,tone:d.tone||'',short_version:d.short_version||'',cta:d.cta||'',image_ideas:d.image_ideas||''});
+  if(ok){toast('✅ Scheduled!');closeModal();await loadSCPosts()}
+}
+async function publishAIPost(){
+  var d=window._aiResult;if(!d)return;
+  var plats=window._aiPlatforms||['facebook'];
+  var fullMsg=(d.caption||'')+'\n\n'+(d.hashtags||'');
+  if(d.cta)fullMsg+='\n\n'+d.cta;
+  // Post to Facebook if selected
+  var fbResult=null;
+  if(plats.indexOf('facebook')>=0||plats.indexOf('instagram')>=0){
+    toast('🚀 Posting to Facebook...');
+    try{
+      var r=await fetch('/.netlify/functions/social-post',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'post_facebook',message:fullMsg})});
+      fbResult=await r.json();
+      if(fbResult.success){toast('✅ Posted to Facebook! '+fbResult.post_url)}
+      else{toast('⚠️ FB: '+(fbResult.error||'Failed'))}
+    }catch(e){toast('⚠️ Facebook post failed: '+e.message)}
+  }
+  var ok=await dbInsert('social_posts',{caption:d.caption,hashtags:d.hashtags||'',platforms:plats,status:'published',published_at:new Date().toISOString(),ai_generated:true,tone:d.tone||'',short_version:d.short_version||'',cta:d.cta||'',image_ideas:d.image_ideas||'',post_url:fbResult&&fbResult.post_url?fbResult.post_url:'',fb_post_id:fbResult&&fbResult.post_id?fbResult.post_id:''});
+  if(ok){await loadSCPosts()}
+}
+// ═══ DIRECT FB POST ═══
+async function postToFB(caption,hashtags,cta,imageUrl){
+  var msg=caption+(hashtags?'\n\n'+hashtags:'')+(cta?'\n\n'+cta:'');
+  var body={action:imageUrl?'post_photo':'post_facebook',message:msg};
+  if(imageUrl)body.image_url=imageUrl;
+  try{
+    var r=await fetch('/.netlify/functions/social-post',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    return await r.json();
+  }catch(e){return{error:e.message}}
+}
+// ═══ PULL FB FEED ═══
+async function pullFBFeed(){
+  toast('📡 Pulling Facebook feed...');
+  try{
+    var r=await fetch('/.netlify/functions/social-post',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'get_feed'})});
+    var d=await r.json();
+    if(d.posts&&d.posts.length){
+      for(var i=0;i<d.posts.length;i++){
+        var p=d.posts[i];
+        var exists=SC_POSTS.find(function(x){return x.fb_post_id===p.post_id});
+        if(!exists){
+          await dbInsert('social_posts',{caption:p.message||'',platforms:['facebook'],status:'published',published_at:p.created_time,post_url:p.permalink,fb_post_id:p.post_id,likes:p.likes,comments_count:p.comments,shares:p.shares});
+        }else{
+          // Update metrics
+          try{await db.from('social_posts').update({likes:p.likes,comments_count:p.comments,shares:p.shares}).eq('fb_post_id',p.post_id)}catch(e){}
+        }
+      }
+      toast('✅ Pulled '+d.posts.length+' posts from Facebook!');
+      await loadSCPosts();
+    }else{toast('ℹ️ No posts found on Facebook page')}
+  }catch(e){toast('❌ '+e.message)}
+}
+function copyAIContent(){
+  var d=window._aiResult;if(!d)return;
+  var text=(d.caption||'')+'\n\n'+(d.hashtags||'')+'\n\n'+(d.short_version?'Short: '+d.short_version+'\n':'')+(d.cta?'CTA: '+d.cta:'');
+  navigator.clipboard.writeText(text).then(function(){toast('📋 Copied!')}).catch(function(){toast('❌ Copy failed')});
+}
+
+// ═══ MANUAL POST ═══
+function openManualPost(){
+  var h='<div class="modal-title">✍️ Create Post</div>';
+  h+='<div class="field-group"><label class="field-label">Caption *</label><textarea class="intel-input" id="mpCaption" placeholder="Write your post caption..." style="min-height:100px"></textarea></div>';
+  h+='<div class="field-group"><label class="field-label">Hashtags</label><input class="intel-input" id="mpHash" placeholder="#SeaSaltPickles #AndhraPickles..."></div>';
+  h+='<div class="field-group"><label class="field-label">Platforms</label><div style="display:flex;gap:6px;flex-wrap:wrap">';
+  ['Instagram','Facebook','YouTube','Twitter','LinkedIn','WhatsApp'].forEach(function(p){
+    h+='<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:6px"><input type="checkbox" class="mpPlat" value="'+p.toLowerCase()+'" '+(p==='Instagram'?'checked':'')+'>'+p+'</label>';
+  });
+  h+='</div></div>';
+  h+='<div class="field-group"><label class="field-label">Status</label><select class="intel-input" id="mpStatus"><option value="draft">Draft</option><option value="scheduled">Scheduled</option><option value="published">Published</option></select></div>';
+  h+='<div class="field-group" id="mpSchedWrap" style="display:none"><label class="field-label">Schedule Date</label><input type="datetime-local" class="intel-input" id="mpSchedDT"></div>';
+  h+='<div class="field-group"><label class="field-label">Post URL (if published)</label><input class="intel-input" id="mpURL" placeholder="https://instagram.com/p/..."></div>';
+  h+='<div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-primary" onclick="saveManualPost()">💾 Save</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>';
+  h+='<script>document.getElementById("mpStatus").onchange=function(){document.getElementById("mpSchedWrap").style.display=this.value==="scheduled"?"block":"none"}<\/script>';
+  showModal(h);
+}
+async function saveManualPost(){
+  var cap=document.getElementById('mpCaption').value.trim();if(!cap){toast('❌ Caption required');return}
+  var platforms=[].slice.call(document.querySelectorAll('.mpPlat:checked')).map(function(c){return c.value});
+  var status=document.getElementById('mpStatus').value;
+  var row={caption:cap,hashtags:document.getElementById('mpHash').value.trim(),platforms:platforms,status:status,post_url:document.getElementById('mpURL').value.trim(),ai_generated:false};
+  if(status==='scheduled'){var dt=document.getElementById('mpSchedDT').value;if(dt)row.scheduled_at=new Date(dt).toISOString()}
+  if(status==='published')row.published_at=new Date().toISOString();
+  if(await dbInsert('social_posts',row)){toast('✅ Post saved!');closeModal();await loadSCPosts()}
+}
+
+// ═══ POST DETAIL & METRICS ═══
+function openPostDetail(id){
+  var p=SC_POSTS.find(function(x){return x.id===id});if(!p)return;
+  var h='<div class="modal-title">📋 Post Detail</div>';
+  h+='<div style="display:flex;gap:6px;margin-bottom:12px"><span class="badge '+(p.status==='published'?'badge-green':p.status==='scheduled'?'badge-amber':'badge-blue')+'">'+esc(p.status)+'</span>';
+  if(p.ai_generated)h+='<span class="badge badge-violet">🤖 AI Generated</span>';
+  h+=(p.platforms||[]).map(function(pl){return '<span class="badge badge-blue">'+esc(pl)+'</span>'}).join(' ')+'</div>';
+  h+='<div style="background:var(--bg-elevated);border-radius:8px;padding:14px;margin-bottom:12px"><div style="font-size:13px;line-height:1.6;white-space:pre-wrap">'+esc(p.caption||'')+'</div></div>';
+  if(p.hashtags)h+='<div style="font-size:12px;color:var(--accent-blue);margin-bottom:12px">'+esc(p.hashtags)+'</div>';
+  if(p.short_version)h+='<div style="background:var(--bg-elevated);border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px"><b>Short version:</b> '+esc(p.short_version)+'</div>';
+  if(p.cta)h+='<div style="font-size:12px;margin-bottom:12px"><b>CTA:</b> '+esc(p.cta)+'</div>';
+  if(p.post_url)h+='<div style="margin-bottom:12px"><a href="'+esc(p.post_url)+'" target="_blank" style="color:var(--accent-blue);font-size:12px">🔗 View Post →</a></div>';
+  // Metrics section
+  h+='<div style="font-size:13px;font-weight:700;margin-bottom:8px;padding-top:8px;border-top:1px solid var(--border-subtle)">📊 Update Metrics</div>';
+  h+='<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">';
+  h+='<div class="field-group"><label class="field-label">♥ Likes</label><input class="intel-input" type="number" id="pmLikes" value="'+(p.likes||0)+'"></div>';
+  h+='<div class="field-group"><label class="field-label">💬 Comments</label><input class="intel-input" type="number" id="pmComments" value="'+(p.comments_count||0)+'"></div>';
+  h+='<div class="field-group"><label class="field-label">↗ Shares</label><input class="intel-input" type="number" id="pmShares" value="'+(p.shares||0)+'"></div>';
+  h+='<div class="field-group"><label class="field-label">👁️ Reach</label><input class="intel-input" type="number" id="pmReach" value="'+(p.reach||0)+'"></div></div>';
+  h+='<div class="field-group"><label class="field-label">Post URL</label><input class="intel-input" id="pmURL" value="'+esc(p.post_url||'')+'"></div>';
+  h+='<div class="field-group"><label class="field-label">Status</label><select class="intel-input" id="pmStatus"><option value="draft" '+(p.status==='draft'?'selected':'')+'>Draft</option><option value="scheduled" '+(p.status==='scheduled'?'selected':'')+'>Scheduled</option><option value="published" '+(p.status==='published'?'selected':'')+'>Published</option></select></div>';
+  h+='<div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-primary btn-sm" onclick="updatePostMetrics('+p.id+')">💾 Update</button><button class="btn btn-ghost btn-sm" onclick="deletePost('+p.id+')">🗑️ Delete</button><button class="btn btn-ghost btn-sm" onclick="closeModal()">Close</button></div>';
+  showModal(h);
+}
+async function updatePostMetrics(id){
+  var u={likes:parseInt(document.getElementById('pmLikes').value)||0,comments_count:parseInt(document.getElementById('pmComments').value)||0,shares:parseInt(document.getElementById('pmShares').value)||0,reach:parseInt(document.getElementById('pmReach').value)||0,post_url:document.getElementById('pmURL').value.trim(),status:document.getElementById('pmStatus').value};
+  if(u.status==='published'&&!SC_POSTS.find(function(p){return p.id===id}).published_at)u.published_at=new Date().toISOString();
+  try{var{error}=await db.from('social_posts').update(u).eq('id',id);if(error)throw error;toast('✅ Updated!');closeModal();await loadSCPosts()}catch(e){toast('❌ '+e.message)}
+}
+async function deletePost(id){if(!confirm('Delete this post?'))return;try{await db.from('social_posts').delete().eq('id',id);toast('🗑️ Deleted');closeModal();await loadSCPosts()}catch(e){toast('❌ '+e.message)}}
+
+// ═══ QUICK FB POST ═══
+function openQuickFBPost(){
+  var h='<div class="modal-title">📘 Quick Facebook Post</div>';
+  h+='<div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Post directly to Sea Salt Pickles Facebook Page</div>';
+  h+='<div class="field-group"><label class="field-label">Message *</label><textarea class="intel-input" id="qfbMsg" placeholder="Write your Facebook post..." style="min-height:120px"></textarea></div>';
+  h+='<div class="field-group"><label class="field-label">Image URL (optional)</label><input class="intel-input" id="qfbImg" placeholder="https://... (must be a public URL)"></div>';
+  h+='<div class="field-group"><label class="field-label">Link (optional)</label><input class="intel-input" id="qfbLink" placeholder="https://seasaltpickles.com/..."></div>';
+  h+='<div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-blue" onclick="submitQuickFB()" id="btnQFB">📘 Post to Facebook Now</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>';
+  showModal(h);
+}
+async function submitQuickFB(){
+  var msg=document.getElementById('qfbMsg').value.trim();if(!msg){toast('❌ Message required');return}
+  var img=document.getElementById('qfbImg').value.trim();
+  var link=document.getElementById('qfbLink').value.trim();
+  var btn=document.getElementById('btnQFB');btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Posting...';
+  try{
+    var body=img?{action:'post_photo',message:msg,image_url:img}:{action:'post_facebook',message:msg,link:link||undefined};
+    var r=await fetch('/.netlify/functions/social-post',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    var d=await r.json();
+    if(d.success){
+      toast('✅ Posted to Facebook!');
+      await dbInsert('social_posts',{caption:msg,platforms:['facebook'],status:'published',published_at:new Date().toISOString(),post_url:d.post_url||'',fb_post_id:d.post_id||''});
+      closeModal();await loadSCPosts();
+    }else{toast('❌ '+(d.error||'Failed to post'))}
+  }catch(e){toast('❌ '+e.message)}
+  btn.disabled=false;btn.innerHTML='📘 Post to Facebook Now';
+}
+
+// ═══ PLATFORM MANAGEMENT ═══
+function openConnectPlatforms(){
+  var h='<div class="modal-title">🔗 Connect Platforms</div>';
+  h+='<div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Save your social media handles. Full API auto-posting requires each platform\'s developer access (Phase 2).</div>';
+  ['instagram','facebook','youtube','twitter','linkedin','whatsapp'].forEach(function(pl){
+    var existing=SC_PLATFORMS.find(function(p){return p.platform===pl});
+    h+='<div class="field-group"><label class="field-label" style="text-transform:capitalize">'+pl+' Handle</label><input class="intel-input platHandle" data-platform="'+pl+'" value="'+esc(existing?existing.handle:'')+'" placeholder="@yourhandle or URL"></div>';
+  });
+  h+='<div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-violet" onclick="savePlatforms()">💾 Save All</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>';
+  showModal(h);
+}
+function managePlatform(key){openConnectPlatforms()}
+async function savePlatforms(){
+  var inputs=document.querySelectorAll('.platHandle');var saved=0;
+  for(var i=0;i<inputs.length;i++){
+    var inp=inputs[i];var pl=inp.dataset.platform;var handle=inp.value.trim();
+    if(!handle)continue;
+    var existing=SC_PLATFORMS.find(function(p){return p.platform===pl});
+    if(existing){try{await db.from('social_platforms').update({handle:handle,updated_at:new Date().toISOString()}).eq('id',existing.id);saved++}catch(e){}}
+    else{if(await dbInsert('social_platforms',{platform:pl,handle:handle,connected:true}))saved++}
+  }
+  toast('✅ '+saved+' platforms saved');closeModal();await loadSCPlatforms();
+}
+
 document.addEventListener('DOMContentLoaded',()=>{if(db)loadAll();else toast('⚠️ Supabase not connected')});
 </script>
 <!-- MOBILE BOTTOM NAV -->
 <div class="mobile-nav">
 <div class="mobile-nav-inner">
 <div class="mob-tab active" onclick="mobileGo('competitors',this)" data-page="competitors"><div class="mob-icon">🏆</div>Intel</div>
+<div class="mob-tab" onclick="mobileGo('social-command',this)" data-page="social-command"><div class="mob-icon">🚀</div>Post</div>
 <div class="mob-tab" onclick="mobileGo('web-intel',this)" data-page="web-intel"><div class="mob-icon">🌐</div>Sites</div>
-<div class="mob-tab" onclick="mobileGo('products',this)" data-page="products"><div class="mob-icon">🛒</div>Prices</div>
 <div class="mob-tab" onclick="mobileGo('social-spy',this)" data-page="social-spy"><div class="mob-icon">🔍</div>Social</div>
 <div class="mob-tab" onclick="toggleMobileMenu()" data-page="more"><div class="mob-icon">☰</div>More</div>
 </div>
@@ -1253,6 +1614,7 @@ document.addEventListener('DOMContentLoaded',()=>{if(db)loadAll();else toast('�
 </div>
 <div style="padding:8px">
 <div class="nav-item" onclick="mobileGo('competitors',this);closeMobileMenu()"><span class="icon">🏆</span><span class="nav-text">Competitors</span></div>
+<div class="nav-item" onclick="mobileGo('social-command',this);closeMobileMenu()"><span class="icon">🚀</span><span class="nav-text">Social Command</span></div>
 <div class="nav-item" onclick="mobileGo('social-spy',this);closeMobileMenu()"><span class="icon">🔍</span><span class="nav-text">Social Spy</span></div>
 <div class="nav-item" onclick="mobileGo('insights',this);closeMobileMenu()"><span class="icon">🧠</span><span class="nav-text">Insights</span></div>
 <div class="nav-item" onclick="mobileGo('content-studio',this);closeMobileMenu()"><span class="icon">🎨</span><span class="nav-text">Content Studio</span></div>
