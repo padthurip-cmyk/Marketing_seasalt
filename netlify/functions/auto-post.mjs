@@ -4,9 +4,6 @@ const PAGE_ID = process.env.META_PAGE_ID || '';
 const IG_USER_ID = process.env.INSTAGRAM_BUSINESS_ID || '';
 const SB_URL = process.env.SUPABASE_URL || '';
 const SB_KEY = process.env.SUPABASE_KEY || '';
-const OWNER_EMAIL = process.env.OWNER_EMAIL || '';
-const RESEND_KEY = process.env.RESEND_API_KEY || '';
-const SITE_URL = process.env.URL || 'https://sage-paletas-ad2239.netlify.app';
 const GRAPH_URL = 'https://graph.facebook.com/v25.0';
 
 function sbH(pref) {
@@ -14,36 +11,77 @@ function sbH(pref) {
   if (pref) h['Prefer'] = pref;
   return h;
 }
-
 async function dbGet(table, q) {
   if (!SB_URL || !SB_KEY) return [];
-  var r = await fetch(SB_URL + '/rest/v1/' + table + '?' + q, { headers: sbH() });
-  return r.json();
+  return (await fetch(SB_URL + '/rest/v1/' + table + '?' + q, { headers: sbH() })).json();
 }
-
 async function dbAdd(table, row) {
   if (!SB_URL || !SB_KEY) return null;
-  var r = await fetch(SB_URL + '/rest/v1/' + table, { method: 'POST', headers: sbH('return=representation'), body: JSON.stringify(row) });
-  return r.json();
+  return (await fetch(SB_URL + '/rest/v1/' + table, { method: 'POST', headers: sbH('return=representation'), body: JSON.stringify(row) })).json();
 }
 
-async function dbPatch(table, match, upd) {
-  if (!SB_URL || !SB_KEY) return null;
-  var r = await fetch(SB_URL + '/rest/v1/' + table + '?' + match, { method: 'PATCH', headers: sbH('return=representation'), body: JSON.stringify(upd) });
-  return r.json();
-}
-
+// ═══ PRODUCT CATALOG WITH REAL IMAGES FROM seasaltpickles.com ═══
 var PRODUCTS = [
-  { name: 'Andhra Avakaya Pickle', price: '₹299', desc: 'Raw mango pickle with red chili & sesame oil' },
-  { name: 'Gongura Pickle', price: '₹249', desc: 'Tangy roselle leaf pickle' },
-  { name: 'Chicken Pickle', price: '₹399', desc: 'Spicy boneless chicken in sesame oil' },
-  { name: 'Prawn Pickle', price: '₹449', desc: 'Premium prawns in Andhra spices' },
-  { name: 'Tomato Pickle', price: '₹199', desc: 'Sweet and tangy tomato pickle' },
-  { name: 'Garlic Pickle', price: '₹219', desc: 'Fiery garlic in spiced sesame oil' },
-  { name: 'Lemon Pickle', price: '₹179', desc: 'Whole lemon pickle aged to perfection' },
-  { name: 'Ginger Pickle', price: '₹199', desc: 'Fresh ginger with mustard and fenugreek' },
-  { name: 'Red Chilli Pickle', price: '₹249', desc: 'Stuffed red chilies the Andhra way' },
-  { name: 'Mixed Veg Pickle', price: '₹229', desc: 'Carrots, cauliflower, green chili blend' }
+  {
+    name: 'Non-Veg Pickles Collection',
+    price: '₹399+',
+    desc: 'Chicken, mutton, prawn & fish pickles in authentic Andhra spices',
+    image: 'https://static.wixstatic.com/media/163af4_0f310878fded4483878262a9b5bd7a2c~mv2.jpg/v1/fill/w_1080,h_1080,al_c,q_85,enc_auto/1.jpg'
+  },
+  {
+    name: 'Veg Pickles Collection',
+    price: '₹199+',
+    desc: 'Avakaya, gongura, tomato, lemon & more homemade veg pickles',
+    image: 'https://static.wixstatic.com/media/163af4_0a7bce5cd55c43ffbca9a8d13a530c17~mv2.jpg/v1/fill/w_1080,h_1080,al_c,q_85,enc_auto/2.jpg'
+  },
+  {
+    name: 'Masalas & Karam Podis',
+    price: '₹149+',
+    desc: 'Biryani masala, karam podi, rasam powder & authentic spice blends',
+    image: 'https://static.wixstatic.com/media/163af4_816f672a49084747b491158f8cd2708b~mv2.jpg/v1/fill/w_1080,h_1080,al_c,q_85,enc_auto/4.jpg'
+  },
+  {
+    name: 'Dry Fruit Laddu & Sweets',
+    price: '₹299+',
+    desc: 'Healthy dry fruit laddu with nuts & natural sweeteners',
+    image: 'https://static.wixstatic.com/media/163af4_8807a03859674ca3b6231625c93ec525~mv2.jpg/v1/fill/w_1080,h_1080,al_c,q_85,enc_auto/3.jpg'
+  },
+  {
+    name: 'Special Combo Pack',
+    price: '₹599+',
+    desc: 'Veg & non-veg pickle combo with authentic spices - perfect gift',
+    image: 'https://static.wixstatic.com/media/163af4_9d4b318bfc3b4f9b842ad99c34357cdf~mv2.jpg/v1/fill/w_1080,h_1080,al_c,q_85,enc_auto/5.jpg'
+  },
+  {
+    name: 'Sea Salt Pickles Logo Brand',
+    price: '',
+    desc: 'Premium homemade Andhra pickles brand from Hyderabad',
+    image: 'https://static.wixstatic.com/media/163af4_1a88c8f7a40d44f3a2ed6a0d10586dd4~mv2.jpg/v1/fill/w_1080,h_1080,al_c,q_85,enc_auto/Sea%20salt%20pickles%20logo.jpg'
+  },
+  {
+    name: 'Chicken Pickle',
+    price: '₹399',
+    desc: 'Spicy boneless chicken pickle slow-cooked in sesame oil',
+    image: 'https://static.wixstatic.com/media/163af4_0f310878fded4483878262a9b5bd7a2c~mv2.jpg/v1/fill/w_1080,h_1080,al_c,q_85,enc_auto/1.jpg'
+  },
+  {
+    name: 'Avakaya Pickle',
+    price: '₹299',
+    desc: 'Authentic raw mango pickle with red chili mustard and sesame oil',
+    image: 'https://static.wixstatic.com/media/163af4_0a7bce5cd55c43ffbca9a8d13a530c17~mv2.jpg/v1/fill/w_1080,h_1080,al_c,q_85,enc_auto/2.jpg'
+  },
+  {
+    name: 'Gongura Pickle',
+    price: '₹249',
+    desc: 'Tangy roselle leaf pickle - classic Andhra flavor',
+    image: 'https://static.wixstatic.com/media/163af4_0a7bce5cd55c43ffbca9a8d13a530c17~mv2.jpg/v1/fill/w_1080,h_1080,al_c,q_85,enc_auto/2.jpg'
+  },
+  {
+    name: 'Biryani Masala',
+    price: '₹149',
+    desc: 'Authentic Hyderabadi biryani masala blend',
+    image: 'https://static.wixstatic.com/media/163af4_816f672a49084747b491158f8cd2708b~mv2.jpg/v1/fill/w_1080,h_1080,al_c,q_85,enc_auto/4.jpg'
+  }
 ];
 
 export const handler = async function(event) {
@@ -51,60 +89,56 @@ export const handler = async function(event) {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: H, body: '' };
 
   var action = 'generate';
-  var token = '';
+  try { if (event.body) { action = JSON.parse(event.body).action || 'generate'; } } catch(e) {}
+  if ((event.queryStringParameters || {}).action) action = event.queryStringParameters.action;
 
   try {
-    if (event.body) {
-      var b = JSON.parse(event.body);
-      action = b.action || 'generate';
-      token = b.token || '';
-    }
-  } catch(e) {}
-
-  var qs = event.queryStringParameters || {};
-  if (qs.action) action = qs.action;
-  if (qs.token) token = qs.token;
-
-  try {
-    if (action === 'generate') {
-      var result = await doGenerate();
-      return { statusCode: 200, headers: H, body: JSON.stringify(result) };
-    }
-    if (action === 'approve') {
-      var result2 = await doApprove(token);
-      return { statusCode: 200, headers: { 'Content-Type': 'text/html' }, body: result2 };
-    }
-    if (action === 'reject') {
-      var result3 = await doReject(token);
-      return { statusCode: 200, headers: { 'Content-Type': 'text/html' }, body: result3 };
-    }
+    if (action === 'generate') return { statusCode: 200, headers: H, body: JSON.stringify(await generateAndPublish()) };
     return { statusCode: 400, headers: H, body: JSON.stringify({ error: 'Unknown action' }) };
   } catch (e) {
-    return { statusCode: 500, headers: H, body: JSON.stringify({ error: e.message || 'Unknown error' }) };
+    return { statusCode: 500, headers: H, body: JSON.stringify({ error: e.message || 'Error' }) };
   }
 };
 
-async function doGenerate() {
+async function generateAndPublish() {
   if (!GEMINI_KEY) throw new Error('GEMINI_API_KEY not set');
+  if (!PAGE_TOKEN) throw new Error('META_PAGE_TOKEN not set');
 
-  // Pick random product
+  // === 1. PICK RANDOM PRODUCT (with image!) ===
   var product = PRODUCTS[Math.floor(Math.random() * PRODUCTS.length)];
-  var pInfo = product.name + ' (' + product.price + ') - ' + product.desc;
 
+  // Avoid recent repeats
+  try {
+    var recent = await dbGet('social_posts', 'ai_generated=eq.true&order=created_at.desc&limit=5&select=caption');
+    if (recent && recent.length) {
+      for (var i = 0; i < 5; i++) {
+        var nm = (product.name || '').toLowerCase();
+        var used = false;
+        for (var j = 0; j < recent.length; j++) {
+          if ((recent[j].caption || '').toLowerCase().indexOf(nm) >= 0) { used = true; break; }
+        }
+        if (!used) break;
+        product = PRODUCTS[Math.floor(Math.random() * PRODUCTS.length)];
+      }
+    }
+  } catch(e) {}
+
+  var pInfo = product.name + (product.price ? ' (' + product.price + ')' : '') + ' - ' + product.desc;
+  var imageUrl = product.image;
+
+  // === 2. GEMINI AI CONTENT ===
   var types = ['product_highlight', 'behind_the_scenes', 'customer_love', 'recipe_tip', 'fun_fact', 'health_benefit', 'origin_story'];
   var ct = types[Math.floor(Math.random() * types.length)];
-
   var now = new Date();
   var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
   var prompt = 'You are social media manager for Sea Salt Pickles (@seasaltpickles) - premium homemade Andhra pickles from Hyderabad. Website: seasaltpickles.com\n\n';
-  prompt += 'TODAY: ' + days[now.getDay()] + ', ' + months[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear() + '\n';
-  prompt += 'PRODUCT: ' + pInfo + '\n';
-  prompt += 'CONTENT TYPE: ' + ct + '\n\n';
-  prompt += 'Create a social media post for Instagram + Facebook. Caption 100-200 words, emojis, 15-20 hashtags, call to action.\n\n';
-  prompt += 'RESPOND IN EXACT JSON only (no markdown no backticks):\n';
-  prompt += '{"caption":"caption with emojis","hashtags":"#SeaSaltPickles #AndhraPickles and more","short_version":"1-2 line version","cta":"call to action","image_ideas":"2-3 ideas","content_type":"' + ct + '","product_featured":"' + product.name + '"}';
+  prompt += 'TODAY: ' + days[now.getDay()] + ', ' + months[now.getMonth()] + ' ' + now.getDate() + '\n';
+  prompt += 'PRODUCT: ' + pInfo + '\nSTYLE: ' + ct + '\n\n';
+  prompt += 'Create a social media post. Caption 100-200 words, emojis, 15-20 hashtags, call to action. Must feel authentic.\n\n';
+  prompt += 'RESPOND IN EXACT JSON only:\n';
+  prompt += '{"caption":"caption","hashtags":"hashtags","short_version":"short","cta":"cta","content_type":"' + ct + '","product_featured":"' + product.name + '"}';
 
   var gRes = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + GEMINI_KEY, {
     method: 'POST',
@@ -116,7 +150,7 @@ async function doGenerate() {
   });
 
   var gData = await gRes.json();
-  if (gData.error) throw new Error(gData.error.message || 'Gemini error');
+  if (gData.error) throw new Error('Gemini: ' + (gData.error.message || 'error'));
 
   var txt = '';
   if (gData.candidates && gData.candidates[0] && gData.candidates[0].content && gData.candidates[0].content.parts && gData.candidates[0].content.parts[0]) {
@@ -124,99 +158,118 @@ async function doGenerate() {
   }
 
   var parsed;
-  try {
-    parsed = JSON.parse(txt.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim());
-  } catch (e) {
-    parsed = { caption: txt.substring(0, 500), hashtags: '#SeaSaltPickles #AndhraPickles', short_version: txt.substring(0, 100), cta: 'Order at seasaltpickles.com', image_ideas: 'Product photo', content_type: ct, product_featured: product.name };
+  try { parsed = JSON.parse(txt.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()); }
+  catch (e) { parsed = { caption: txt.substring(0, 500), hashtags: '#SeaSaltPickles #AndhraPickles', cta: 'Order at seasaltpickles.com', content_type: ct, product_featured: product.name }; }
+
+  // === 3. BUILD FULL MESSAGE ===
+  var fullMsg = (parsed.caption || '') + '\n\n' + (parsed.hashtags || '');
+  if (parsed.cta) fullMsg += '\n\n' + parsed.cta;
+
+  var results = [];
+  var fbPostId = '';
+  var igMediaId = '';
+  var postUrl = '';
+
+  // === 4. POST TO FACEBOOK (with image!) ===
+  if (PAGE_TOKEN && PAGE_ID) {
+    try {
+      var fbParams = new URLSearchParams();
+      fbParams.append('access_token', PAGE_TOKEN);
+      if (imageUrl) {
+        // Post as photo with caption
+        fbParams.append('url', imageUrl);
+        fbParams.append('caption', fullMsg);
+        var fbRes = await fetch(GRAPH_URL + '/' + PAGE_ID + '/photos', { method: 'POST', body: fbParams });
+      } else {
+        fbParams.append('message', fullMsg);
+        var fbRes = await fetch(GRAPH_URL + '/' + PAGE_ID + '/feed', { method: 'POST', body: fbParams });
+      }
+      var fbData = await fbRes.json();
+      if (fbData.id || fbData.post_id) {
+        fbPostId = fbData.id || fbData.post_id;
+        postUrl = 'https://facebook.com/' + fbPostId;
+        results.push('Facebook: POSTED ✅');
+      } else {
+        results.push('Facebook: FAILED ❌ ' + (fbData.error && fbData.error.message ? fbData.error.message : JSON.stringify(fbData)));
+      }
+    } catch (e) { results.push('Facebook: ERROR ❌ ' + e.message); }
+  } else {
+    results.push('Facebook: SKIPPED (no token)');
   }
 
-  var tkn = 'apt_' + Date.now() + '_' + Math.random().toString(36).substring(2, 10);
+  // === 5. POST TO INSTAGRAM (with product image!) ===
+  if (PAGE_TOKEN && IG_USER_ID && imageUrl) {
+    try {
+      // Step 1: Create media container
+      var igParams = new URLSearchParams();
+      igParams.append('access_token', PAGE_TOKEN);
+      igParams.append('image_url', imageUrl);
+      igParams.append('caption', fullMsg);
+      var igRes = await fetch(GRAPH_URL + '/' + IG_USER_ID + '/media', { method: 'POST', body: igParams });
+      var igContainer = await igRes.json();
 
-  // Save to DB
+      if (igContainer.id) {
+        // Step 2: Wait for processing
+        var ready = false;
+        for (var w = 0; w < 15; w++) {
+          await new Promise(function(r) { setTimeout(r, 2000); });
+          var sRes = await fetch(GRAPH_URL + '/' + igContainer.id + '?fields=status_code&access_token=' + PAGE_TOKEN);
+          var sData = await sRes.json();
+          if (sData.status_code === 'FINISHED') { ready = true; break; }
+          if (sData.status_code === 'ERROR') { results.push('Instagram: PROCESSING ERROR ❌'); break; }
+        }
+
+        if (ready) {
+          // Step 3: Publish
+          var pubParams = new URLSearchParams();
+          pubParams.append('access_token', PAGE_TOKEN);
+          pubParams.append('creation_id', igContainer.id);
+          var pubRes = await fetch(GRAPH_URL + '/' + IG_USER_ID + '/media_publish', { method: 'POST', body: pubParams });
+          var pubData = await pubRes.json();
+          if (pubData.id) {
+            igMediaId = pubData.id;
+            results.push('Instagram: POSTED ✅');
+          } else {
+            results.push('Instagram: PUBLISH FAILED ❌ ' + (pubData.error && pubData.error.message ? pubData.error.message : ''));
+          }
+        } else if (!results.some(function(r) { return r.indexOf('Instagram') >= 0; })) {
+          results.push('Instagram: TIMEOUT ❌ (image processing took too long)');
+        }
+      } else {
+        results.push('Instagram: CONTAINER FAILED ❌ ' + (igContainer.error && igContainer.error.message ? igContainer.error.message : JSON.stringify(igContainer)));
+      }
+    } catch (e) { results.push('Instagram: ERROR ❌ ' + e.message); }
+  } else {
+    results.push('Instagram: SKIPPED (no IG_USER_ID or image)');
+  }
+
+  // === 6. SAVE TO DATABASE ===
   try {
     await dbAdd('social_posts', {
       caption: parsed.caption || '',
       hashtags: parsed.hashtags || '',
-      platforms: ['facebook', 'instagram'],
-      status: 'pending_approval',
+      platforms: fbPostId && igMediaId ? ['facebook', 'instagram'] : fbPostId ? ['facebook'] : igMediaId ? ['instagram'] : [],
+      status: 'published',
+      published_at: new Date().toISOString(),
       ai_generated: true,
       tone: parsed.content_type || ct,
       short_version: parsed.short_version || '',
       cta: parsed.cta || '',
       image_ideas: parsed.image_ideas || '',
-      fb_post_id: tkn
+      image_url: imageUrl || '',
+      fb_post_id: fbPostId,
+      ig_media_id: igMediaId,
+      post_url: postUrl
     });
-  } catch (e) {}
-
-  var approveUrl = SITE_URL + '/.netlify/functions/auto-post?action=approve&token=' + tkn;
-  var rejectUrl = SITE_URL + '/.netlify/functions/auto-post?action=reject&token=' + tkn;
+  } catch (e) { results.push('Database: ERROR ' + e.message); }
 
   return {
-    success: true,
-    token: tkn,
+    success: (fbPostId || igMediaId) ? true : false,
     post: parsed,
-    approve_url: approveUrl,
-    reject_url: rejectUrl,
-    message: 'Daily post generated! Click Approve to publish.'
+    image_url: imageUrl,
+    facebook: fbPostId ? { id: fbPostId, url: postUrl, status: 'posted' } : { status: 'failed' },
+    instagram: igMediaId ? { id: igMediaId, status: 'posted' } : { status: imageUrl ? 'failed' : 'skipped' },
+    results: results,
+    message: results.join(' | ')
   };
-}
-
-async function doApprove(token) {
-  if (!token) return '<h1>Token required</h1>';
-
-  var posts = await dbGet('social_posts', 'fb_post_id=eq.' + token + '&status=eq.pending_approval&limit=1');
-  if (!posts || !posts.length) return '<h1>Post not found or already processed</h1>';
-
-  var post = posts[0];
-  var msg = (post.caption || '') + '\n\n' + (post.hashtags || '');
-  if (post.cta) msg += '\n\n' + post.cta;
-  var results = [];
-
-  // Facebook
-  if (PAGE_TOKEN && PAGE_ID) {
-    try {
-      var p = new URLSearchParams();
-      p.append('access_token', PAGE_TOKEN);
-      p.append('message', msg);
-      var r = await fetch(GRAPH_URL + '/' + PAGE_ID + '/feed', { method: 'POST', body: p });
-      var d = await r.json();
-      if (d.id) { results.push('Facebook: Published'); } else { results.push('Facebook: ' + (d.error && d.error.message ? d.error.message : 'Failed')); }
-    } catch (e) { results.push('Facebook error: ' + e.message); }
-  }
-
-  // Instagram
-  if (PAGE_TOKEN && IG_USER_ID && post.image_url) {
-    try {
-      var cp = new URLSearchParams();
-      cp.append('access_token', PAGE_TOKEN);
-      cp.append('image_url', post.image_url);
-      cp.append('caption', msg);
-      var cr = await fetch(GRAPH_URL + '/' + IG_USER_ID + '/media', { method: 'POST', body: cp });
-      var cd = await cr.json();
-      if (cd.id) {
-        await new Promise(function(resolve) { setTimeout(resolve, 5000); });
-        var pp = new URLSearchParams();
-        pp.append('access_token', PAGE_TOKEN);
-        pp.append('creation_id', cd.id);
-        var pr = await fetch(GRAPH_URL + '/' + IG_USER_ID + '/media_publish', { method: 'POST', body: pp });
-        var pd = await pr.json();
-        if (pd.id) { results.push('Instagram: Published'); } else { results.push('Instagram: ' + (pd.error && pd.error.message ? pd.error.message : 'Failed')); }
-      } else { results.push('Instagram: ' + (cd.error && cd.error.message ? cd.error.message : 'Failed')); }
-    } catch (e) { results.push('Instagram error: ' + e.message); }
-  } else {
-    results.push('Instagram: Skipped (no image URL)');
-  }
-
-  // Update DB
-  try { await dbPatch('social_posts', 'id=eq.' + post.id, { status: 'published', published_at: new Date().toISOString(), fb_post_id: '' }); } catch(e) {}
-
-  return '<html><body style="font-family:sans-serif;max-width:600px;margin:40px auto;padding:20px;background:#0a0a0a;color:#fff"><h2>🔱 Post Approved!</h2>' + results.map(function(r) { return '<p>' + r + '</p>'; }).join('') + '<p><a href="' + SITE_URL + '" style="color:#a855f7">Open Dashboard</a></p></body></html>';
-}
-
-async function doReject(token) {
-  if (!token) return '<h1>Token required</h1>';
-  var posts = await dbGet('social_posts', 'fb_post_id=eq.' + token + '&status=eq.pending_approval&limit=1');
-  if (!posts || !posts.length) return '<h1>Already processed</h1>';
-  try { await dbPatch('social_posts', 'id=eq.' + posts[0].id, { status: 'rejected', fb_post_id: '' }); } catch(e) {}
-  return '<html><body style="font-family:sans-serif;max-width:600px;margin:40px auto;padding:20px;background:#0a0a0a;color:#fff"><h2>🔱 Post Rejected</h2><p>Not published. New one tomorrow.</p><p><a href="' + SITE_URL + '" style="color:#a855f7">Dashboard</a></p></body></html>';
 }
