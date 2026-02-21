@@ -5,9 +5,8 @@
 [functions]
   node_bundler = "esbuild"
 
-# Daily Auto-Post: 8:00 AM IST = 2:30 AM UTC
-[functions."auto-post"]
-  schedule = "30 2 * * *"
+# Note: For daily scheduling, use Netlify UI: Functions > auto-post > Schedule
+# Or use external cron like cron-job.org to call the endpoint daily
 
 [[plugins]]
   package = "./plugins/inject-config"
