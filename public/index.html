@@ -323,6 +323,8 @@ textarea.intel-input{resize:vertical;min-height:80px}select.intel-input{appearan
 <button class="btn btn-ghost btn-sm" onclick="openManualPost()">✍️ Manual Post</button>
 <button class="btn btn-blue btn-sm" onclick="pullFBFeed()">📡 Pull FB Feed</button>
 <button class="btn btn-ghost btn-sm" onclick="openQuickFBPost()">📘 Quick FB Post</button>
+<button class="btn btn-sm" style="background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:#fff;border:0" onclick="openQuickIGPost()">📸 Quick IG Post</button>
+<button class="btn btn-sm" style="background:linear-gradient(45deg,#f09433,#dc2743,#bc1888);color:#fff;border:0" onclick="pullIGFeed()">📡 Pull IG Feed</button>
 <button class="btn btn-ghost btn-sm" onclick="openConnectPlatforms()">🔗 Connect Platforms</button>
 </div>
 <div class="card" style="margin-bottom:16px"><div class="card-header"><div><div class="card-title">🔗 Connected Platforms</div><div class="card-subtitle">Connect your social media accounts to post directly</div></div></div><div id="platformsArea"></div></div>
@@ -1432,18 +1434,31 @@ async function publishAIPost(){
   var plats=window._aiPlatforms||['facebook'];
   var fullMsg=(d.caption||'')+'\n\n'+(d.hashtags||'');
   if(d.cta)fullMsg+='\n\n'+d.cta;
-  // Post to Facebook if selected
-  var fbResult=null;
-  if(plats.indexOf('facebook')>=0||plats.indexOf('instagram')>=0){
+  var fbResult=null,igResult=null;
+  // Post to Facebook
+  if(plats.indexOf('facebook')>=0){
     toast('🚀 Posting to Facebook...');
     try{
       var r=await fetch('/.netlify/functions/social-post',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'post_facebook',message:fullMsg})});
       fbResult=await r.json();
-      if(fbResult.success){toast('✅ Posted to Facebook! '+fbResult.post_url)}
+      if(fbResult.success){toast('✅ Posted to Facebook!')}
       else{toast('⚠️ FB: '+(fbResult.error||'Failed'))}
     }catch(e){toast('⚠️ Facebook post failed: '+e.message)}
   }
-  var ok=await dbInsert('social_posts',{caption:d.caption,hashtags:d.hashtags||'',platforms:plats,status:'published',published_at:new Date().toISOString(),ai_generated:true,tone:d.tone||'',short_version:d.short_version||'',cta:d.cta||'',image_ideas:d.image_ideas||'',post_url:fbResult&&fbResult.post_url?fbResult.post_url:'',fb_post_id:fbResult&&fbResult.post_id?fbResult.post_id:''});
+  // Post to Instagram (needs image)
+  if(plats.indexOf('instagram')>=0){
+    var imgUrl=prompt('📸 Instagram requires a public image URL.\nPaste the image URL (upload to imgur.com first):');
+    if(imgUrl&&imgUrl.trim()){
+      toast('🚀 Posting to Instagram...');
+      try{
+        var r2=await fetch('/.netlify/functions/social-post',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'post_instagram',caption:fullMsg,image_url:imgUrl.trim()})});
+        igResult=await r2.json();
+        if(igResult.success){toast('✅ Posted to Instagram!')}
+        else{toast('⚠️ IG: '+(igResult.error||'Failed'))}
+      }catch(e){toast('⚠️ Instagram post failed: '+e.message)}
+    }else{toast('ℹ️ Skipped Instagram (no image URL)')}
+  }
+  var ok=await dbInsert('social_posts',{caption:d.caption,hashtags:d.hashtags||'',platforms:plats,status:'published',published_at:new Date().toISOString(),ai_generated:true,tone:d.tone||'',short_version:d.short_version||'',cta:d.cta||'',image_ideas:d.image_ideas||'',post_url:fbResult&&fbResult.post_url?fbResult.post_url:'',fb_post_id:fbResult&&fbResult.post_id?fbResult.post_id:'',ig_media_id:igResult&&igResult.media_id?igResult.media_id:''});
   if(ok){await loadSCPosts()}
 }
 // ═══ DIRECT FB POST ═══
@@ -1541,6 +1556,53 @@ async function updatePostMetrics(id){
   try{var{error}=await db.from('social_posts').update(u).eq('id',id);if(error)throw error;toast('✅ Updated!');closeModal();await loadSCPosts()}catch(e){toast('❌ '+e.message)}
 }
 async function deletePost(id){if(!confirm('Delete this post?'))return;try{await db.from('social_posts').delete().eq('id',id);toast('🗑️ Deleted');closeModal();await loadSCPosts()}catch(e){toast('❌ '+e.message)}}
+
+// ═══ QUICK IG POST ═══
+function openQuickIGPost(){
+  var h='<div class="modal-title">📸 Quick Instagram Post</div>';
+  h+='<div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Post directly to @seasaltpickles Instagram</div>';
+  h+='<div class="field-group"><label class="field-label">Caption *</label><textarea class="intel-input" id="qigCap" placeholder="Write your Instagram caption..." style="min-height:120px"></textarea></div>';
+  h+='<div class="field-group"><label class="field-label">Image URL * (must be public)</label><input class="intel-input" id="qigImg" placeholder="https://... (JPG/PNG, publicly accessible)"></div>';
+  h+='<div style="background:rgba(255,180,0,0.1);border:1px solid rgba(255,180,0,0.3);border-radius:8px;padding:10px;font-size:11px;margin-bottom:12px">⚠️ Instagram requires a <b>public image URL</b>. Upload your image to <a href="https://imgur.com/upload" target="_blank">imgur.com</a> or <a href="https://postimages.org" target="_blank">postimages.org</a> first, then paste the direct URL here.</div>';
+  h+='<div style="display:flex;gap:10px;margin-top:12px"><button class="btn" style="background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:#fff;border:0" onclick="submitQuickIG()" id="btnQIG">📸 Post to Instagram Now</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>';
+  showModal(h);
+}
+async function submitQuickIG(){
+  var cap=document.getElementById('qigCap').value.trim();if(!cap){toast('❌ Caption required');return}
+  var img=document.getElementById('qigImg').value.trim();if(!img){toast('❌ Image URL required for Instagram');return}
+  var btn=document.getElementById('btnQIG');btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Posting...';
+  try{
+    var r=await fetch('/.netlify/functions/social-post',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'post_instagram',caption:cap,image_url:img})});
+    var d=await r.json();
+    if(d.success){
+      toast('✅ Posted to Instagram!');
+      await dbInsert('social_posts',{caption:cap,platforms:['instagram'],status:'published',published_at:new Date().toISOString(),post_url:d.post_url||'',image_url:img,ig_media_id:d.media_id||''});
+      closeModal();await loadSCPosts();
+    }else{toast('❌ '+(d.error||'Failed to post'))}
+  }catch(e){toast('❌ '+e.message)}
+  btn.disabled=false;btn.innerHTML='📸 Post to Instagram Now';
+}
+// ═══ PULL IG FEED ═══
+async function pullIGFeed(){
+  toast('📡 Pulling Instagram feed...');
+  try{
+    var r=await fetch('/.netlify/functions/social-post',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'get_ig_feed'})});
+    var d=await r.json();
+    if(d.posts&&d.posts.length){
+      for(var i=0;i<d.posts.length;i++){
+        var p=d.posts[i];
+        var exists=SC_POSTS.find(function(x){return x.ig_media_id===p.media_id});
+        if(!exists){
+          await dbInsert('social_posts',{caption:p.caption||'',platforms:['instagram'],status:'published',published_at:p.timestamp,post_url:p.permalink,image_url:p.media_url,ig_media_id:p.media_id,likes:p.likes,comments_count:p.comments});
+        }else{
+          try{await db.from('social_posts').update({likes:p.likes,comments_count:p.comments}).eq('ig_media_id',p.media_id)}catch(e){}
+        }
+      }
+      toast('✅ Pulled '+d.posts.length+' posts from Instagram!');
+      await loadSCPosts();
+    }else{toast('ℹ️ No posts found on Instagram')}
+  }catch(e){toast('❌ '+e.message)}
+}
 
 // ═══ QUICK FB POST ═══
 function openQuickFBPost(){
