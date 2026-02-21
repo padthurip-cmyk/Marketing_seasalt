@@ -1664,7 +1664,9 @@ async function triggerAutoPost(){
   toast('⚡ Generating daily AI post...');
   try{
     var r=await fetch('/.netlify/functions/auto-post',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'generate'})});
-    var d=await r.json();
+    var txt=await r.text();
+    var d;
+    try{d=JSON.parse(txt)}catch(e){toast('❌ '+txt.substring(0,150));return}
     if(d.success){
       toast('✅ Daily post generated!');
       // Show the approval modal
