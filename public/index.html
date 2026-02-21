@@ -1344,17 +1344,26 @@ function renderPostPerf(){
 // ═══ AI POST CREATOR (Gemini) ═══
 function openAIPostCreator(){
   var h='<div class="modal-title">🤖 AI Post Creator</div>';
-  h+='<div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Powered by Google Gemini — generates captions, hashtags & content ideas</div>';
+  h+='<div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Powered by Google Gemini — generates captions, hashtags & auto-publishes to FB + IG</div>';
   h+='<div class="field-group"><label class="field-label">What do you want to post about? *</label><textarea class="intel-input" id="aiTopic" placeholder="e.g. New mango avakaya pickle launch, behind-the-scenes making video, customer testimonial, festival offer..." style="min-height:80px"></textarea></div>';
-  h+='<div class="field-group"><label class="field-label">Upload Image (optional)</label><input type="file" id="aiImage" accept="image/*" class="intel-input" style="padding:8px"></div>';
-  h+='<div class="field-group"><label class="field-label">Platform</label><div style="display:flex;gap:6px;flex-wrap:wrap" id="aiPlatformPicks">';
-  ['Instagram','Facebook','YouTube','Twitter','LinkedIn','WhatsApp'].forEach(function(p){
-    h+='<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:6px"><input type="checkbox" class="aiPlat" value="'+p.toLowerCase()+'" '+(p==='Instagram'?'checked':'')+'>'+p+'</label>';
+  h+='<div class="field-group"><label class="field-label">Upload Image for Analysis (optional)</label><input type="file" id="aiImage" accept="image/*" class="intel-input" style="padding:8px"><div style="font-size:10px;color:var(--text-muted);margin-top:4px">Gemini will analyze this image and create a post about it</div></div>';
+  h+='<div class="field-group"><label class="field-label">Image URL for Publishing (required for Instagram)</label><input class="intel-input" id="aiImageUrl" placeholder="https://i.imgur.com/... (public direct image URL)"><div style="font-size:10px;color:var(--text-muted);margin-top:4px">Upload your image to <a href="https://imgur.com/upload" target="_blank">imgur.com</a> and paste the direct URL here</div></div>';
+  h+='<div class="field-group"><label class="field-label">Auto-Publish To</label><div style="display:flex;gap:6px;flex-wrap:wrap" id="aiPlatformPicks">';
+  ['Facebook','Instagram'].forEach(function(p){
+    h+='<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg-elevated)"><input type="checkbox" class="aiPlat" value="'+p.toLowerCase()+'" checked>'+p+'</label>';
+  });
+  ['YouTube','Twitter','LinkedIn','WhatsApp'].forEach(function(p){
+    h+='<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:6px"><input type="checkbox" class="aiPlat" value="'+p.toLowerCase()+'">'+p+'</label>';
   });
   h+='</div></div>';
-  h+='<div class="field-group"><label class="field-label">Tone</label><select class="intel-input" id="aiTone"><option value="casual">Casual & Fun</option><option value="professional">Professional</option><option value="promotional" selected>Promotional</option><option value="storytelling">Storytelling</option><option value="educational">Educational</option><option value="festive">Festive / Seasonal</option></select></div>';
-  h+='<div class="field-group"><label class="field-label">Language</label><select class="intel-input" id="aiLang"><option value="english">English</option><option value="telugu_english">Telugu + English Mix</option><option value="hindi_english">Hindi + English Mix</option><option value="telugu">Telugu</option></select></div>';
-  h+='<div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-violet" onclick="generateAIPost()" id="btnGenAI">🤖 Generate with Gemini</button><button class="btn btn-ghost" onclick="closeModal()">Cancel</button></div>';
+  h+='<div style="display:flex;gap:10px">';
+  h+='<div class="field-group" style="flex:1"><label class="field-label">Tone</label><select class="intel-input" id="aiTone"><option value="casual">Casual & Fun</option><option value="professional">Professional</option><option value="promotional" selected>Promotional</option><option value="storytelling">Storytelling</option><option value="educational">Educational</option><option value="festive">Festive / Seasonal</option></select></div>';
+  h+='<div class="field-group" style="flex:1"><label class="field-label">Language</label><select class="intel-input" id="aiLang"><option value="english">English</option><option value="telugu_english">Telugu + English Mix</option><option value="hindi_english">Hindi + English Mix</option><option value="telugu">Telugu</option></select></div>';
+  h+='</div>';
+  h+='<div style="display:flex;gap:10px;margin-top:12px">';
+  h+='<button class="btn btn-violet" onclick="generateAIPost()" id="btnGenAI">🤖 Generate with Gemini</button>';
+  h+='<button class="btn btn-ghost" onclick="closeModal()">Cancel</button>';
+  h+='</div>';
   showModal(h);
 }
 
@@ -1365,7 +1374,11 @@ async function generateAIPost(){
   var tone=document.getElementById('aiTone').value;
   var lang=document.getElementById('aiLang').value;
   var imgFile=document.getElementById('aiImage').files[0];
+  var imgUrl=document.getElementById('aiImageUrl').value.trim();
   var btn=document.getElementById('btnGenAI');btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Gemini thinking...';
+
+  // Store image URL for publishing later
+  window._aiImageUrl=imgUrl;
 
   // Build image base64 if uploaded
   var imgData=null;
@@ -1403,11 +1416,25 @@ function showAIResult(data,platforms){
   if(data.short_version){h+='<div style="background:var(--bg-elevated);border-radius:10px;padding:16px"><div style="font-size:11px;font-weight:700;color:var(--accent-amber);margin-bottom:6px">📱 SHORT VERSION (Stories/Reels)</div><div style="font-size:12px" id="aiShort">'+esc(data.short_version)+'</div></div>'}
   if(data.cta){h+='<div style="background:var(--bg-elevated);border-radius:10px;padding:16px"><div style="font-size:11px;font-weight:700;color:var(--accent-emerald);margin-bottom:6px">🎯 CALL TO ACTION</div><div style="font-size:12px">'+esc(data.cta)+'</div></div>'}
   if(data.image_ideas){h+='<div style="background:var(--bg-elevated);border-radius:10px;padding:16px"><div style="font-size:11px;font-weight:700;color:var(--accent-orange);margin-bottom:6px">📸 IMAGE/VIDEO IDEAS</div><div style="font-size:12px;line-height:1.5">'+esc(data.image_ideas)+'</div></div>'}
+  if(data.best_time){h+='<div style="background:var(--bg-elevated);border-radius:10px;padding:12px"><div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:4px">⏰ BEST POSTING TIME</div><div style="font-size:12px">'+esc(data.best_time)+'</div></div>'}
+  // Publishing targets
+  var platIcons={facebook:'📘',instagram:'📸',youtube:'📺',twitter:'𝕏',linkedin:'💼',whatsapp:'💬'};
+  h+='<div style="background:rgba(100,50,255,0.05);border:1px solid rgba(100,50,255,0.15);border-radius:10px;padding:14px">';
+  h+='<div style="font-size:11px;font-weight:700;color:var(--accent-violet);margin-bottom:8px">🚀 AUTO-PUBLISH TARGETS</div>';
+  h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">';
+  platforms.forEach(function(p){h+='<span style="font-size:11px;padding:3px 10px;background:var(--bg-elevated);border-radius:12px;border:1px solid var(--border)">'+(platIcons[p]||'')+ ' '+p.charAt(0).toUpperCase()+p.slice(1)+'</span>'});
+  h+='</div>';
+  if(window._aiImageUrl){
+    h+='<div style="font-size:11px;color:var(--accent-emerald)">✅ Image URL ready: '+esc(window._aiImageUrl.substring(0,50))+'...</div>';
+  }else if(platforms.indexOf('instagram')>=0){
+    h+='<div style="font-size:11px;color:var(--accent-amber)">⚠️ No image URL — Instagram posting will ask for one</div>';
+  }
+  h+='</div>';
   // Actions
   h+='<div style="display:flex;gap:8px;flex-wrap:wrap;padding-top:8px">';
-  h+='<button class="btn btn-emerald btn-sm" onclick="saveAIDraft()">💾 Save as Draft</button>';
+  h+='<button class="btn btn-sm" style="background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;border:0;font-weight:700" onclick="autoPublishAI()" id="btnAutoPublish">🚀 Auto-Publish to All</button>';
+  h+='<button class="btn btn-emerald btn-sm" onclick="saveAIDraft()">💾 Save Draft</button>';
   h+='<button class="btn btn-amber btn-sm" onclick="scheduleAIPost()">📅 Schedule</button>';
-  h+='<button class="btn btn-violet btn-sm" onclick="publishAIPost()">🚀 Publish Now</button>';
   h+='<button class="btn btn-ghost btn-sm" onclick="copyAIContent()">📋 Copy All</button></div>';
   document.getElementById('aiResultArea').innerHTML=h+'</div>';
   // Store for saving
@@ -1429,38 +1456,65 @@ async function confirmSchedule(){
   var ok=await dbInsert('social_posts',{caption:d.caption,hashtags:d.hashtags||'',platforms:window._aiPlatforms||['instagram'],status:'scheduled',scheduled_at:new Date(dt).toISOString(),ai_generated:true,tone:d.tone||'',short_version:d.short_version||'',cta:d.cta||'',image_ideas:d.image_ideas||''});
   if(ok){toast('✅ Scheduled!');closeModal();await loadSCPosts()}
 }
-async function publishAIPost(){
+async function autoPublishAI(){
   var d=window._aiResult;if(!d)return;
   var plats=window._aiPlatforms||['facebook'];
   var fullMsg=(d.caption||'')+'\n\n'+(d.hashtags||'');
   if(d.cta)fullMsg+='\n\n'+d.cta;
+  var imgUrl=window._aiImageUrl||'';
+  var btn=document.getElementById('btnAutoPublish');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Publishing...';
   var fbResult=null,igResult=null;
-  // Post to Facebook
+  var statusParts=[];
+
+  // === FACEBOOK ===
   if(plats.indexOf('facebook')>=0){
-    toast('🚀 Posting to Facebook...');
+    toast('📘 Publishing to Facebook...');
     try{
-      var r=await fetch('/.netlify/functions/social-post',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'post_facebook',message:fullMsg})});
+      var fbBody=imgUrl?{action:'post_photo',message:fullMsg,image_url:imgUrl}:{action:'post_facebook',message:fullMsg};
+      var r=await fetch('/.netlify/functions/social-post',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(fbBody)});
       fbResult=await r.json();
-      if(fbResult.success){toast('✅ Posted to Facebook!')}
-      else{toast('⚠️ FB: '+(fbResult.error||'Failed'))}
-    }catch(e){toast('⚠️ Facebook post failed: '+e.message)}
+      if(fbResult.success){statusParts.push('📘 FB ✅');toast('✅ Facebook posted!')}
+      else{statusParts.push('📘 FB ❌');toast('⚠️ FB: '+(fbResult.error||'Failed'))}
+    }catch(e){statusParts.push('📘 FB ❌');toast('⚠️ FB error: '+e.message)}
   }
-  // Post to Instagram (needs image)
+
+  // === INSTAGRAM ===
   if(plats.indexOf('instagram')>=0){
-    var imgUrl=prompt('📸 Instagram requires a public image URL.\nPaste the image URL (upload to imgur.com first):');
+    if(!imgUrl){
+      imgUrl=prompt('📸 Instagram requires a public image URL.\nUpload to imgur.com and paste the direct link:');
+    }
     if(imgUrl&&imgUrl.trim()){
-      toast('🚀 Posting to Instagram...');
+      toast('📸 Publishing to Instagram...');
       try{
         var r2=await fetch('/.netlify/functions/social-post',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'post_instagram',caption:fullMsg,image_url:imgUrl.trim()})});
         igResult=await r2.json();
-        if(igResult.success){toast('✅ Posted to Instagram!')}
-        else{toast('⚠️ IG: '+(igResult.error||'Failed'))}
-      }catch(e){toast('⚠️ Instagram post failed: '+e.message)}
-    }else{toast('ℹ️ Skipped Instagram (no image URL)')}
+        if(igResult.success){statusParts.push('📸 IG ✅');toast('✅ Instagram posted!')}
+        else{statusParts.push('📸 IG ❌');toast('⚠️ IG: '+(igResult.error||'Failed'))}
+      }catch(e){statusParts.push('📸 IG ❌');toast('⚠️ IG error: '+e.message)}
+    }else{statusParts.push('📸 IG ⏭️ skipped')}
   }
-  var ok=await dbInsert('social_posts',{caption:d.caption,hashtags:d.hashtags||'',platforms:plats,status:'published',published_at:new Date().toISOString(),ai_generated:true,tone:d.tone||'',short_version:d.short_version||'',cta:d.cta||'',image_ideas:d.image_ideas||'',post_url:fbResult&&fbResult.post_url?fbResult.post_url:'',fb_post_id:fbResult&&fbResult.post_id?fbResult.post_id:'',ig_media_id:igResult&&igResult.media_id?igResult.media_id:''});
-  if(ok){await loadSCPosts()}
+
+  // === SAVE TO DATABASE ===
+  var ok=await dbInsert('social_posts',{
+    caption:d.caption,hashtags:d.hashtags||'',platforms:plats,status:'published',
+    published_at:new Date().toISOString(),ai_generated:true,tone:d.tone||'',
+    short_version:d.short_version||'',cta:d.cta||'',image_ideas:d.image_ideas||'',
+    image_url:imgUrl||'',
+    post_url:fbResult&&fbResult.post_url?fbResult.post_url:'',
+    fb_post_id:fbResult&&fbResult.post_id?fbResult.post_id:'',
+    ig_media_id:igResult&&igResult.media_id?igResult.media_id:''
+  });
+  if(ok)await loadSCPosts();
+
+  // === FINAL STATUS ===
+  btn.disabled=false;
+  btn.innerHTML='✅ Published! '+statusParts.join(' · ');
+  setTimeout(function(){btn.innerHTML='🚀 Auto-Publish to All'},5000);
+  toast('🎉 '+statusParts.join(' · '));
 }
+// Legacy alias
+async function publishAIPost(){return autoPublishAI()}
 // ═══ DIRECT FB POST ═══
 async function postToFB(caption,hashtags,cta,imageUrl){
   var msg=caption+(hashtags?'\n\n'+hashtags:'')+(cta?'\n\n'+cta:'');
