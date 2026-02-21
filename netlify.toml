@@ -5,6 +5,10 @@
 [functions]
   node_bundler = "esbuild"
 
+# Daily Auto-Post: 8:00 AM IST = 2:30 AM UTC
+[functions."auto-post"]
+  schedule = "30 2 * * *"
+
 [[plugins]]
   package = "./plugins/inject-config"
 
