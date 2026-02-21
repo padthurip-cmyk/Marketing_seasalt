@@ -1,461 +1,194 @@
 // ═══════════════════════════════════════════════════════
-// SeaSalt — Facebook + Instagram Auto-Post Function
-// ═══════════════════════════════════════════════════════
-// Endpoint: /.netlify/functions/social-post
-// Methods:
-//   POST { action: 'post_facebook', message, link, image_url }
-//   POST { action: 'post_instagram', caption, image_url }
-//   POST { action: 'post_instagram_reel', caption, video_url }
-//   POST { action: 'post_both', message, image_url }
-//   POST { action: 'get_metrics', post_id }
-//   POST { action: 'get_feed' }
-//   POST { action: 'get_ig_feed' }
-//   POST { action: 'get_ig_metrics', media_id }
-//   POST { action: 'convert_token' } — get long-lived token
+// SeaSalt — Automated Daily Post Generator (No NPM deps)
 // ═══════════════════════════════════════════════════════
 
-const PAGE_ID = process.env.META_PAGE_ID || '';
+const GEMINI_KEY = process.env.GEMINI_API_KEY || '';
 const PAGE_TOKEN = process.env.META_PAGE_TOKEN || '';
-const APP_ID = process.env.META_APP_ID || '';
-const APP_SECRET = process.env.META_APP_SECRET || '';
+const PAGE_ID = process.env.META_PAGE_ID || '';
 const IG_USER_ID = process.env.INSTAGRAM_BUSINESS_ID || '';
+const SB_URL = process.env.SUPABASE_URL || '';
+const SB_KEY = process.env.SUPABASE_KEY || '';
+const OWNER_EMAIL = process.env.OWNER_EMAIL || '';
+const RESEND_KEY = process.env.RESEND_API_KEY || '';
+const SITE_URL = process.env.URL || 'https://sage-paletas-ad2239.netlify.app';
 const GRAPH_URL = 'https://graph.facebook.com/v25.0';
 
-export const handler = async (event) => {
-  const H = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Content-Type': 'application/json'
-  };
-  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: H, body: '' };
-  if (event.httpMethod !== 'POST') return { statusCode: 405, headers: H, body: JSON.stringify({ error: 'POST only' }) };
+// ═══ Supabase fetch helpers ═══
+const SB_H = () => ({ 'Content-Type': 'application/json', 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY });
+async function dbSelect(table, q) { return (await fetch(SB_URL + '/rest/v1/' + table + '?' + q, { headers: SB_H() })).json(); }
+async function dbInsert(table, row) { return (await fetch(SB_URL + '/rest/v1/' + table, { method: 'POST', headers: { ...SB_H(), 'Prefer': 'return=representation' }, body: JSON.stringify(row) })).json(); }
+async function dbUpdate(table, match, upd) { return (await fetch(SB_URL + '/rest/v1/' + table + '?' + match, { method: 'PATCH', headers: { ...SB_H(), 'Prefer': 'return=representation' }, body: JSON.stringify(upd) })).json(); }
 
-  if (!PAGE_TOKEN) {
-    return { statusCode: 500, headers: H, body: JSON.stringify({ error: 'META_PAGE_TOKEN not set. Add it in Netlify Environment Variables.' }) };
-  }
+// ═══ Product catalog fallback ═══
+const PRODUCTS = [
+  { name: 'Andhra Avakaya Pickle', price: '₹299', desc: 'Authentic raw mango pickle with red chili, mustard & sesame oil' },
+  { name: 'Gongura Pickle', price: '₹249', desc: 'Tangy roselle leaf pickle — Andhra classic' },
+  { name: 'Chicken Pickle', price: '₹399', desc: 'Spicy boneless chicken pickle, slow-cooked in sesame oil' },
+  { name: 'Prawn Pickle', price: '₹449', desc: 'Premium prawns marinated in Andhra spices' },
+  { name: 'Tomato Pickle', price: '₹199', desc: 'Sweet & tangy tomato pickle for daily meals' },
+  { name: 'Mixed Vegetable Pickle', price: '₹229', desc: 'Carrots, cauliflower, green chili blend' },
+  { name: 'Garlic Pickle', price: '₹219', desc: 'Fiery garlic cloves in spiced sesame oil' },
+  { name: 'Lemon Pickle', price: '₹179', desc: 'Whole lemon pickle aged to perfection' },
+  { name: 'Ginger Pickle', price: '₹199', desc: 'Fresh ginger with mustard & fenugreek' },
+  { name: 'Red Chilli Pickle', price: '₹249', desc: 'Stuffed red chilies — the Andhra way' }
+];
+
+export const handler = async (event) => {
+  const H = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Allow-Methods': 'POST, GET, OPTIONS', 'Content-Type': 'application/json' };
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: H, body: '' };
 
   try {
-    const body = JSON.parse(event.body || '{}');
-    const { action } = body;
+    let action = 'generate', token = '';
+    if (event.body) { try { const b = JSON.parse(event.body); action = b.action || 'generate'; token = b.token || ''; } catch(e) {} }
+    if (event.queryStringParameters?.action) action = event.queryStringParameters.action;
+    if (event.queryStringParameters?.token) token = event.queryStringParameters.token;
 
-    switch (action) {
-      case 'post_facebook':
-        return { statusCode: 200, headers: H, body: JSON.stringify(await postToFacebook(body)) };
-      case 'post_photo':
-        return { statusCode: 200, headers: H, body: JSON.stringify(await postPhoto(body)) };
-      case 'post_instagram':
-        return { statusCode: 200, headers: H, body: JSON.stringify(await postToInstagram(body)) };
-      case 'post_instagram_reel':
-        return { statusCode: 200, headers: H, body: JSON.stringify(await postInstagramReel(body)) };
-      case 'post_both':
-        return { statusCode: 200, headers: H, body: JSON.stringify(await postBoth(body)) };
-      case 'get_metrics':
-        return { statusCode: 200, headers: H, body: JSON.stringify(await getPostMetrics(body.post_id)) };
-      case 'get_feed':
-        return { statusCode: 200, headers: H, body: JSON.stringify(await getPageFeed()) };
-      case 'get_ig_feed':
-        return { statusCode: 200, headers: H, body: JSON.stringify(await getInstagramFeed()) };
-      case 'get_ig_metrics':
-        return { statusCode: 200, headers: H, body: JSON.stringify(await getIGMediaMetrics(body.media_id)) };
-      case 'get_page_info':
-        return { statusCode: 200, headers: H, body: JSON.stringify(await getPageInfo()) };
-      case 'convert_token':
-        return { statusCode: 200, headers: H, body: JSON.stringify(await convertToLongLived(body.short_token)) };
-      default:
-        return { statusCode: 400, headers: H, body: JSON.stringify({ error: 'Unknown action: ' + action }) };
-    }
+    if (action === 'generate') return { statusCode: 200, headers: H, body: JSON.stringify(await generateDailyPost()) };
+    if (action === 'approve') { const r = await approvePost(token); return r.statusCode ? r : { statusCode: 200, headers: H, body: JSON.stringify(r) }; }
+    if (action === 'reject') { const r = await rejectPost(token); return r.statusCode ? r : { statusCode: 200, headers: H, body: JSON.stringify(r) }; }
+    if (action === 'status') return { statusCode: 200, headers: H, body: JSON.stringify(await getPendingPosts()) };
+    return { statusCode: 400, headers: H, body: JSON.stringify({ error: 'Unknown action' }) };
   } catch (e) {
-    console.error('[Social Post] Error:', e);
+    console.error('[Auto Post]', e);
     return { statusCode: 500, headers: H, body: JSON.stringify({ error: e.message }) };
   }
 };
 
-// ═══ POST TEXT/LINK TO FACEBOOK PAGE ═══
-async function postToFacebook({ message, link, scheduled_publish_time }) {
-  const params = new URLSearchParams();
-  params.append('access_token', PAGE_TOKEN);
-  if (message) params.append('message', message);
-  if (link) params.append('link', link);
+async function generateDailyPost() {
+  if (!GEMINI_KEY) throw new Error('GEMINI_API_KEY not set in Netlify env vars');
 
-  // Schedule for future (Unix timestamp)
-  if (scheduled_publish_time) {
-    params.append('published', 'false');
-    params.append('scheduled_publish_time', scheduled_publish_time);
-  }
-
-  const url = `${GRAPH_URL}/${PAGE_ID}/feed`;
-  console.log('[FB Post] Posting to:', url);
-
-  const res = await fetch(url, {
-    method: 'POST',
-    body: params
-  });
-
-  const data = await res.json();
-
-  if (data.error) {
-    console.error('[FB Post] Error:', data.error);
-    throw new Error(data.error.message || 'Facebook API error');
-  }
-
-  console.log('[FB Post] Success! Post ID:', data.id);
-  return {
-    success: true,
-    post_id: data.id,
-    post_url: `https://www.facebook.com/${data.id.replace('_', '/posts/')}`,
-    platform: 'facebook',
-    message: 'Posted to Sea Salt Pickles Facebook Page!'
-  };
-}
-
-// ═══ POST PHOTO TO FACEBOOK PAGE ═══
-async function postPhoto({ message, image_url }) {
-  if (!image_url) throw new Error('image_url required for photo posts');
-
-  const params = new URLSearchParams();
-  params.append('access_token', PAGE_TOKEN);
-  params.append('url', image_url);
-  if (message) params.append('message', message);
-
-  const url = `${GRAPH_URL}/${PAGE_ID}/photos`;
-  console.log('[FB Photo] Posting photo to:', url);
-
-  const res = await fetch(url, {
-    method: 'POST',
-    body: params
-  });
-
-  const data = await res.json();
-
-  if (data.error) {
-    console.error('[FB Photo] Error:', data.error);
-    throw new Error(data.error.message || 'Facebook API error');
-  }
-
-  console.log('[FB Photo] Success! Post ID:', data.post_id || data.id);
-  return {
-    success: true,
-    post_id: data.post_id || data.id,
-    photo_id: data.id,
-    platform: 'facebook',
-    message: 'Photo posted to Sea Salt Pickles Facebook Page!'
-  };
-}
-
-// ═══ GET POST METRICS ═══
-async function getPostMetrics(post_id) {
-  if (!post_id) throw new Error('post_id required');
-
-  // Get basic post data + reactions/comments/shares
-  const url = `${GRAPH_URL}/${post_id}?fields=id,message,created_time,permalink_url,shares,likes.summary(true),comments.summary(true),insights.metric(post_impressions,post_engaged_users,post_clicks)&access_token=${PAGE_TOKEN}`;
-
-  const res = await fetch(url);
-  const data = await res.json();
-
-  if (data.error) {
-    // Try without insights (some posts don't have insights)
-    const url2 = `${GRAPH_URL}/${post_id}?fields=id,message,created_time,permalink_url,shares,likes.summary(true),comments.summary(true)&access_token=${PAGE_TOKEN}`;
-    const res2 = await fetch(url2);
-    const data2 = await res2.json();
-    if (data2.error) throw new Error(data2.error.message);
-
-    return {
-      post_id: data2.id,
-      message: (data2.message || '').substring(0, 100),
-      created_time: data2.created_time,
-      permalink: data2.permalink_url,
-      likes: data2.likes?.summary?.total_count || 0,
-      comments: data2.comments?.summary?.total_count || 0,
-      shares: data2.shares?.count || 0
-    };
-  }
-
-  // Parse insights
-  const insights = {};
-  if (data.insights && data.insights.data) {
-    data.insights.data.forEach(m => {
-      insights[m.name] = m.values?.[0]?.value || 0;
-    });
-  }
-
-  return {
-    post_id: data.id,
-    message: (data.message || '').substring(0, 100),
-    created_time: data.created_time,
-    permalink: data.permalink_url,
-    likes: data.likes?.summary?.total_count || 0,
-    comments: data.comments?.summary?.total_count || 0,
-    shares: data.shares?.count || 0,
-    impressions: insights.post_impressions || 0,
-    engaged_users: insights.post_engaged_users || 0,
-    clicks: insights.post_clicks || 0
-  };
-}
-
-// ═══ GET PAGE FEED (recent posts) ═══
-async function getPageFeed() {
-  const url = `${GRAPH_URL}/${PAGE_ID}/posts?fields=id,message,created_time,permalink_url,full_picture,shares,likes.summary(true),comments.summary(true)&limit=20&access_token=${PAGE_TOKEN}`;
-
-  const res = await fetch(url);
-  const data = await res.json();
-
-  if (data.error) throw new Error(data.error.message);
-
-  return {
-    posts: (data.data || []).map(p => ({
-      post_id: p.id,
-      message: (p.message || '').substring(0, 150),
-      created_time: p.created_time,
-      permalink: p.permalink_url,
-      image: p.full_picture || '',
-      likes: p.likes?.summary?.total_count || 0,
-      comments: p.comments?.summary?.total_count || 0,
-      shares: p.shares?.count || 0
-    })),
-    page_id: PAGE_ID,
-    count: (data.data || []).length
-  };
-}
-
-// ═══ GET PAGE INFO ═══
-async function getPageInfo() {
-  const url = `${GRAPH_URL}/${PAGE_ID}?fields=id,name,fan_count,followers_count,new_like_count,talking_about_count,website,picture&access_token=${PAGE_TOKEN}`;
-
-  const res = await fetch(url);
-  const data = await res.json();
-  if (data.error) throw new Error(data.error.message);
-
-  return data;
-}
-
-// ═══ CONVERT SHORT-LIVED TOKEN TO LONG-LIVED ═══
-async function convertToLongLived(shortToken) {
-  if (!shortToken) throw new Error('short_token required');
-  if (!APP_ID || !APP_SECRET) throw new Error('META_APP_ID and META_APP_SECRET required');
-
-  const url = `${GRAPH_URL}/oauth/access_token?grant_type=fb_exchange_token&client_id=${APP_ID}&client_secret=${APP_SECRET}&fb_exchange_token=${shortToken}`;
-
-  const res = await fetch(url);
-  const data = await res.json();
-
-  if (data.error) throw new Error(data.error.message);
-
-  return {
-    access_token: data.access_token,
-    token_type: data.token_type,
-    expires_in: data.expires_in,
-    message: 'Long-lived token generated! Expires in ~60 days. Add this as META_PAGE_TOKEN in Netlify.'
-  };
-}
-
-// ═══════════════════════════════════════════════════════
-// INSTAGRAM AUTO-POSTING (via Graph API)
-// ═══════════════════════════════════════════════════════
-
-// ═══ POST IMAGE TO INSTAGRAM ═══
-async function postToInstagram({ caption, image_url }) {
-  if (!IG_USER_ID) throw new Error('INSTAGRAM_BUSINESS_ID not set in Netlify Environment Variables.');
-  if (!image_url) throw new Error('image_url required. Instagram requires a publicly accessible image URL.');
-
-  console.log('[IG Post] Creating container for:', image_url);
-
-  // Step 1: Create media container
-  const containerParams = new URLSearchParams();
-  containerParams.append('access_token', PAGE_TOKEN);
-  containerParams.append('image_url', image_url);
-  if (caption) containerParams.append('caption', caption);
-
-  const containerRes = await fetch(`${GRAPH_URL}/${IG_USER_ID}/media`, {
-    method: 'POST',
-    body: containerParams
-  });
-  const containerData = await containerRes.json();
-
-  if (containerData.error) {
-    console.error('[IG Post] Container error:', containerData.error);
-    throw new Error(containerData.error.message);
-  }
-
-  const creationId = containerData.id;
-  console.log('[IG Post] Container created:', creationId);
-
-  // Step 2: Wait for processing (poll status)
-  await waitForIGContainer(creationId);
-
-  // Step 3: Publish
-  const publishParams = new URLSearchParams();
-  publishParams.append('access_token', PAGE_TOKEN);
-  publishParams.append('creation_id', creationId);
-
-  const publishRes = await fetch(`${GRAPH_URL}/${IG_USER_ID}/media_publish`, {
-    method: 'POST',
-    body: publishParams
-  });
-  const publishData = await publishRes.json();
-
-  if (publishData.error) {
-    console.error('[IG Post] Publish error:', publishData.error);
-    throw new Error(publishData.error.message);
-  }
-
-  console.log('[IG Post] Published! Media ID:', publishData.id);
-  return {
-    success: true,
-    media_id: publishData.id,
-    post_url: `https://www.instagram.com/seasaltpickles/`,
-    platform: 'instagram',
-    message: 'Posted to @seasaltpickles Instagram!'
-  };
-}
-
-// ═══ POST REEL TO INSTAGRAM ═══
-async function postInstagramReel({ caption, video_url, cover_url }) {
-  if (!IG_USER_ID) throw new Error('INSTAGRAM_BUSINESS_ID not set.');
-  if (!video_url) throw new Error('video_url required for Reels.');
-
-  const containerParams = new URLSearchParams();
-  containerParams.append('access_token', PAGE_TOKEN);
-  containerParams.append('video_url', video_url);
-  containerParams.append('media_type', 'REELS');
-  if (caption) containerParams.append('caption', caption);
-  if (cover_url) containerParams.append('cover_url', cover_url);
-
-  const containerRes = await fetch(`${GRAPH_URL}/${IG_USER_ID}/media`, {
-    method: 'POST',
-    body: containerParams
-  });
-  const containerData = await containerRes.json();
-  if (containerData.error) throw new Error(containerData.error.message);
-
-  // Wait for video processing (can take longer)
-  await waitForIGContainer(containerData.id, 30);
-
-  const publishParams = new URLSearchParams();
-  publishParams.append('access_token', PAGE_TOKEN);
-  publishParams.append('creation_id', containerData.id);
-
-  const publishRes = await fetch(`${GRAPH_URL}/${IG_USER_ID}/media_publish`, {
-    method: 'POST',
-    body: publishParams
-  });
-  const publishData = await publishRes.json();
-  if (publishData.error) throw new Error(publishData.error.message);
-
-  return {
-    success: true,
-    media_id: publishData.id,
-    platform: 'instagram',
-    message: 'Reel posted to @seasaltpickles!'
-  };
-}
-
-// ═══ POST TO BOTH FB + INSTAGRAM ═══
-async function postBoth({ message, image_url, caption }) {
-  const results = { facebook: null, instagram: null };
-
-  // Post to Facebook
-  try {
-    if (image_url) {
-      results.facebook = await postPhoto({ message, image_url });
-    } else {
-      results.facebook = await postToFacebook({ message });
-    }
-  } catch (e) {
-    results.facebook = { error: e.message };
-  }
-
-  // Post to Instagram (requires image)
-  if (image_url && IG_USER_ID) {
+  let products = PRODUCTS;
+  // Try DB products
+  if (SB_URL && SB_KEY) {
     try {
-      results.instagram = await postToInstagram({ caption: caption || message, image_url });
-    } catch (e) {
-      results.instagram = { error: e.message };
-    }
-  } else if (!image_url) {
-    results.instagram = { error: 'Instagram requires an image_url. Text-only posts not supported.' };
+      const d = await dbSelect('website_intelligence', 'brand_name=eq.Seasaltpickles&select=products&limit=1');
+      if (d?.[0]?.products) { const p = typeof d[0].products === 'string' ? JSON.parse(d[0].products) : d[0].products; if (p.length) products = p; }
+    } catch (e) {}
   }
 
-  return {
-    success: !!(results.facebook?.success || results.instagram?.success),
-    facebook: results.facebook,
-    instagram: results.instagram,
-    message: 'Posted to ' + 
-      (results.facebook?.success ? 'Facebook ✅' : 'Facebook ❌') + ' + ' +
-      (results.instagram?.success ? 'Instagram ✅' : 'Instagram ❌')
-  };
-}
+  // Avoid recent repeats
+  let recent = [];
+  if (SB_URL && SB_KEY) { try { recent = (await dbSelect('social_posts', 'ai_generated=eq.true&order=created_at.desc&limit=5&select=caption')).map(r => (r.caption || '').toLowerCase()); } catch (e) {} }
 
-// ═══ WAIT FOR IG CONTAINER PROCESSING ═══
-async function waitForIGContainer(containerId, maxAttempts = 15) {
-  for (let i = 0; i < maxAttempts; i++) {
-    const res = await fetch(`${GRAPH_URL}/${containerId}?fields=status_code,status&access_token=${PAGE_TOKEN}`);
-    const data = await res.json();
-    
-    if (data.status_code === 'FINISHED') return true;
-    if (data.status_code === 'ERROR') throw new Error('Instagram media processing failed: ' + (data.status || 'Unknown error'));
-    
-    // Wait 2 seconds before next check
-    await new Promise(resolve => setTimeout(resolve, 2000));
+  let product = products[Math.floor(Math.random() * products.length)];
+  for (let i = 0; i < 5; i++) {
+    const nm = (product.name || product.product_name || '').toString().toLowerCase();
+    if (!recent.some(c => c.includes(nm))) break;
+    product = products[Math.floor(Math.random() * products.length)];
   }
-  throw new Error('Instagram media processing timed out. Try again.');
+
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const now = new Date();
+
+  const types = [
+    { k: 'product_highlight', g: 'Mouth-watering product showcase. Highlight taste, ingredients, what makes it special.' },
+    { k: 'behind_the_scenes', g: 'Behind-the-scenes of making this. The craft, care, family tradition.' },
+    { k: 'customer_love', g: 'Write as a real customer testimonial/review. Authentic, relatable.' },
+    { k: 'recipe_tip', g: 'Quick recipe or serving suggestion. What pairs well with it?' },
+    { k: 'fun_fact', g: 'Interesting fact about pickles, ingredients, or Andhra food culture.' },
+    { k: 'seasonal', g: months[now.getMonth()] + ' seasonal post. Connect to current weather or festivals.' },
+    { k: 'health_benefit', g: 'Health benefits — probiotics, spices, traditional wellness.' },
+    { k: 'origin_story', g: 'Origin story of this pickle variety — Andhra heritage, family recipes.' }
+  ];
+  const ct = types[Math.floor(Math.random() * types.length)];
+  const pInfo = `${product.name || product.product_name || product} ${product.price ? '(' + product.price + ')' : ''} — ${product.desc || ''}`;
+
+  const prompt = `You are social media manager for "Sea Salt Pickles" (@seasaltpickles) — premium homemade Andhra-style pickles from Hyderabad. Website: seasaltpickles.com
+
+TODAY: ${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}
+PRODUCT: ${pInfo}
+STYLE: ${ct.g}
+
+Create a social media post for Instagram + Facebook. Caption 100-200 words, natural emojis, 15-20 hashtags, call to action. Must feel authentic, not AI-generated.
+
+RESPOND IN EXACT JSON (no markdown, no backticks):
+{"caption":"caption with emojis","hashtags":"#SeaSaltPickles #AndhraPickles ...","short_version":"1-2 line version","cta":"call to action","image_ideas":"2-3 ideas","content_type":"${ct.k}","product_featured":"${product.name || product.product_name || ''}"}`;
+
+  const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_KEY, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.9, maxOutputTokens: 2048 } })
+  });
+  const gd = await res.json();
+  if (gd.error) throw new Error('Gemini: ' + (gd.error.message || 'error'));
+
+  const txt = gd.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  let parsed;
+  try { parsed = JSON.parse(txt.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()); }
+  catch (e) { parsed = { caption: txt.substring(0, 500), hashtags: '#SeaSaltPickles #AndhraPickles', short_version: txt.substring(0, 100), cta: 'Order at seasaltpickles.com', image_ideas: 'Product photo', content_type: ct.k, product_featured: product.name || '' }; }
+
+  const token = 'apt_' + Date.now() + '_' + Math.random().toString(36).substring(2, 10);
+
+  if (SB_URL && SB_KEY) {
+    try { await dbInsert('social_posts', { caption: parsed.caption, hashtags: parsed.hashtags, platforms: ['facebook', 'instagram'], status: 'pending_approval', ai_generated: true, tone: parsed.content_type, short_version: parsed.short_version, cta: parsed.cta, image_ideas: parsed.image_ideas, fb_post_id: token }); } catch (e) { console.error('[DB]', e.message); }
+  }
+
+  const approveUrl = SITE_URL + '/.netlify/functions/auto-post?action=approve&token=' + token;
+  const rejectUrl = SITE_URL + '/.netlify/functions/auto-post?action=reject&token=' + token;
+
+  if (OWNER_EMAIL && RESEND_KEY) { await sendEmail(OWNER_EMAIL, parsed, approveUrl, rejectUrl, pInfo); }
+
+  return { success: true, token, post: parsed, approve_url: approveUrl, reject_url: rejectUrl, message: OWNER_EMAIL && RESEND_KEY ? 'Email sent to ' + OWNER_EMAIL : 'Click Approve to publish.' };
 }
 
-// ═══ GET INSTAGRAM FEED ═══
-async function getInstagramFeed() {
-  if (!IG_USER_ID) throw new Error('INSTAGRAM_BUSINESS_ID not set.');
+async function approvePost(token) {
+  if (!token) throw new Error('Token required');
+  const posts = await dbSelect('social_posts', 'fb_post_id=eq.' + token + '&status=eq.pending_approval&limit=1');
+  if (!posts?.length) return { success: false, message: 'Not found or already processed.' };
 
-  const url = `${GRAPH_URL}/${IG_USER_ID}/media?fields=id,caption,media_type,media_url,permalink,timestamp,like_count,comments_count&limit=20&access_token=${PAGE_TOKEN}`;
+  const post = posts[0];
+  const msg = (post.caption || '') + '\n\n' + (post.hashtags || '') + (post.cta ? '\n\n' + post.cta : '');
+  const results = [];
 
-  const res = await fetch(url);
-  const data = await res.json();
-  if (data.error) throw new Error(data.error.message);
+  if (PAGE_TOKEN && PAGE_ID) {
+    try {
+      const p = new URLSearchParams(); p.append('access_token', PAGE_TOKEN); p.append('message', msg);
+      const r = await (await fetch(GRAPH_URL + '/' + PAGE_ID + '/feed', { method: 'POST', body: p })).json();
+      results.push(r.id ? '✅ Facebook' : '❌ FB: ' + (r.error?.message || 'Failed'));
+    } catch (e) { results.push('❌ FB: ' + e.message); }
+  }
 
-  return {
-    posts: (data.data || []).map(p => ({
-      media_id: p.id,
-      caption: (p.caption || '').substring(0, 150),
-      media_type: p.media_type,
-      media_url: p.media_url || '',
-      permalink: p.permalink,
-      timestamp: p.timestamp,
-      likes: p.like_count || 0,
-      comments: p.comments_count || 0
-    })),
-    count: (data.data || []).length,
-    platform: 'instagram'
-  };
+  if (PAGE_TOKEN && IG_USER_ID && post.image_url) {
+    try {
+      const cp = new URLSearchParams(); cp.append('access_token', PAGE_TOKEN); cp.append('image_url', post.image_url); cp.append('caption', msg);
+      const cd = await (await fetch(GRAPH_URL + '/' + IG_USER_ID + '/media', { method: 'POST', body: cp })).json();
+      if (cd.id) {
+        await new Promise(r => setTimeout(r, 5000));
+        const pp = new URLSearchParams(); pp.append('access_token', PAGE_TOKEN); pp.append('creation_id', cd.id);
+        const pd = await (await fetch(GRAPH_URL + '/' + IG_USER_ID + '/media_publish', { method: 'POST', body: pp })).json();
+        results.push(pd.id ? '✅ Instagram' : '❌ IG: ' + (pd.error?.message || 'Failed'));
+      } else results.push('❌ IG: ' + (cd.error?.message || 'Failed'));
+    } catch (e) { results.push('❌ IG: ' + e.message); }
+  } else results.push('⏭️ IG skipped (no image)');
+
+  await dbUpdate('social_posts', 'id=eq.' + post.id, { status: 'published', published_at: new Date().toISOString(), fb_post_id: '' });
+
+  return { statusCode: 200, headers: { 'Content-Type': 'text/html' }, body: `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Approved</title><style>body{font-family:-apple-system,sans-serif;max-width:600px;margin:40px auto;padding:20px;background:#0a0a0a;color:#e5e5e5}.c{background:#1a1a2e;border-radius:16px;padding:30px;border:1px solid #333}.s{padding:8px 16px;border-radius:8px;margin:6px 0;font-size:14px}.ok{background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3)}.no{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3)}.sk{background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3)}</style></head><body><div class="c"><div style="font-size:24px;margin-bottom:12px">🔱 Post Approved!</div>${results.map(r => '<div class="s ' + (r.includes('✅') ? 'ok' : r.includes('⏭️') ? 'sk' : 'no') + '">' + r + '</div>').join('')}<p style="margin-top:16px;font-size:12px"><a href="${SITE_URL}" style="color:#a855f7">Open Dashboard →</a></p></div></body></html>` };
 }
 
-// ═══ GET IG MEDIA METRICS ═══
-async function getIGMediaMetrics(mediaId) {
-  if (!mediaId) throw new Error('media_id required');
+async function rejectPost(token) {
+  if (!token) throw new Error('Token required');
+  const posts = await dbSelect('social_posts', 'fb_post_id=eq.' + token + '&status=eq.pending_approval&limit=1');
+  if (!posts?.length) return { success: false, message: 'Already processed.' };
+  await dbUpdate('social_posts', 'id=eq.' + posts[0].id, { status: 'rejected', fb_post_id: '' });
+  return { statusCode: 200, headers: { 'Content-Type': 'text/html' }, body: `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Rejected</title><style>body{font-family:-apple-system,sans-serif;max-width:600px;margin:40px auto;padding:20px;background:#0a0a0a;color:#e5e5e5}.c{background:#1a1a2e;border-radius:16px;padding:30px;border:1px solid #333}</style></head><body><div class="c"><div style="font-size:24px;margin-bottom:8px">🔱 Post Rejected</div><p style="color:#888">Not published. New one tomorrow.</p><p style="font-size:12px"><a href="${SITE_URL}" style="color:#a855f7">Dashboard →</a></p></div></body></html>` };
+}
 
-  const url = `${GRAPH_URL}/${mediaId}?fields=id,caption,media_type,permalink,timestamp,like_count,comments_count,media_url&access_token=${PAGE_TOKEN}`;
-  const res = await fetch(url);
-  const data = await res.json();
-  if (data.error) throw new Error(data.error.message);
+async function getPendingPosts() {
+  if (!SB_URL || !SB_KEY) return { posts: [] };
+  return { posts: await dbSelect('social_posts', 'status=eq.pending_approval&order=created_at.desc&limit=10') };
+}
 
-  // Try to get insights
-  let insights = {};
+async function sendEmail(to, post, approveUrl, rejectUrl, productInfo) {
   try {
-    const insUrl = `${GRAPH_URL}/${mediaId}/insights?metric=impressions,reach,engagement&access_token=${PAGE_TOKEN}`;
-    const insRes = await fetch(insUrl);
-    const insData = await insRes.json();
-    if (insData.data) {
-      insData.data.forEach(m => { insights[m.name] = m.values?.[0]?.value || 0; });
-    }
-  } catch (e) { /* insights may not be available for all media */ }
-
-  return {
-    media_id: data.id,
-    caption: (data.caption || '').substring(0, 100),
-    media_type: data.media_type,
-    permalink: data.permalink,
-    likes: data.like_count || 0,
-    comments: data.comments_count || 0,
-    impressions: insights.impressions || 0,
-    reach: insights.reach || 0,
-    engagement: insights.engagement || 0
-  };
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + RESEND_KEY },
+      body: JSON.stringify({
+        from: 'SeaSalt AI <onboarding@resend.dev>', to: [to],
+        subject: '🔱 Daily Post: ' + (post.product_featured || 'New') + ' — Approve?',
+        html: '<div style="font-family:-apple-system,sans-serif;max-width:600px;margin:0 auto;background:#0a0a0a;color:#e5e5e5"><div style="background:linear-gradient(135deg,#1a1a2e,#16213e);padding:30px"><div style="font-size:24px;font-weight:800;color:#fff">🔱 SeaSalt Daily Post</div><div style="color:#888;font-size:13px">AI-Generated · Awaiting Approval</div></div><div style="padding:24px;background:#111"><div style="background:rgba(100,50,255,0.08);border:1px solid rgba(100,50,255,0.2);border-radius:12px;padding:20px;margin-bottom:16px"><b style="color:#a855f7">📝 CAPTION</b><br><br>' + (post.caption || '').replace(/\n/g, '<br>') + '</div><div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:12px;padding:16px;margin-bottom:16px"><b style="color:#3b82f6">🏷️</b> ' + (post.hashtags || '') + '</div><div style="font-size:12px;color:#666;margin-bottom:20px">📦 ' + productInfo + '</div><a href="' + approveUrl + '" style="display:inline-block;padding:14px 32px;background:#10b981;color:#fff;text-decoration:none;border-radius:10px;font-weight:700;margin-right:12px">✅ Approve</a><a href="' + rejectUrl + '" style="display:inline-block;padding:14px 28px;background:rgba(239,68,68,0.15);color:#ef4444;text-decoration:none;border-radius:10px;border:1px solid rgba(239,68,68,0.3)">❌ Reject</a></div></div>'
+      })
+    });
+  } catch (e) { console.error('[Email]', e.message); }
 }
