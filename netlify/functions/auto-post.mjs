@@ -190,22 +190,37 @@ async function generateAndPublish() {
     try {
       var fbParams = new URLSearchParams();
       fbParams.append('access_token', PAGE_TOKEN);
+      
       if (imageUrl) {
-        // Post as photo with caption
+        // Photo post - use /photos with 'message' not 'caption'
         fbParams.append('url', imageUrl);
-        fbParams.append('caption', fullMsg);
+        fbParams.append('message', fullMsg);
         var fbRes = await fetch(GRAPH_URL + '/' + PAGE_ID + '/photos', { method: 'POST', body: fbParams });
       } else {
+        // Text-only post
         fbParams.append('message', fullMsg);
         var fbRes = await fetch(GRAPH_URL + '/' + PAGE_ID + '/feed', { method: 'POST', body: fbParams });
       }
       var fbData = await fbRes.json();
+      
       if (fbData.id || fbData.post_id) {
         fbPostId = fbData.id || fbData.post_id;
         postUrl = 'https://facebook.com/' + fbPostId;
         results.push('Facebook: POSTED ✅');
       } else {
-        results.push('Facebook: FAILED ❌ ' + (fbData.error && fbData.error.message ? fbData.error.message : JSON.stringify(fbData)));
+        // If photo endpoint fails, try text-only as fallback
+        var fb2 = new URLSearchParams();
+        fb2.append('access_token', PAGE_TOKEN);
+        fb2.append('message', fullMsg);
+        var fbRes2 = await fetch(GRAPH_URL + '/' + PAGE_ID + '/feed', { method: 'POST', body: fb2 });
+        var fbData2 = await fbRes2.json();
+        if (fbData2.id) {
+          fbPostId = fbData2.id;
+          postUrl = 'https://facebook.com/' + fbData2.id;
+          results.push('Facebook: POSTED ✅ (text only)');
+        } else {
+          results.push('Facebook: FAILED ❌ ' + (fbData2.error && fbData2.error.message ? fbData2.error.message : JSON.stringify(fbData)));
+        }
       }
     } catch (e) { results.push('Facebook: ERROR ❌ ' + e.message); }
   } else {
