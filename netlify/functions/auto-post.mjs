@@ -106,7 +106,7 @@ async function doGenerate() {
   prompt += 'RESPOND IN EXACT JSON only (no markdown no backticks):\n';
   prompt += '{"caption":"caption with emojis","hashtags":"#SeaSaltPickles #AndhraPickles and more","short_version":"1-2 line version","cta":"call to action","image_ideas":"2-3 ideas","content_type":"' + ct + '","product_featured":"' + product.name + '"}';
 
-  var gRes = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_KEY, {
+  var gRes = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + GEMINI_KEY, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
