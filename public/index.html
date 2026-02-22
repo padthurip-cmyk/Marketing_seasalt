@@ -326,6 +326,7 @@ textarea.intel-input{resize:vertical;min-height:80px}select.intel-input{appearan
 <button class="btn btn-sm" style="background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:#fff;border:0" onclick="openQuickIGPost()">📸 Quick IG Post</button>
 <button class="btn btn-sm" style="background:linear-gradient(45deg,#f09433,#dc2743,#bc1888);color:#fff;border:0" onclick="pullIGFeed()">📡 Pull IG Feed</button>
 <button class="btn btn-sm" style="background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;border:0" onclick="triggerAutoPost()">⚡ Generate Daily Post</button>
+<button class="btn btn-sm" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:0" onclick="triggerSEOBlog()">📝 Generate SEO Blog</button>
 <button class="btn btn-ghost btn-sm" onclick="openConnectPlatforms()">🔗 Connect Platforms</button>
 </div>
 <div class="card" style="margin-bottom:16px"><div class="card-header"><div><div class="card-title">🔗 Connected Platforms</div><div class="card-subtitle">Connect your social media accounts to post directly</div></div></div><div id="platformsArea"></div></div>
@@ -1690,6 +1691,53 @@ async function triggerAutoPost(){
     else toast('⚠️ Check results above');
     await loadSCPosts();
   }catch(e){toast('❌ '+e.message)}
+}
+
+// ═══ SEO BLOG GENERATOR ═══
+async function triggerSEOBlog(){
+  toast('📝 Generating SEO blog post...');
+  try{
+    var r=await fetch('/.netlify/functions/auto-post',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'blog'})});
+    var txt=await r.text();
+    var d;
+    try{d=JSON.parse(txt)}catch(e){toast('❌ '+txt.substring(0,200));return}
+    var h='<div class="modal-title">📝 SEO Blog Generated!</div>';
+    if(d.error){h+='<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444;padding:12px;border-radius:8px;font-size:13px;margin-bottom:10px">❌ '+esc(d.error)+'</div>'}
+    if(d.blog){
+      h+='<div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#10b981;padding:10px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:10px">✅ Blog ready! Copy to seasaltpickles.com/blog</div>';
+      h+='<div style="background:var(--bg-elevated);border-radius:10px;padding:16px;margin-bottom:12px">';
+      h+='<div style="font-size:11px;font-weight:700;color:var(--accent-violet);margin-bottom:4px">📰 TITLE</div>';
+      h+='<div style="font-size:16px;font-weight:700;margin-bottom:12px">'+esc(d.blog.title||'')+'</div>';
+      h+='<div style="font-size:11px;font-weight:700;color:var(--accent-blue);margin-bottom:4px">🔍 META DESCRIPTION</div>';
+      h+='<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">'+esc(d.blog.meta_description||'')+'</div>';
+      h+='<div style="font-size:11px;font-weight:700;color:var(--accent-orange);margin-bottom:4px">🔗 SLUG</div>';
+      h+='<div style="font-size:12px;margin-bottom:12px">seasaltpickles.com/blog/'+esc(d.blog.slug||'')+'</div>';
+      h+='<div style="font-size:11px;font-weight:700;color:var(--accent-emerald);margin-bottom:4px">🏷️ SEO KEYWORDS</div>';
+      h+='<div style="font-size:11px;color:var(--accent-emerald);margin-bottom:12px">'+esc(d.blog.keywords||'')+'</div>';
+      if(d.blog.related_product)h+='<div style="font-size:11px;margin-bottom:8px">📦 Links to: <b>'+esc(d.blog.related_product.name||'')+'</b></div>';
+      h+='</div>';
+      // Blog content preview
+      h+='<div style="background:var(--bg-elevated);border-radius:10px;padding:16px;margin-bottom:12px;max-height:300px;overflow-y:auto">';
+      h+='<div style="font-size:11px;font-weight:700;color:var(--accent-red);margin-bottom:8px">📄 BLOG CONTENT (copy this to your website)</div>';
+      h+='<div style="font-size:12px;line-height:1.7" id="blogContentArea">'+((d.blog.content||'').substring(0,3000))+'</div>';
+      h+='</div>';
+      h+='<div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-sm" style="background:var(--accent-emerald);color:#fff;border:0" onclick="copyBlogContent()">📋 Copy Blog HTML</button><button class="btn btn-ghost btn-sm" onclick="closeModal()">Close</button></div>';
+      // Store full content for copying
+      window._blogContent=d.blog.content||'';
+      window._blogTitle=d.blog.title||'';
+    }else{
+      h+='<div style="display:flex;gap:10px;margin-top:12px"><button class="btn btn-ghost btn-sm" onclick="closeModal()">Close</button></div>';
+    }
+    showModal(h);
+    if(d.success)toast('✅ SEO blog generated!');
+    await loadSCPosts();
+  }catch(e){toast('❌ '+e.message)}
+}
+function copyBlogContent(){
+  var content='<h1>'+window._blogTitle+'</h1>\n'+(window._blogContent||'');
+  navigator.clipboard.writeText(content).then(function(){toast('📋 Blog HTML copied! Paste into seasaltpickles.com/blog')}).catch(function(){
+    var t=document.createElement('textarea');t.value=content;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);toast('📋 Copied!');
+  });
 }
 
 // ═══ QUICK FB POST ═══
