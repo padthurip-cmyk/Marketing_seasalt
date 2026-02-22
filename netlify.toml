@@ -5,6 +5,17 @@
 [functions]
   node_bundler = "esbuild"
 
+# Blog routes → blog function
+[[redirects]]
+  from = "/blog"
+  to = "/.netlify/functions/blog"
+  status = 200
+
+[[redirects]]
+  from = "/blog/*"
+  to = "/.netlify/functions/blog"
+  status = 200
+
 # Note: For daily scheduling, use Netlify UI: Functions > auto-post > Schedule
 # Or use external cron like cron-job.org to call the endpoint daily
 
