@@ -1,5 +1,5 @@
 # Netlify Configuration for SeaSalt Pickles
-# ═══ TEST MODE — triggers in ~4 minutes ═══
+# ═══ PRODUCTION ═══
 
 [build]
   publish = "public"
@@ -13,14 +13,18 @@
   node_bundler = "esbuild"
   external_node_modules = ["@netlify/functions"]
 
-# ═══ TEST SCHEDULE — fires at 15:15 UTC (10:45 AM IST) ═══
-# Change back to production times after testing!
-
+# ═══ SCHEDULED FUNCTIONS ═══
+# Regular product post → FB & Instagram at 7:00 AM IST (1:30 AM UTC)
 [functions."scheduled-social"]
-  schedule = "15 15 * * *"
+  schedule = "30 1 * * *"
 
+# Spin & Win promo post → FB & Instagram at 8:00 AM IST (2:30 AM UTC)
+[functions."scheduled-promo"]
+  schedule = "30 2 * * *"
+
+# SEO Blog post → seasaltpickles.com/blog at 7:00 PM IST (1:30 PM UTC)
 [functions."scheduled-blog"]
-  schedule = "17 15 * * *"
+  schedule = "30 13 * * *"
 
 # ═══ REDIRECTS ═══
 
@@ -42,6 +46,11 @@
 [[redirects]]
   from = "/blog/feed.xml"
   to = "/.netlify/functions/blog-feed"
+  status = 200
+
+[[redirects]]
+  from = "/video-ad"
+  to = "/.netlify/functions/scheduled-video?preview=true"
   status = 200
 
 [[redirects]]
