@@ -321,53 +321,25 @@ textarea.intel-input{resize:vertical;min-height:80px}select.intel-input{appearan
 <!-- ═══ AUTOMATION PANEL ═══ -->
 <div class="card" style="margin-bottom:16px">
 <div class="card-header"><div><div class="card-title">⚡ Automated Posting</div><div class="card-subtitle">Daily auto-posts run on schedule. Trigger manually anytime.</div></div></div>
-<table class="data-table" style="margin-bottom:0">
-<thead><tr><th>Type</th><th>Platforms</th><th>Schedule</th><th>Status</th><th>Action</th></tr></thead>
+<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">
+<thead><tr style="border-bottom:1px solid var(--border-subtle)"><th style="text-align:left;padding:10px 12px;color:var(--text-muted);font-size:11px;font-weight:600">Type</th><th style="text-align:left;padding:10px 8px;color:var(--text-muted);font-size:11px;font-weight:600">Platforms</th><th style="text-align:left;padding:10px 8px;color:var(--text-muted);font-size:11px;font-weight:600">Schedule</th><th style="text-align:left;padding:10px 8px;color:var(--text-muted);font-size:11px;font-weight:600">Status</th><th style="text-align:right;padding:10px 12px;color:var(--text-muted);font-size:11px;font-weight:600">Action</th></tr></thead>
 <tbody>
-<tr>
-<td><span style="font-weight:600">📱 Product Post</span><br><span style="font-size:11px;color:var(--text-muted)">Random product image + AI caption</span></td>
-<td><span class="badge badge-blue">Facebook</span> <span class="badge badge-violet">Instagram</span></td>
-<td><span style="font-weight:600">7:00 AM</span><br><span style="font-size:10px;color:var(--text-muted)">Daily IST</span></td>
-<td><span class="badge badge-green">● Active</span></td>
-<td><button class="btn btn-primary btn-sm" onclick="triggerScheduledSocial()" id="btnSocial">Post Now</button></td>
-</tr>
-<tr>
-<td><span style="font-weight:600">🎯 Promo Post</span><br><span style="font-size:11px;color:var(--text-muted)">Spin & Win offer + product highlight</span></td>
-<td><span class="badge badge-blue">Facebook</span> <span class="badge badge-violet">Instagram</span></td>
-<td><span style="font-weight:600">8:00 AM</span><br><span style="font-size:10px;color:var(--text-muted)">Daily IST</span></td>
-<td><span class="badge badge-green">● Active</span></td>
-<td><button class="btn btn-orange btn-sm" onclick="triggerScheduledPromo()" id="btnPromo">Post Now</button></td>
-</tr>
-<tr>
-<td><span style="font-weight:600">📝 SEO Blog</span><br><span style="font-size:11px;color:var(--text-muted)">1000+ word article → seasaltpickles.com/blog</span></td>
-<td><span class="badge badge-green">Blog</span> <span class="badge badge-amber">RSS → GBP</span></td>
-<td><span style="font-weight:600">7:00 PM</span><br><span style="font-size:10px;color:var(--text-muted)">Daily IST</span></td>
-<td><span class="badge badge-green">● Active</span></td>
-<td><button class="btn btn-emerald btn-sm" onclick="triggerScheduledBlog()" id="btnBlog">Generate Now</button></td>
-</tr>
-<tr>
-<td><span style="font-weight:600">🎬 Video Ad</span><br><span style="font-size:11px;color:var(--text-muted)">Animated promo for YouTube Shorts</span></td>
-<td><span class="badge badge-red">YouTube</span></td>
-<td><span style="font-size:11px;color:var(--text-muted)">On demand</span></td>
-<td><span class="badge badge-amber">● Preview</span></td>
-<td><button class="btn btn-blue btn-sm" onclick="window.open('/.netlify/functions/scheduled-video?preview=true','_blank')">Preview</button></td>
-</tr>
-</tbody>
-</table>
+<tr style="border-bottom:1px solid var(--border-subtle)"><td style="padding:10px 12px"><span style="font-weight:600">📱 Product Post</span><br><span style="font-size:11px;color:var(--text-muted)">Random product + AI caption</span></td><td style="padding:10px 8px"><span class="badge badge-blue" style="font-size:10px">Facebook</span> <span class="badge badge-violet" style="font-size:10px">Instagram</span></td><td style="padding:10px 8px"><strong>7:00 AM</strong><br><span style="font-size:10px;color:var(--text-muted)">Daily IST</span></td><td style="padding:10px 8px"><span class="badge badge-green" style="font-size:10px">● Active</span></td><td style="padding:10px 12px;text-align:right"><button class="btn btn-primary btn-sm" onclick="triggerScheduledSocial()" id="btnSocial">Post Now</button></td></tr>
+<tr style="border-bottom:1px solid var(--border-subtle)"><td style="padding:10px 12px"><span style="font-weight:600">🎯 Promo Post</span><br><span style="font-size:11px;color:var(--text-muted)">Spin & Win offer</span></td><td style="padding:10px 8px"><span class="badge badge-blue" style="font-size:10px">Facebook</span> <span class="badge badge-violet" style="font-size:10px">Instagram</span></td><td style="padding:10px 8px"><strong>8:00 AM</strong><br><span style="font-size:10px;color:var(--text-muted)">Daily IST</span></td><td style="padding:10px 8px"><span class="badge badge-green" style="font-size:10px">● Active</span></td><td style="padding:10px 12px;text-align:right"><button class="btn btn-sm" style="background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff;border:0" onclick="triggerScheduledPromo()" id="btnPromo">Post Now</button></td></tr>
+<tr style="border-bottom:1px solid var(--border-subtle)"><td style="padding:10px 12px"><span style="font-weight:600">📝 SEO Blog</span><br><span style="font-size:11px;color:var(--text-muted)">1000+ word article</span></td><td style="padding:10px 8px"><span class="badge badge-green" style="font-size:10px">Blog</span> <span class="badge badge-amber" style="font-size:10px">RSS→GBP</span></td><td style="padding:10px 8px"><strong>7:00 PM</strong><br><span style="font-size:10px;color:var(--text-muted)">Daily IST</span></td><td style="padding:10px 8px"><span class="badge badge-green" style="font-size:10px">● Active</span></td><td style="padding:10px 12px;text-align:right"><button class="btn btn-sm" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:0" onclick="triggerScheduledBlog()" id="btnBlog">Generate Now</button></td></tr>
+<tr><td style="padding:10px 12px"><span style="font-weight:600">🎬 Video Ad</span><br><span style="font-size:11px;color:var(--text-muted)">Animated promo</span></td><td style="padding:10px 8px"><span class="badge badge-red" style="font-size:10px">YouTube</span></td><td style="padding:10px 8px"><span style="font-size:11px;color:var(--text-muted)">On demand</span></td><td style="padding:10px 8px"><span class="badge badge-amber" style="font-size:10px">● Preview</span></td><td style="padding:10px 12px;text-align:right"><button class="btn btn-blue btn-sm" onclick="window.open('/video-ad','_blank')">Preview</button></td></tr>
+</tbody></table></div>
 </div>
-
-<!-- ═══ MANUAL TOOLS ═══ -->
-<div class="card" style="margin-bottom:16px">
-<div class="card-header"><div><div class="card-title">🛠️ Manual Tools</div><div class="card-subtitle">Create custom posts, pull feeds, manage platforms</div></div></div>
-<div style="display:flex;gap:8px;flex-wrap:wrap">
+<div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
 <button class="btn btn-violet btn-sm" onclick="openAIPostCreator()">🤖 AI Create Post</button>
 <button class="btn btn-ghost btn-sm" onclick="openManualPost()">✍️ Manual Post</button>
 <button class="btn btn-blue btn-sm" onclick="pullFBFeed()">📡 Pull FB Feed</button>
 <button class="btn btn-ghost btn-sm" onclick="openQuickFBPost()">📘 Quick FB Post</button>
-<button class="btn btn-ghost btn-sm" onclick="openQuickIGPost()">📸 Quick IG Post</button>
-<button class="btn btn-ghost btn-sm" onclick="pullIGFeed()">📡 Pull IG Feed</button>
+<button class="btn btn-sm" style="background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:#fff;border:0" onclick="openQuickIGPost()">📸 Quick IG Post</button>
+<button class="btn btn-sm" style="background:linear-gradient(45deg,#f09433,#dc2743,#bc1888);color:#fff;border:0" onclick="pullIGFeed()">📡 Pull IG Feed</button>
+<button class="btn btn-sm" style="background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;border:0" onclick="triggerAutoPost()">⚡ Generate Daily Post</button>
+<button class="btn btn-sm" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:0" onclick="triggerSEOBlog()">📝 Generate SEO Blog</button>
 <button class="btn btn-ghost btn-sm" onclick="openConnectPlatforms()">🔗 Connect Platforms</button>
-</div>
 </div>
 <div class="card" style="margin-bottom:16px"><div class="card-header"><div><div class="card-title">🔗 Connected Platforms</div><div class="card-subtitle">Connect your social media accounts to post directly</div></div></div><div id="platformsArea"></div></div>
 <div class="card" style="margin-bottom:16px;display:none" id="aiResultCard"><div class="card-header"><div><div class="card-title">🤖 AI Generated Content</div><div class="card-subtitle">Powered by Google Gemini — edit before posting</div></div><button class="btn btn-ghost btn-sm" onclick="document.getElementById('aiResultCard').style.display='none'">✕</button></div><div id="aiResultArea"></div></div>
@@ -1881,7 +1853,8 @@ function mobileGo(p,el){
   var sideItem=document.querySelector('.sidebar .nav-item[onclick*="'+p+'"]');
   if(sideItem)sideItem.classList.add('active');
 }
-// ═══ MANUAL TRIGGERS for Scheduled Functions ═══
+
+// ═══ AUTOMATION TRIGGER FUNCTIONS ═══
 
 async function triggerScheduledSocial(){
   var btn=document.getElementById('btnSocial');
@@ -1891,9 +1864,9 @@ async function triggerScheduledSocial(){
     var r=await fetch('/.netlify/functions/auto-post',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'generate'})});
     var d=await r.json();
     var h='<div class="modal-title">📱 Product Post Result</div>';
-    if(d.results){d.results.forEach(function(r){
-      var isOk=r.indexOf('POSTED')>=0;
-      h+='<div style="background:'+(isOk?'rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#10b981':'rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444')+';padding:10px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:6px">'+esc(r)+'</div>';
+    if(d.results){d.results.forEach(function(x){
+      var isOk=x.indexOf('POSTED')>=0;
+      h+='<div style="background:'+(isOk?'rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#10b981':'rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444')+';padding:10px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:6px">'+esc(x)+'</div>';
     })}
     if(d.post){
       h+='<div style="background:var(--bg-elevated);border-radius:10px;padding:16px;margin-top:12px"><div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px">CAPTION</div><div style="font-size:13px;line-height:1.6;white-space:pre-wrap">'+esc(d.post.caption||'')+'</div></div>';
@@ -1916,9 +1889,9 @@ async function triggerScheduledPromo(){
     var r=await fetch('/.netlify/functions/auto-post',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'generate'})});
     var d=await r.json();
     var h='<div class="modal-title">🎯 Promo Post Result</div>';
-    if(d.results){d.results.forEach(function(r){
-      var isOk=r.indexOf('POSTED')>=0;
-      h+='<div style="background:'+(isOk?'rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#10b981':'rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444')+';padding:10px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:6px">'+esc(r)+'</div>';
+    if(d.results){d.results.forEach(function(x){
+      var isOk=x.indexOf('POSTED')>=0;
+      h+='<div style="background:'+(isOk?'rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#10b981':'rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444')+';padding:10px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:6px">'+esc(x)+'</div>';
     })}
     if(d.post){
       h+='<div style="background:var(--bg-elevated);border-radius:10px;padding:16px;margin-top:12px"><div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px">PROMO CAPTION</div><div style="font-size:13px;line-height:1.6;white-space:pre-wrap">'+esc(d.post.caption||'')+'</div></div>';
@@ -1948,15 +1921,12 @@ async function triggerScheduledBlog(){
       h+='<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">'+esc(d.blog.meta_description||'')+'</div>';
       h+='<div style="font-size:11px;color:var(--accent-blue)">🔗 /blog/'+esc(d.blog.slug||'')+'</div>';
       h+='</div>';
-      if(d.blog.content){h+='<div style="background:var(--bg-elevated);border-radius:10px;padding:16px;max-height:200px;overflow-y:auto"><div style="font-size:12px;line-height:1.7">'+d.blog.content.substring(0,1500)+'...</div></div>';}
     }
     h+='<div style="margin-top:16px"><button class="btn btn-ghost" onclick="closeModal()">Close</button></div>';
     showModal(h);
     if(d.success)toast('✅ Blog published!');
-    await loadSCPosts();
   }catch(e){toast('❌ '+e.message)}
   btn.disabled=false;btn.textContent='Generate Now';
 }
-
 </script>
 </body></html>
