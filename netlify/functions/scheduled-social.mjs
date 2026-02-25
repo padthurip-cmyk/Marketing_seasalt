@@ -1,5 +1,8 @@
-// Scheduled Social Media Post — Runs daily at 7:00 AM IST (1:30 AM UTC)
-// Calls auto-post genPost() logic to generate + publish to Facebook/Instagram
+// ═══════════════════════════════════════════════════════════════
+// SCHEDULED-SOCIAL.MJS — Regular Daily Product Post
+// Runs: 7:00 AM IST (1:30 AM UTC) every day
+// Posts: Single product image + AI caption → Facebook & Instagram
+// ═══════════════════════════════════════════════════════════════
 import { schedule } from "@netlify/functions";
 
 var GK = process.env.GEMINI_API_KEY || '';
@@ -76,14 +79,14 @@ function parseAI(txt,ct,pn){
   return {caption:c.substring(0,500),hashtags:'#SeaSaltPickles #AndhraPickles #HomemadePickles #HyderabadFood',cta:'Order at seasaltpickles.com',content_type:ct,product_featured:pn};
 }
 
-// ═══ GENERATE + PUBLISH SOCIAL POST ═══
+// ═══ GENERATE + PUBLISH ═══
 async function genPost() {
   if (!GK) throw new Error('GEMINI_API_KEY not set');
   var prod = PRODUCTS[Math.floor(Math.random()*PRODUCTS.length)];
 
   // Avoid repeating recent products
   try {
-    var rec = await dG('social_posts','ai_generated=eq.true&order=created_at.desc&limit=5&select=caption');
+    var rec = await dG('social_posts','ai_generated=eq.true&tone=neq.spinwheel_promo&order=created_at.desc&limit=5&select=caption');
     if (rec && rec.length) {
       for (var i=0;i<8;i++) {
         var nm=(prod.n||'').toLowerCase();var u=false;
@@ -98,7 +101,6 @@ async function genPost() {
   var types=['product_highlight','behind_the_scenes','customer_love','recipe_tip','fun_fact','health_benefit','origin_story','seasonal'];
   var ct=types[Math.floor(Math.random()*types.length)];
 
-  // Use IST time for context
   var now=new Date(new Date().getTime()+5.5*60*60*1000);
   var ds=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   var ms=['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -124,13 +126,13 @@ async function genPost() {
   if(PT&&IG&&imageUrl){try{var ip=new URLSearchParams();ip.append('access_token',PT);ip.append('image_url',imageUrl);ip.append('caption',fullMsg);var ir=await fetch(G+'/'+IG+'/media',{method:'POST',body:ip});var ic=await ir.json();if(ic.id){for(var w=0;w<15;w++){await new Promise(function(r){setTimeout(r,2000)});var sr=await fetch(G+'/'+ic.id+'?fields=status_code&access_token='+PT);var sd=await sr.json();if(sd.status_code==='FINISHED'||sd.status_code==='ERROR')break}var pp=new URLSearchParams();pp.append('access_token',PT);pp.append('creation_id',ic.id);var pr=await fetch(G+'/'+IG+'/media_publish',{method:'POST',body:pp});var pd=await pr.json();if(pd.id){igId=pd.id;results.push('Instagram: POSTED ✅')}else{results.push('Instagram: PUBLISH FAILED ❌ '+(pd.error&&pd.error.message?pd.error.message:''))}}else{results.push('Instagram: CONTAINER FAILED ❌ '+(ic.error&&ic.error.message?ic.error.message:''))}}catch(e){results.push('Instagram: ERROR ❌ '+e.message)}}
 
   // Save to Supabase
-  try{await dA('social_posts',{caption:parsed.caption,hashtags:parsed.hashtags,platforms:[fbId?'facebook':'',igId?'instagram':''].filter(Boolean),status:'published',published_at:new Date().toISOString(),ai_generated:true,tone:ct,cta:parsed.cta,image_url:imageUrl,fb_post_id:fbId,ig_media_id:igId,post_url:postUrl})}catch(e){}
+  try{await dA('social_posts',{caption:parsed.caption,hashtags:parsed.hashtags,platforms:[fbId?'facebook':'',igId?'instagram':''].filter(Boolean),status:'published',published_at:new Date().toISOString(),ai_generated:true,tone:ct,cta:parsed.cta,image_url:imageUrl,fb_post_id:fbId,ig_media_id:igId,post_url:postUrl,product_featured:prod.n})}catch(e){}
 
   console.log('[Scheduled-Social] 7AM IST — Product: '+prod.n+' | Results: '+results.join(', '));
   return {success:!!(fbId||igId),post:parsed,image_url:imageUrl,product:prod.n,results:results};
 }
 
-// ═══ SCHEDULED HANDLER — runs at 7:00 AM IST (1:30 AM UTC) ═══
+// ═══ SCHEDULED HANDLER — 7:00 AM IST (1:30 AM UTC) ═══
 var handler = schedule("30 1 * * *", async (event) => {
   console.log('[Scheduled-Social] Triggered at', new Date().toISOString(), '(7 AM IST)');
   try {
