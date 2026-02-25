@@ -4,7 +4,7 @@
 // Generates: Animated HTML page (1080x1920 vertical) with spin wheel
 // Access preview: /.netlify/functions/scheduled-video?preview=true
 // ═══════════════════════════════════════════════════════════════
-import { schedule } from "@netlify/functions";
+// HTTP-only function (no schedule — video is on-demand preview)
 
 var SU = process.env.SUPABASE_URL || '';
 var SK = process.env.SUPABASE_KEY || '';
