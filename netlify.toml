@@ -9,6 +9,10 @@
 [build.environment]
   NODE_VERSION = "18"
 
+# ═══ LOCAL PLUGINS ═══
+[[plugins]]
+  package = "./plugins/inject-config"
+
 [functions]
   node_bundler = "esbuild"
   external_node_modules = ["@netlify/functions"]
