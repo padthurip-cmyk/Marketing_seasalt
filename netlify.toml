@@ -1,19 +1,29 @@
 # Netlify Configuration for SeaSalt Pickles
-# ==========================================
+# ═══ TEST MODE — triggers in ~4 minutes ═══
+
 [build]
-  # Directory where static files are located
   publish = "public"
-  
-  # Functions directory
   functions = "netlify/functions"
-  
-  # Build command (none needed for static files)
   command = "echo 'No build step required'"
 
 [build.environment]
   NODE_VERSION = "18"
 
-# Redirects for SPA routing
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["@netlify/functions"]
+
+# ═══ TEST SCHEDULE — fires at 15:15 UTC (10:45 AM IST) ═══
+# Change back to production times after testing!
+
+[functions."scheduled-social"]
+  schedule = "15 15 * * *"
+
+[functions."scheduled-blog"]
+  schedule = "17 15 * * *"
+
+# ═══ REDIRECTS ═══
+
 [[redirects]]
   from = "/admin"
   to = "/admin/index.html"
@@ -24,36 +34,33 @@
   to = "/admin/:splat"
   status = 200
 
-# API function redirects
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
 
-# Blog RSS Feed (MUST be before /blog/*)
 [[redirects]]
   from = "/blog/feed.xml"
   to = "/.netlify/functions/blog-feed"
   status = 200
 
-# Blog routes (MUST be before the catch-all)
 [[redirects]]
   from = "/blog"
-  to = "/.netlify/functions/seasalt-blog"
+  to = "/.netlify/functions/blog"
   status = 200
 
 [[redirects]]
   from = "/blog/*"
-  to = "/.netlify/functions/seasalt-blog"
+  to = "/.netlify/functions/blog"
   status = 200
 
-# SPA fallback for main app (catch-all — must be LAST)
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
 
-# Headers for security and caching
+# ═══ HEADERS ═══
+
 [[headers]]
   for = "/*"
   [headers.values]
