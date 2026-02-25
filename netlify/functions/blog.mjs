@@ -1,8 +1,8 @@
 // Blog rendering function for marketing intelligence dashboard
 // Reads blog posts from Supabase blog_posts table
 // Routes: /blog (list) and /blog/:slug (single post)
-var SU = process.env.SUPABASE_URL || '';
-var SK = process.env.SUPABASE_KEY || '';
+var SU = process.env.SUPABASE_URL || 'https://yosjbsncvghpscsrvxds.supabase.co';
+var SK = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlvc2pic25jdmdocHNjc3J2eGRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyMjc3NTgsImV4cCI6MjA4NTgwMzc1OH0.PNEbeofoyT7KdkzepRfqg-zqyBiGAat5ElCMiyQ4UAs';
 var SITE = process.env.URL || 'https://seasaltpickles.com';
 var MAIN_SITE = 'https://seasaltpickles.com';
 
