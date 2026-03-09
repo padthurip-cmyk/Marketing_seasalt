@@ -3,7 +3,7 @@
 // Runs: 7:00 AM IST (1:30 AM UTC) every day
 // Posts: Single product image + AI caption → Facebook & Instagram
 // ═══════════════════════════════════════════════════════════════
-import { schedule } from "@netlify/functions";
+// Schedule defined in netlify.toml — no npm import needed
 
 var GK = process.env.GEMINI_API_KEY || '';
 var PT = process.env.META_PAGE_TOKEN || '';
@@ -133,7 +133,7 @@ async function genPost() {
 }
 
 // ═══ SCHEDULED HANDLER — 7:00 AM IST (1:30 AM UTC) ═══
-var handler = schedule("30 1 * * *", async (event) => {
+export async function handler(event) {
   console.log('[Scheduled-Social] Triggered at', new Date().toISOString(), '(7 AM IST)');
   try {
     var result = await genPost();
@@ -143,6 +143,4 @@ var handler = schedule("30 1 * * *", async (event) => {
     console.error('[Scheduled-Social] Error:', e.message);
     return { statusCode: 500 };
   }
-});
-
-export { handler };
+}
