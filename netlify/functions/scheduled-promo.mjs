@@ -4,7 +4,7 @@
 // Posts: Promo image (5 products + spin wheel) + promo caption → FB & Instagram
 // Change PROMO_THEMES to switch campaigns (e.g. festival sale, combo deal)
 // ═══════════════════════════════════════════════════════════════
-import { schedule } from "@netlify/functions";
+// Schedule defined in netlify.toml — no npm import needed
 
 var GK = process.env.GEMINI_API_KEY || '';
 var PT = process.env.META_PAGE_TOKEN || '';
@@ -155,7 +155,7 @@ async function genPromo() {
 }
 
 // ═══ SCHEDULED HANDLER — 8:00 AM IST (2:30 AM UTC) ═══
-var handler = schedule("30 2 * * *", async (event) => {
+export async function handler(event) {
   console.log('[Scheduled-Promo] Triggered at', new Date().toISOString(), '(8 AM IST)');
   try {
     var result = await genPromo();
@@ -165,6 +165,4 @@ var handler = schedule("30 2 * * *", async (event) => {
     console.error('[Scheduled-Promo] Error:', e.message);
     return { statusCode: 500 };
   }
-});
-
-export { handler };
+}
