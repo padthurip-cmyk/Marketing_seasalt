@@ -1,246 +1,209 @@
-// Blog rendering function for marketing intelligence dashboard
-// Reads blog posts from Supabase blog_posts table
-// Routes: /blog (list) and /blog/:slug (single post)
-var SU = process.env.SUPABASE_URL || 'https://yosjbsncvghpscsrvxds.supabase.co';
-var SK = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlvc2pic25jdmdocHNjc3J2eGRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyMjc3NTgsImV4cCI6MjA4NTgwMzc1OH0.PNEbeofoyT7KdkzepRfqg-zqyBiGAat5ElCMiyQ4UAs';
+// Scheduled Blog Post — Runs daily at 7:00 PM IST (1:30 PM UTC)
+// Generates SEO blog via Gemini and publishes to Supabase blog_posts table
+// Schedule defined in netlify.toml — no npm import needed
+
+var GK = process.env.GEMINI_API_KEY || '';
+var SU = process.env.SUPABASE_URL || '';
+var SK = process.env.SUPABASE_KEY || '';
 var SITE = process.env.URL || 'https://seasaltpickles.com';
-var MAIN_SITE = 'https://seasaltpickles.com';
+var W = 'https://static.wixstatic.com/media/';
 
-function sH() { return { 'apikey': SK, 'Authorization': 'Bearer ' + SK }; }
+function sH(p){var h={'Content-Type':'application/json',apikey:SK,Authorization:'Bearer '+SK};if(p)h.Prefer=p;return h}
+async function dG(t,q){if(!SU)return[];return(await fetch(SU+'/rest/v1/'+t+'?'+q,{headers:sH()})).json()}
+async function dA(t,r){if(!SU)return null;return(await fetch(SU+'/rest/v1/'+t,{method:'POST',headers:sH('return=representation'),body:JSON.stringify(r)})).json()}
+function im(f){return W+f+'/v1/fill/w_1080,h_1080,al_c,q_85,enc_auto/'+f}
 
-export var handler = async function(event) {
-  var slug = (event.path || '').replace(/^\/blog\/?/, '').replace(/^\.netlify\/functions\/blog\/?/, '').replace(/\/$/, '');
-  var H = { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=1800' };
+// ═══ ALL 35 PRODUCTS ═══
+var PRODUCTS=[
+{n:'Dry Fruit Laddu',p:350,d:'Wholesome energy-packed sweet with almonds, cashews, dates, pumpkin seeds.',c:'Sweets & Snacks',i:'163af4_e6a395f4ac2549f5a77ad25f2ec23b60~mv2.jpg',s:'dry-fruit-laddu'},
+{n:'Turmeric Powder',p:125,d:'Pure sun-dried turmeric, rich in curcumin. Golden hue, warm flavor.',c:'Masalas & Karam Podis',i:'163af4_76e4b86c589c416fb6d30ecdf540fd66~mv2.jpg',s:'turmeric-powder'},
+{n:'Kura Karam',p:300,d:'Sun-dried red chillies finely ground. Bold flavor, vibrant color.',c:'Masalas & Karam Podis',i:'163af4_a97d93f9ec1a4dfb95de4954b433d257~mv2.jpg',s:'kura-karam'},
+{n:'Mutton Kheema Pickle',p:1000,d:'Finely minced tender mutton slow-cooked in Andhra masala.',c:'Non Veg Pickles',i:'53b0e3_3be3a6d6eeb44946828b9b967a645931~mv2.jpg',s:'mutton-kheema-pickle'},
+{n:'Gongura Prawns',p:850,d:'Fresh succulent prawns with tangy gongura leaves.',c:'Non Veg Pickles',i:'53b0e3_6a2ee4df6cfe45bfa571742350b0a551~mv2.png',s:'gongura-prawns'},
+{n:'Gongura Chicken Boneless',p:630,d:'Tender boneless chicken with gongura, traditional spices.',c:'Non Veg Pickles',i:'53b0e3_99a38423b54b4327828de1ef6b257a46~mv2.png',s:'gongura-chicken-boneless'},
+{n:'Flax Seeds Laddu',p:220,d:'Roasted flax seeds, sesame, jaggery, ghee. Rich in omega-3.',c:'Sweets & Snacks',i:'163af4_9b4713713ca44be29f4b3cedd665d38c~mv2.jpg',s:'flax-seeds-laddu'},
+{n:'Janthikalu',p:150,d:'Crispy golden spirals of rice flour, gram flour, butter, spices.',c:'Sweets & Snacks',i:'163af4_a2137bc79ea74d20af5fd90b82f88e3b~mv2.jpg',s:'janthikalu'},
+{n:'Chekkalu - Sago',p:170,d:'Rice flour crackers with sago, green chilli masala.',c:'Sweets & Snacks',i:'163af4_281785428c1a4f1ebb5821acf8cbd370~mv2.jpg',s:'chekkalu-sago'},
+{n:'Chekkalu',p:150,d:'Peanut chekkalu with curry leaves, just the right spice.',c:'Sweets & Snacks',i:'163af4_ba68548805f943cb9e2e8f6fc31f57f3~mv2.jpg',s:'chekkalu'},
+{n:'Munagaaku Karam',p:80,d:'Drumstick leaves podi with roasted lentils, chillies.',c:'Masalas & Karam Podis',i:'163af4_8e4278b579364734ba7ff3650898bcf8~mv2.jpg',s:'munagaaku-karam'},
+{n:'Pudina Karam',p:80,d:'Mint leaf podi with roasted lentils, garlic.',c:'Masalas & Karam Podis',i:'163af4_625bd2ee00b7403aa27e238f8f270290~mv2.jpg',s:'pudina-karam'},
+{n:'Karivepaku Karam',p:80,d:'Curry leaf chutney powder with lentils, garlic.',c:'Masalas & Karam Podis',i:'163af4_1f3cc39a9ba543ed881feb8ae3a27ce0~mv2.jpg',s:'karivepaku-karam'},
+{n:'Chicken + Coriander Combo',p:800,d:'500g Chicken Bone Pickle + 500g Coriander Pickle.',c:'Combos',i:'163af4_7dc576230bc64852b4861a7bcb77015c~mv2.jpg',s:'chicken-coriander'},
+{n:'Avakaya + Tomato Combo',p:550,d:'500g Avakaya + 500g Tomato. Perfect veg pickle duo.',c:'Combos',i:'163af4_a5be29aba0f7461583b94fe4daa4f830~mv2.jpg',s:'avakaya-tomato'},
+{n:'Kakarakaya Karam',p:80,d:'Sun-dried bitter gourd podi with lentils.',c:'Masalas & Karam Podis',i:'163af4_058b8624a4a0474e973d90b19e119a1a~mv2.jpg',s:'kakarakaya-karam'},
+{n:'Nalla Karam',p:80,d:'Roasted lentils, dry red chillies, garlic, sesame seeds.',c:'Masalas & Karam Podis',i:'163af4_b1dc36c9300848e8b343b93fb28488c3~mv2.jpg',s:'nalla-karam'},
+{n:'Garam Masala',p:80,d:'Warm aromatic spice blend — cumin, coriander, cardamom.',c:'Masalas & Karam Podis',i:'163af4_02d29cde3ae1441fb01b32dcde60046f~mv2.jpg',s:'garam-masala'},
+{n:'Pandu Mirchi Pachadi',p:300,d:'Fiery red chilli pickle — traditional Andhra condiment.',c:'Vegetarian Pickles',i:'53b0e3_1383b71f1c1541f78e702c5364c59f09~mv2.jpg',s:'pandu-mirchi-pachadi'},
+{n:'Biryani Masala',p:200,d:'Black Biryani Masala — whole spices slow-roasted and ground.',c:'Masalas & Karam Podis',i:'163af4_7f81a30887664bba8fc94f652c1dd5e1~mv2.jpg',s:'biryani-masala'},
+{n:'Kara Podi',p:80,d:'Idli Podi / Karam Podi — flavorful spice powder.',c:'Masalas & Karam Podis',i:'163af4_a2bfe3454c4e456cb2b6aedc429a3484~mv2.jpg',s:'kara-podi'},
+{n:'Chicken Pickle Boneless',p:630,d:'Finest boneless chicken marinated in aromatic spices.',c:'Non Veg Pickles',i:'53b0e3_bd4b8d8643724c3dbbded34896cc40c4~mv2.jpg',s:'chicken-pickle-boneless'},
+{n:'Gongura Nilva Pachadi',p:330,d:'Tangy gongura leaves with aromatic spices.',c:'Vegetarian Pickles',i:'53b0e3_d3504025073140cab435c56935e0a2ef~mv2.jpg',s:'gongura-nilva-pachadi'},
+{n:'Chicken Pickle with Bone',p:540,d:'Hand-picked chicken pieces, aromatic spices.',c:'Non Veg Pickles',i:'53b0e3_4a25ae4fca044360a5317828d4bf9dc3~mv2.jpg',s:'chicken-pickle-bone'},
+{n:'Coriander Nilva Pachadi',p:330,d:'Fresh coriander leaves pickle — refreshing, tangy.',c:'Vegetarian Pickles',i:'53b0e3_df7b35b3764a4fb0888e24e5e0e7facb~mv2.jpg',s:'coriander-nilva-pachadi'},
+{n:'Dhaniyala Maagaya',p:330,d:'Tangy mangoes with aromatic coriander.',c:'Vegetarian Pickles',i:'53b0e3_44f8a3dc204f49c781d426335bf62ad8~mv2.jpg',s:'dhaniyala-maagaya'},
+{n:'Amla Patchadi',p:330,d:'Hand-picked amla fruits with aromatic spices.',c:'Vegetarian Pickles',i:'163af4_23da098b073749529dca236bbdb68880~mv2.jpg',s:'amla-patchadi'},
+{n:'Ginger Pickle',p:330,d:'Fiery tangy ginger pickle — hand-picked ginger roots.',c:'Vegetarian Pickles',i:'53b0e3_fd749ebdc8b345a0843acca96e7f6114~mv2.jpg',s:'ginger-pickle'},
+{n:'Avakaya',p:330,d:'Authentic homemade Avakaya — hand-picked mangoes, herbs.',c:'Vegetarian Pickles',i:'163af4_58038c71b77b4b8eae82c58c8e4f9b5c~mv2.jpg',s:'avakaya'},
+{n:'Prawn Pickle',p:800,d:'Hand-picked prawns marinated in aromatic spices.',c:'Non Veg Pickles',i:'53b0e3_52f7a2f8bf9b4e95975f93aa19b63c26~mv2.jpg',s:'prawn-pickle'},
+{n:'Tomato Pickle',p:300,d:'Green chilies and ripe tomatoes — tangy, spicy, sweet.',c:'Vegetarian Pickles',i:'53b0e3_315289d09db24d65a1b33ecab2a2a8e9~mv2.jpg',s:'tomato-pickle'},
+{n:'Mint Pickle',p:330,d:'Fresh mint leaves, aromatic spices, tangy goodness.',c:'Vegetarian Pickles',i:'53b0e3_f21bc86babaf464dbf6d199bdaa3de15~mv2.jpg',s:'mint-pickle'},
+{n:'Maagaya',p:330,d:'Authentic mango pickle — hand-picked mangoes, herbs.',c:'Vegetarian Pickles',i:'53b0e3_ad2fb569d13446b8a80e30ec17ec1c2d~mv2.jpg',s:'maagaya'},
+{n:'Lemon Pickle',p:330,d:'Hand-picked lemons — tangy, spicy traditional condiment.',c:'Vegetarian Pickles',i:'163af4_4b0acd7a2e6048bd8f740d24f8f33a6a~mv2.jpg',s:'lemon-pickle'},
+{n:'Mixed Vegetable Avakaya',p:300,d:'Carrots, tindora, cauliflower, mango — sour and spicy.',c:'Vegetarian Pickles',i:'53b0e3_cf6497e892ba4f1b9ecc11129f7b6325~mv2.jpg',s:'mixed-vegetable-avakaya'}
+];
 
-  if (!SU || !SK) {
-    return { statusCode: 200, headers: H, body: errorPage('Supabase not configured. Set SUPABASE_URL and SUPABASE_KEY environment variables in Netlify.') };
-  }
+// ═══ 25 SEO BLOG TOPICS ═══
+var TOPICS=[
+{f:'avakaya pickle recipe authentic andhra',k:'avakaya pickle,mango pickle recipe,andhra avakaya,telugu pickle,raw mango pickle,avakaya pachadi'},
+{f:'health benefits of Indian pickles probiotics',k:'pickle health benefits,probiotics in pickles,fermented food benefits,gut health pickles,indian pickle nutrition'},
+{f:'gongura pickle recipe roselle leaves',k:'gongura pickle,roselle leaf pickle,andhra gongura,sorrel leaf recipe,gongura chicken'},
+{f:'best Indian pickles to buy online',k:'buy pickles online india,homemade pickles delivery,andhra pickles online,authentic pickle shop'},
+{f:'chicken pickle recipe andhra style spicy',k:'chicken pickle,non veg pickle recipe,andhra chicken pickle,spicy chicken pickle,boneless chicken pickle'},
+{f:'types of Indian pickles regional guide',k:'indian pickle varieties,achar types,regional pickles india,south indian pickles,telugu pickles'},
+{f:'turmeric powder benefits uses cooking',k:'turmeric benefits,haldi uses,anti inflammatory spices,organic turmeric,curcumin health'},
+{f:'moringa drumstick leaves health superfood',k:'moringa benefits,drumstick leaves,munagaku uses,superfood india,moringa powder nutrition'},
+{f:'traditional telugu snacks chekkalu janthikalu',k:'chekkalu recipe,janthikalu,telugu snacks,andhra snacks,rice crackers south indian'},
+{f:'prawn pickle coastal andhra recipe',k:'prawn pickle,shrimp pickle recipe,seafood pickle,coastal andhra food,gongura prawns'},
+{f:'how to store homemade pickles preserve',k:'pickle storage tips,preserve pickles,pickle shelf life,homemade pickle care,pickle making tips'},
+{f:'biryani masala powder recipe homemade',k:'biryani masala,hyderabadi biryani spice,biryani seasoning,garam masala biryani,authentic biryani recipe'},
+{f:'dry fruit laddu healthy Indian sweets',k:'dry fruit laddu,healthy laddu,sugar free sweets,nutritious indian sweets,flax seed laddu'},
+{f:'andhra food culture cuisine traditions',k:'andhra pradesh cuisine,telugu food,south indian food culture,hyderabad food,andhra cooking traditions'},
+{f:'pickle making process traditional methods',k:'how pickles are made,pickle fermentation,traditional pickle making,homemade achar,sea salt pickling'},
+{f:'best pickle combinations with Indian food',k:'pickle with rice,pickle pairing,best condiments,indian pickle serving ideas,pickle and biryani'},
+{f:'amla pickle gooseberry health benefits',k:'amla pickle,gooseberry pickle,usirikaya pachadi,vitamin c pickle,amla health benefits'},
+{f:'homemade vs commercial pickles comparison',k:'homemade vs store pickles,preservative free pickles,natural pickle,chemical free pickle,organic pickle'},
+{f:'karam podi idli podi recipe uses',k:'karam podi,idli podi recipe,gun powder chutney,spice powder south indian,dosa podi'},
+{f:'food gift ideas Indian festivals diwali',k:'food gift hamper india,pickle gift box,diwali food gifts,andhra food gifts,festival gifting'},
+{f:'mutton pickle recipe traditional andhra',k:'mutton pickle,non veg pickle,kheema pickle,andhra mutton pickle,telugu mutton achar'},
+{f:'curry leaf benefits karivepaku uses',k:'curry leaf benefits,karivepaku karam,curry leaf podi,curry leaves nutrition,south indian herbs'},
+{f:'mint pudina health benefits recipes',k:'mint benefits,pudina uses,pudina karam,mint pickle,fresh mint recipes'},
+{f:'ginger pickle benefits ayurvedic remedy',k:'ginger pickle,ginger health benefits,ayurvedic pickle,immunity boosting foods,ginger remedy'},
+{f:'lemon pickle recipe indian preservation',k:'lemon pickle,nimbu achar,lemon preservation,citrus pickle recipe,vitamin c condiment'}
+];
 
-  // Blog listing
-  if (!slug) {
-    try {
-      var res = await fetch(SU + '/rest/v1/blog_posts?status=eq.published&order=published_at.desc&limit=50&select=title,slug,excerpt,meta_description,image_url,published_at,keywords,product_name', { headers: sH() });
-      if (!res.ok) {
-        var errText = await res.text();
-        return { statusCode: 200, headers: H, body: errorPage('Supabase error: ' + res.status + ' — ' + errText.substring(0, 200) + '. Make sure the blog_posts table exists (run the SQL setup).') };
-      }
-      var posts = await res.json();
-      return { statusCode: 200, headers: H, body: listPage(posts) };
-    } catch (e) {
-      return { statusCode: 200, headers: H, body: errorPage('Failed to fetch blog posts: ' + e.message) };
-    }
-  }
-
-  // Single post
-  try {
-    var res = await fetch(SU + '/rest/v1/blog_posts?slug=eq.' + encodeURIComponent(slug) + '&limit=1', { headers: sH() });
-    if (!res.ok) return { statusCode: 200, headers: H, body: errorPage('Supabase error fetching post') };
-    var posts = await res.json();
-    if (posts && posts.length > 0) return { statusCode: 200, headers: H, body: postPage(posts[0]) };
-    return { statusCode: 404, headers: H, body: notFound(slug) };
-  } catch (e) {
-    return { statusCode: 500, headers: H, body: errorPage('Error: ' + e.message) };
-  }
-};
-
-function esc(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-
-function head(title, desc, extra) {
-  return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-    + '<title>' + esc(title) + '</title>'
-    + '<meta name="description" content="' + esc(desc) + '">'
-    + '<link rel="icon" href="/favicon.ico">'
-    + '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-    + '<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">'
-    + (extra || '')
-    + '<style>' + css() + '</style></head>';
-}
-
-function nav() {
-  return '<header><div class="wrap"><a href="' + MAIN_SITE + '" class="logo"><span class="logo-icon">\uD83E\uDED9</span> SeaSalt Pickles</a>'
-    + '<nav><a href="' + MAIN_SITE + '">Home</a><a href="/blog" class="active">Blog</a><a href="' + MAIN_SITE + '">Shop</a></nav>'
-    + '</div></header>';
-}
-
-function footer() {
-  return '<footer><div class="wrap"><div class="f-grid"><div><h4>\uD83E\uDED9 SeaSalt Pickles</h4><p>Premium homemade Andhra pickles, masalas & snacks from Hyderabad. 100% natural, no preservatives.</p></div>'
-    + '<div><h4>Shop</h4><a href="' + MAIN_SITE + '">All Products</a><a href="' + MAIN_SITE + '">Non Veg Pickles</a><a href="' + MAIN_SITE + '">Veg Pickles</a><a href="' + MAIN_SITE + '">Masalas</a></div>'
-    + '<div><h4>Connect</h4><a href="https://instagram.com/seasaltpickles" target="_blank">Instagram</a><a href="https://wa.me/918096203122" target="_blank">WhatsApp</a><a href="mailto:seasaltpickles@gmail.com">Email</a></div></div>'
-    + '<div class="f-bottom"><p>&copy; ' + new Date().getFullYear() + ' SeaSalt Pickles. All rights reserved.</p></div></div></footer>';
-}
-
-function listPage(posts) {
-  var cards = '';
-  for (var i = 0; i < posts.length; i++) {
-    var p = posts[i];
-    var date = p.published_at ? new Date(p.published_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
-    cards += '<article class="card"><a href="/blog/' + esc(p.slug) + '">';
-    if (p.image_url) cards += '<div class="card-img"><img src="' + esc(p.image_url) + '" alt="' + esc(p.title) + '" loading="lazy"></div>';
-    cards += '<div class="card-body"><h2>' + esc(p.title) + '</h2>';
-    cards += '<p class="excerpt">' + esc(p.excerpt || p.meta_description || '') + '</p>';
-    var meta = '<time>' + date + '</time>';
-    if (p.product_name) meta += '<span class="tag">\uD83E\uDED9 ' + esc(p.product_name) + '</span>';
-    cards += '<div class="meta">' + meta + '</div>';
-    cards += '</div></a></article>';
-  }
-  if (!cards) cards = '<div class="empty"><div class="empty-icon">\uD83D\uDCDD</div><h3>No blog posts yet</h3><p>Use the <strong>Generate SEO Blog</strong> button in the Intelligence Dashboard to create your first blog post.</p></div>';
-
-  return head('Blog | SeaSalt Pickles \u2014 Recipes, Health Tips & Food Stories',
-    'Discover authentic Andhra pickle recipes, health benefits, food stories and cooking tips from SeaSalt Pickles, Hyderabad.',
-    '<meta property="og:title" content="SeaSalt Pickles Blog"><meta property="og:type" content="website"><meta property="og:url" content="' + SITE + '/blog"><link rel="canonical" href="' + SITE + '/blog">')
-    + '<body>' + nav()
-    + '<main class="wrap"><div class="hero-blog"><h1>Our Blog</h1><p>Recipes, health tips, food stories & more from the world of authentic Andhra pickles</p>'
-    + '<div class="post-count">' + posts.length + ' article' + (posts.length !== 1 ? 's' : '') + '</div></div>'
-    + '<div class="grid">' + cards + '</div></main>' + footer() + '</body></html>';
-}
-
-function postPage(post) {
-  var date = post.published_at ? new Date(post.published_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
-  var schema = JSON.stringify({
-    "@context": "https://schema.org", "@type": "BlogPosting",
-    "headline": post.title, "description": post.meta_description || post.excerpt || '',
-    "image": post.image_url || '', "datePublished": post.published_at || '',
-    "author": { "@type": "Organization", "name": "SeaSalt Pickles", "url": MAIN_SITE },
-    "publisher": { "@type": "Organization", "name": "SeaSalt Pickles" }
+// ═══ HELPERS ═══
+async function callGemini(prompt){
+  var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+GK,{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.85,maxOutputTokens:8192}})
   });
+  var d=await r.json();
+  if(d.error)throw new Error('Gemini: '+(d.error.message||'error'));
+  var txt='';
+  try{var parts=d.candidates[0].content.parts;for(var i=0;i<parts.length;i++){if(parts[i].text&&!parts[i].thought){txt=parts[i].text;break}}if(!txt&&parts.length>0)txt=parts[parts.length-1].text||''}catch(e){throw new Error('Gemini parse error')}
+  return txt;
+}
 
-  // FAQ schema
-  var faqSchema = '';
-  if (post.content && post.content.indexOf('FAQ') >= 0) {
-    var faqItems = [];
-    var qs = (post.content || '').match(/<h3[^>]*>(.*?)<\/h3>\s*<p>([\s\S]*?)<\/p>/gi);
-    if (qs) {
-      for (var i = 0; i < qs.length && i < 5; i++) {
-        var qMatch = qs[i].match(/<h3[^>]*>(.*?)<\/h3>/i);
-        var aMatch = qs[i].match(/<\/h3>\s*<p>([\s\S]*?)<\/p>/i);
-        if (qMatch && aMatch) faqItems.push({ "@type": "Question", "name": qMatch[1].replace(/<[^>]*>/g, ''), "acceptedAnswer": { "@type": "Answer", "text": aMatch[1].replace(/<[^>]*>/g, '') } });
+function parseAI(txt,ct,pn){
+  var c=txt.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+  if(c.indexOf('<think>')>=0)c=c.replace(/<think>[\s\S]*?<\/think>/g,'').trim();
+  var m=c.match(/\{[\s\S]*\}/);
+  if(m){try{return JSON.parse(m[0])}catch(e){}}
+  return {caption:c.substring(0,500),hashtags:'#SeaSaltPickles #AndhraPickles',cta:'seasaltpickles.com',content_type:ct,product_featured:pn};
+}
+
+// ═══ GENERATE SEO BLOG ═══
+async function genBlog() {
+  if (!GK) throw new Error('GEMINI_API_KEY not set');
+
+  // Pick a topic, avoid repeats
+  var topic = TOPICS[Math.floor(Math.random()*TOPICS.length)];
+  try {
+    var rb = await dG('blog_posts','order=created_at.desc&limit=10&select=slug');
+    if (rb && rb.length) {
+      for(var i=0;i<10;i++){
+        var u=false;
+        var ts=topic.f.split(' ')[0].toLowerCase();
+        for(var j=0;j<rb.length;j++){if((rb[j].slug||'').toLowerCase().indexOf(ts)>=0){u=true;break}}
+        if(!u)break;
+        topic=TOPICS[Math.floor(Math.random()*TOPICS.length)];
       }
     }
-    if (faqItems.length > 0) faqSchema = '<script type="application/ld+json">' + JSON.stringify({ "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": faqItems }) + '</script>';
-  }
+  } catch(e){}
 
-  // Keywords as tags
-  var tagsHtml = '';
-  if (post.keywords) {
-    var kws = post.keywords.split(',');
-    tagsHtml = '<div class="tags">';
-    for (var i = 0; i < kws.length; i++) {
-      tagsHtml += '<span class="tag">' + esc(kws[i].trim()) + '</span>';
+  var prod = PRODUCTS[Math.floor(Math.random()*PRODUCTS.length)];
+
+  var bp='You are an expert SEO content writer for Sea Salt Pickles (seasaltpickles.com) — premium homemade Andhra pickle, masala & snack brand from Hyderabad.\n\n';
+  bp+='Write a COMPREHENSIVE SEO blog post.\nTOPIC: "'+topic.f+'"\nTARGET KEYWORDS: '+topic.k+'\nRELATED PRODUCT: '+prod.n+' (Rs.'+prod.p+') at seasaltpickles.com\n\n';
+  bp+='REQUIREMENTS:\n';
+  bp+='- Title: SEO-optimized, 50-60 chars, primary keyword near start\n';
+  bp+='- Meta description: 150-160 chars for Google snippet\n';
+  bp+='- Length: 1000-1500 words with H2 and H3 headings in HTML\n';
+  bp+='- Use target keywords naturally 5-8 times\n';
+  bp+='- Include internal link to seasaltpickles.com\n';
+  bp+='- FAQ section: 4 questions with concise answers\n';
+  bp+='- End with CTA to shop at seasaltpickles.com\n';
+  bp+='- Tone: Informative, warm, authoritative\n\n';
+  bp+='RESPOND ONLY WITH JSON:\n{"title":"SEO title","meta_description":"150 char meta","slug":"url-slug-here","content":"<h2>...</h2><p>...</p>...full HTML","excerpt":"2-3 sentence summary","keywords":"kw1,kw2,kw3","word_count":1200}';
+
+  var ai = await callGemini(bp);
+  var blog = parseAI(ai,'seo_blog',topic.f);
+
+  // Ensure slug
+  if (!blog.slug) blog.slug = topic.f.replace(/[^a-z0-9]+/gi,'-').toLowerCase().substring(0,60);
+
+  // Add date suffix to prevent duplicates
+  var dateSuffix = new Date().toISOString().split('T')[0]; // e.g., 2026-02-25
+  var finalSlug = blog.slug;
+
+  // Check if slug already exists
+  try {
+    var existing = await dG('blog_posts','slug=eq.'+encodeURIComponent(finalSlug)+'&select=id');
+    if (existing && existing.length > 0) {
+      finalSlug = blog.slug + '-' + dateSuffix;
     }
-    tagsHtml += '</div>';
+  } catch(e){}
+
+  // Save to blog_posts table (published immediately on seasaltpickles.com/blog)
+  try {
+    await dA('blog_posts',{
+      title: blog.title || topic.f,
+      slug: finalSlug,
+      content: blog.content || '',
+      excerpt: blog.excerpt || blog.meta_description || '',
+      meta_description: blog.meta_description || '',
+      keywords: blog.keywords || topic.k,
+      image_url: im(prod.i),
+      product_name: prod.n,
+      product_slug: prod.s,
+      status: 'published',
+      created_at: new Date().toISOString(),
+      published_at: new Date().toISOString()
+    });
+  } catch(e){ console.error('[Scheduled-Blog] Save blog_posts error:', e.message); }
+
+  // Also save to social_posts for dashboard tracking
+  try {
+    await dA('social_posts',{
+      caption: '📝 Blog: '+(blog.title||topic.f),
+      hashtags: (blog.keywords||topic.k).split(',').map(function(k){return '#'+k.trim().replace(/\s+/g,'')}).join(' '),
+      platforms: ['blog'],
+      status: 'published',
+      published_at: new Date().toISOString(),
+      ai_generated: true,
+      tone: 'seo_blog',
+      cta: 'https://seasaltpickles.com/blog/'+finalSlug,
+      image_url: im(prod.i)
+    });
+  } catch(e){}
+
+  console.log('[Scheduled-Blog] 7PM IST — Published: '+finalSlug+' | Topic: '+topic.f);
+  return {
+    success: true,
+    blog: { title: blog.title, slug: finalSlug, keywords: blog.keywords },
+    message: 'Blog published at seasaltpickles.com/blog/'+finalSlug
+  };
+}
+
+// ═══ SCHEDULED HANDLER — runs at 7:00 PM IST (1:30 PM UTC) ═══
+export async function handler(event) {
+  console.log('[Scheduled-Blog] Triggered at', new Date().toISOString(), '(7 PM IST)');
+  try {
+    var result = await genBlog();
+    console.log('[Scheduled-Blog] Done:', result.message);
+    return { statusCode: 200 };
+  } catch(e) {
+    console.error('[Scheduled-Blog] Error:', e.message);
+    return { statusCode: 500 };
   }
-
-  return head(post.title + ' | SeaSalt Pickles Blog', post.meta_description || post.excerpt || '',
-    '<meta name="keywords" content="' + esc(post.keywords || '') + '">'
-    + '<meta property="og:title" content="' + esc(post.title) + '">'
-    + '<meta property="og:description" content="' + esc(post.meta_description || '') + '">'
-    + '<meta property="og:image" content="' + esc(post.image_url || '') + '">'
-    + '<meta property="og:type" content="article">'
-    + '<meta property="og:url" content="' + SITE + '/blog/' + esc(post.slug) + '">'
-    + '<link rel="canonical" href="' + SITE + '/blog/' + esc(post.slug) + '">'
-    + '<script type="application/ld+json">' + schema + '</script>'
-    + faqSchema)
-    + '<body>' + nav()
-    + '<main class="wrap"><article class="post">'
-    + '<div class="post-nav"><a href="/blog">\u2190 All Posts</a><time>' + date + '</time></div>'
-    + '<h1>' + esc(post.title) + '</h1>'
-    + (post.image_url ? '<img src="' + esc(post.image_url) + '" alt="' + esc(post.title) + '" class="hero-img">' : '')
-    + '<div class="content">' + (post.content || '') + '</div>'
-    + tagsHtml
-    + (post.product_name ? '<div class="cta-box"><h3>\uD83D\uDED2 Try Our ' + esc(post.product_name) + '</h3><p>Authentic, homemade, no preservatives. Crafted with love in Hyderabad.</p><a href="' + MAIN_SITE + '" class="cta-btn">Shop Now at seasaltpickles.com \u2192</a></div>' : '')
-    + '</article></main>' + footer() + '</body></html>';
-}
-
-function notFound(slug) {
-  return head('Not Found | SeaSalt Pickles', '')
-    + '<body>' + nav()
-    + '<main class="wrap" style="text-align:center;padding:80px 20px">'
-    + '<div style="font-size:4rem;margin-bottom:16px;">\uD83D\uDD0D</div>'
-    + '<h1 style="font-size:2rem;margin-bottom:12px;">Post Not Found</h1>'
-    + '<p style="color:#666;margin-bottom:24px;">The blog post "' + esc(slug) + '" doesn\'t exist or may have been removed.</p>'
-    + '<a href="/blog" class="cta-btn">\u2190 Back to Blog</a></main>'
-    + footer() + '</body></html>';
-}
-
-function errorPage(msg) {
-  return head('Blog Setup | SeaSalt Pickles', '')
-    + '<body>' + nav()
-    + '<main class="wrap" style="text-align:center;padding:60px 20px">'
-    + '<div style="font-size:3rem;margin-bottom:16px;">\u26A0\uFE0F</div>'
-    + '<h1 style="font-size:1.5rem;margin-bottom:12px;">Blog Setup Required</h1>'
-    + '<div style="background:#fef3c7;border:1px solid #fbbf24;border-radius:12px;padding:20px;max-width:600px;margin:0 auto 24px;text-align:left;font-size:0.9rem;color:#92400e;">'
-    + '<p style="margin-bottom:12px;"><strong>Issue:</strong> ' + esc(msg) + '</p>'
-    + '<p style="margin-bottom:8px;"><strong>Setup Steps:</strong></p>'
-    + '<ol style="padding-left:20px;line-height:1.8;">'
-    + '<li>Run the <code>create-blog-table.sql</code> in Supabase SQL Editor</li>'
-    + '<li>Set <code>SUPABASE_URL</code> and <code>SUPABASE_KEY</code> in Netlify environment variables</li>'
-    + '<li>Redeploy the site</li>'
-    + '<li>Use "Generate SEO Blog" button in the dashboard to create posts</li>'
-    + '</ol></div>'
-    + '<a href="/" class="cta-btn">\u2190 Back to Dashboard</a></main>'
-    + footer() + '</body></html>';
-}
-
-function css() {
-  return '*{margin:0;padding:0;box-sizing:border-box}'
-    + 'body{font-family:Outfit,-apple-system,BlinkMacSystemFont,sans-serif;color:#1a1a2e;line-height:1.7;background:#fff}'
-    + '.wrap{max-width:960px;margin:0 auto;padding:0 20px}'
-    // Header
-    + 'header{background:linear-gradient(135deg,#1a1a2e,#16213e);padding:14px 0;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.15)}'
-    + 'header .wrap{display:flex;align-items:center;justify-content:space-between}'
-    + '.logo{color:#fff;text-decoration:none;font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px}'
-    + '.logo-icon{font-size:22px}'
-    + 'nav a{color:rgba(255,255,255,.6);text-decoration:none;margin-left:28px;font-size:14px;font-weight:500;transition:.2s}nav a:hover,nav a.active{color:#fff}'
-    // Hero
-    + '.hero-blog{text-align:center;padding:48px 0 32px}'
-    + '.hero-blog h1{font-family:"Playfair Display",serif;font-size:38px;margin-bottom:8px;background:linear-gradient(135deg,#D4451A,#ea580c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}'
-    + '.hero-blog p{color:#666;font-size:16px;margin-bottom:8px}'
-    + '.post-count{font-size:13px;color:#999;font-weight:500}'
-    // Grid
-    + '.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px;padding-bottom:60px}'
-    + '.card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06);transition:.3s;border:1px solid #f0f0f0}'
-    + '.card:hover{transform:translateY(-4px);box-shadow:0 12px 36px rgba(0,0,0,.1);border-color:rgba(212,69,26,.2)}'
-    + '.card a{text-decoration:none;color:inherit}'
-    + '.card-img{height:200px;overflow:hidden;background:linear-gradient(135deg,#f8f7f4,#ede9e3)}img{width:100%;height:100%;object-fit:cover;transition:transform .3s}.card:hover img{transform:scale(1.05)}'
-    + '.card-body{padding:18px}h2{font-family:"Playfair Display",serif;font-size:17px;margin-bottom:8px;line-height:1.4;color:#1a1a2e}'
-    + '.excerpt{font-size:13px;color:#666;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}'
-    + '.meta{font-size:11px;color:#999;display:flex;align-items:center;gap:8px;flex-wrap:wrap}'
-    + '.tag{background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}'
-    + '.empty{text-align:center;padding:60px 20px}'
-    + '.empty-icon{font-size:4rem;margin-bottom:16px}'
-    + '.empty h3{font-size:1.3rem;margin-bottom:8px;color:#333}'
-    + '.empty p{color:#888;font-size:0.95rem;max-width:400px;margin:0 auto}'
-    // Post
-    + '.post{padding:40px 0 60px;max-width:720px;margin:0 auto}'
-    + '.post-nav{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#888;margin-bottom:20px}'
-    + '.post-nav a{color:#D4451A;text-decoration:none;font-weight:600}'
-    + '.post h1{font-family:"Playfair Display",serif;font-size:34px;line-height:1.3;margin-bottom:20px;color:#1a1a2e}'
-    + '.hero-img{width:100%;max-height:420px;object-fit:cover;border-radius:16px;margin-bottom:32px;box-shadow:0 8px 24px rgba(0,0,0,.08)}'
-    + '.content{font-size:17px;line-height:1.85}'
-    + '.content h2{font-family:"Playfair Display",serif;font-size:26px;margin:36px 0 14px;color:#1a1a2e;border-bottom:2px solid #fee2e2;padding-bottom:8px}'
-    + '.content h3{font-size:20px;margin:28px 0 10px;color:#333}'
-    + '.content p{margin-bottom:18px}'
-    + '.content ul,.content ol{margin:18px 0;padding-left:28px}'
-    + '.content li{margin-bottom:8px}'
-    + '.content a{color:#D4451A;font-weight:500}'
-    + '.content blockquote{border-left:4px solid #D4451A;padding:12px 20px;margin:20px 0;background:#fef2f2;border-radius:0 10px 10px 0;font-style:italic}'
-    + '.content table{width:100%;border-collapse:collapse;margin:20px 0;border-radius:8px;overflow:hidden}'
-    + '.content th,.content td{padding:10px 14px;border:1px solid #eee;font-size:14px;text-align:left}'
-    + '.content th{background:#f8f7f4;font-weight:700}'
-    // Tags
-    + '.tags{display:flex;flex-wrap:wrap;gap:8px;margin:24px 0;padding-top:16px;border-top:1px solid #f0f0f0}'
-    // CTA
-    + '.cta-box{background:linear-gradient(135deg,#D4451A,#ea580c);color:#fff;padding:32px;border-radius:16px;margin:40px 0;text-align:center;box-shadow:0 8px 32px rgba(212,69,26,.25)}'
-    + '.cta-box h3{font-family:"Playfair Display",serif;font-size:22px;margin-bottom:8px}.cta-box p{opacity:.9;margin-bottom:16px}'
-    + '.cta-btn{display:inline-block;background:#fff;color:#D4451A;padding:14px 32px;border-radius:12px;text-decoration:none;font-weight:700;font-size:15px;transition:.2s;box-shadow:0 4px 16px rgba(0,0,0,.1)}'
-    + '.cta-btn:hover{transform:scale(1.03);box-shadow:0 6px 24px rgba(0,0,0,.15)}'
-    // Footer
-    + 'footer{background:linear-gradient(135deg,#1a1a2e,#16213e);color:rgba(255,255,255,.7);padding:40px 0 24px;margin-top:40px}'
-    + '.f-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:32px;margin-bottom:24px}'
-    + 'footer h4{color:#fff;margin-bottom:12px;font-size:15px}'
-    + 'footer p{font-size:13px;line-height:1.6}'
-    + 'footer a{color:rgba(255,255,255,.6);text-decoration:none;display:block;font-size:13px;margin-bottom:6px}footer a:hover{color:#fff}'
-    + '.f-bottom{border-top:1px solid rgba(255,255,255,.1);padding-top:16px;text-align:center;font-size:12px}'
-    + 'code{background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:0.85em}'
-    + '@media(max-width:640px){.grid{grid-template-columns:1fr}.f-grid{grid-template-columns:1fr}.post h1{font-size:26px}.hero-blog h1{font-size:28px}nav a{margin-left:16px;font-size:13px}}';
 }
