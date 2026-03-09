@@ -1,6 +1,6 @@
 // Scheduled Blog Post — Runs daily at 7:00 PM IST (1:30 PM UTC)
 // Generates SEO blog via Gemini and publishes to Supabase blog_posts table
-import { schedule } from "@netlify/functions";
+// Schedule defined in netlify.toml — no npm import needed
 
 var GK = process.env.GEMINI_API_KEY || '';
 var SU = process.env.SUPABASE_URL || '';
@@ -196,7 +196,7 @@ async function genBlog() {
 }
 
 // ═══ SCHEDULED HANDLER — runs at 7:00 PM IST (1:30 PM UTC) ═══
-var handler = schedule("30 13 * * *", async (event) => {
+export async function handler(event) {
   console.log('[Scheduled-Blog] Triggered at', new Date().toISOString(), '(7 PM IST)');
   try {
     var result = await genBlog();
@@ -206,6 +206,4 @@ var handler = schedule("30 13 * * *", async (event) => {
     console.error('[Scheduled-Blog] Error:', e.message);
     return { statusCode: 500 };
   }
-});
-
-export { handler };
+}
