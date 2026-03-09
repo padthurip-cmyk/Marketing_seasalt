@@ -15,7 +15,6 @@
 
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["@netlify/functions"]
 
 # ═══ SCHEDULED FUNCTIONS ═══
 # Regular product post → FB & Instagram at 7:00 AM IST (1:30 AM UTC)
