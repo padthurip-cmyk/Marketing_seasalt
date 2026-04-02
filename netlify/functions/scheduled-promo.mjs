@@ -18,7 +18,7 @@ var W = 'https://static.wixstatic.com/media/';
 function sH(p){var h={'Content-Type':'application/json',apikey:SK,Authorization:'Bearer '+SK};if(p)h.Prefer=p;return h}
 async function dG(t,q){if(!SU)return[];return(await fetch(SU+'/rest/v1/'+t+'?'+q,{headers:sH()})).json()}
 async function dA(t,r){if(!SU)return null;return(await fetch(SU+'/rest/v1/'+t,{method:'POST',headers:sH('return=representation'),body:JSON.stringify(r)})).json()}
-function im(f,w,h){w=w||1080;h=h||1080;return W+f+'/v1/fill/w_'+w+',h_'+h+',al_c,q_85,enc_auto/'+f}
+function im(f,w,h){w=w||1080;h=h||1080;if(!f)return'';if(f.startsWith('http'))return f;return W+f+'/v1/fill/w_'+w+',h_'+h+',al_c,q_85,enc_auto/'+f}
 
 // ═══ CURRENT PROMOTION — Change this to switch campaigns ═══
 var PROMO = {
@@ -91,10 +91,24 @@ function parseAI(txt,pn){
 }
 
 // ═══ PICK 5 DAILY PRODUCTS (date-seeded so different each day) ═══
-function pickDaily5() {
+// ═══ FETCH LIVE CATALOG FROM SUPABASE ═══
+async function fetchCatalog(){
+  try{
+    var rows=await dG('products','is_active=eq.true&select=id,name,description,category,image,images,variants');
+    if(!rows||!rows.length)return PRODUCTS; // fallback to hardcoded
+    return rows.map(function(p){
+      var img=p.image||(p.images&&p.images.length?p.images[0]:'');
+      var price=0;
+      try{var vs=typeof p.variants==='string'?JSON.parse(p.variants):p.variants;if(Array.isArray(vs)&&vs.length)price=vs[0].price||0}catch(e){}
+      return{n:p.name||'',p:price,d:(p.description||'').substring(0,200),c:p.category||'',i:img&&img.startsWith('http')?img:(img||''),id:p.id};
+    });
+  }catch(e){return PRODUCTS;}
+}
+
+function pickDaily5(catalog) {
   var now = new Date(new Date().getTime() + 5.5*60*60*1000);
   var seed = now.getFullYear()*10000 + (now.getMonth()+1)*100 + now.getDate() + 5555;
-  var arr = PRODUCTS.slice();
+  var arr = catalog.slice();
   for (var i = arr.length - 1; i > 0; i--) {
     seed = (seed * 1103515245 + 12345) & 0x7fffffff;
     var j = seed % (i + 1);
@@ -107,9 +121,9 @@ function pickDaily5() {
 async function genPromo() {
   if (!GK) throw new Error('GEMINI_API_KEY not set');
 
-  var products = pickDaily5();
+  var catalog = await fetchCatalog();
+  var products = pickDaily5(catalog);
   var featured = products[0];
-  // Use first product image as the post image (promo caption does the selling)
   var imageUrl = im(featured.i);
 
   var now = new Date(new Date().getTime()+5.5*60*60*1000);
@@ -148,7 +162,7 @@ async function genPromo() {
   if(PT&&IG&&imageUrl){try{var ip=new URLSearchParams();ip.append('access_token',PT);ip.append('image_url',imageUrl);ip.append('caption',fullMsg);var ir=await fetch(G+'/'+IG+'/media',{method:'POST',body:ip});var ic=await ir.json();if(ic.id){for(var w=0;w<15;w++){await new Promise(function(r){setTimeout(r,2000)});var sr=await fetch(G+'/'+ic.id+'?fields=status_code&access_token='+PT);var sd=await sr.json();if(sd.status_code==='FINISHED'||sd.status_code==='ERROR')break}var pp=new URLSearchParams();pp.append('access_token',PT);pp.append('creation_id',ic.id);var pr=await fetch(G+'/'+IG+'/media_publish',{method:'POST',body:pp});var pd=await pr.json();if(pd.id){igId=pd.id;results.push('Instagram: POSTED ✅')}else{results.push('Instagram: PUBLISH FAILED ❌ '+(pd.error&&pd.error.message?pd.error.message:''))}}else{results.push('Instagram: CONTAINER FAILED ❌ '+(ic.error&&ic.error.message?ic.error.message:''))}}catch(e){results.push('Instagram: ERROR ❌ '+e.message)}}
 
   // Save to Supabase
-  try{await dA('social_posts',{caption:parsed.caption,hashtags:parsed.hashtags,platforms:[fbId?'facebook':'',igId?'instagram':''].filter(Boolean),status:'published',published_at:new Date().toISOString(),ai_generated:true,tone:'spinwheel_promo',cta:parsed.cta,image_url:imageUrl,fb_post_id:fbId,ig_media_id:igId,post_url:postUrl,product_featured:featured.n})}catch(e){}
+  try{await dA('social_posts',{caption:parsed.caption,hashtags:parsed.hashtags,platforms:[fbId?'facebook':'',igId?'instagram':''].filter(Boolean),status:'published',published_at:new Date().toISOString(),ai_generated:true,tone:'spinwheel_promo',cta:parsed.cta,image_url:imageUrl,fb_post_id:fbId,ig_media_id:igId,post_url:postUrl,product_featured:featured.n,product_id:featured.id||null})}catch(e){}
 
   console.log('[Scheduled-Promo] 8AM IST — Products: '+productList+' | Results: '+results.join(', '));
   return {success:!!(fbId||igId),post:parsed,image_url:imageUrl,products:products.map(function(p){return p.n}),results:results};
